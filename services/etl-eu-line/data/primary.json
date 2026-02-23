@@ -1,0 +1,8002 @@
+[
+  {
+    "first_name": "Paul",
+    "last_name": "Schmitz",
+    "email": "paul.schmitz@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Mark Brennan"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Schwarz",
+    "email": "karen.schwarz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karim Okafor"
+  },
+  {
+    "first_name": "Amanda",
+    "last_name": "Hayashi",
+    "email": "amanda.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Sullivan"
+  },
+  {
+    "first_name": "Maria",
+    "last_name": "Hartmann",
+    "email": "maria.hartmann@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Charles McCarthy"
+  },
+  {
+    "first_name": "Frank",
+    "last_name": "Walter",
+    "email": "frank.walter@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Lehmann"
+  },
+  {
+    "first_name": "Kevin",
+    "last_name": "Miller",
+    "email": "kevin.miller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kathleen Werner"
+  },
+  {
+    "first_name": "Ryan",
+    "last_name": "Ryan",
+    "email": "ryan.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Young"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Murphy",
+    "email": "karen.murphy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emily Hill"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Konig",
+    "email": "sandra.konig@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ryan Hartmann"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Hill",
+    "email": "amir.hill@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Wilson"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Hartmann",
+    "email": "michael.hartmann@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Michael Ahmed"
+  },
+  {
+    "first_name": "Carol",
+    "last_name": "Gonzalez",
+    "email": "carol.gonzalez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald Allen"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Roberts",
+    "email": "aisha.roberts@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Stephen Asante"
+  },
+  {
+    "first_name": "Melissa",
+    "last_name": "Sato",
+    "email": "melissa.sato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Meyer"
+  },
+  {
+    "first_name": "Carol",
+    "last_name": "Thomas",
+    "email": "carol.thomas@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Yamamoto"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Schmidt",
+    "email": "nicole.schmidt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Hartmann"
+  },
+  {
+    "first_name": "Amanda",
+    "last_name": "Khan",
+    "email": "amanda.khan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Koga"
+  },
+  {
+    "first_name": "Cynthia",
+    "last_name": "Jackson",
+    "email": "cynthia.jackson@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kevin Martinez"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "Mensah",
+    "email": "raj.mensah@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Brennan"
+  },
+  {
+    "first_name": "Emma",
+    "last_name": "Gonzalez",
+    "email": "emma.gonzalez@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Isabela Harris"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Wagner",
+    "email": "eric.wagner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Hall"
+  },
+  {
+    "first_name": "Laura",
+    "last_name": "White",
+    "email": "laura.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joshua Moore"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Walter",
+    "email": "sarah.walter1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Rodriguez"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Sheikh",
+    "email": "deborah.sheikh@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Matthew Meyer"
+  },
+  {
+    "first_name": "Carolyn",
+    "last_name": "Kimura",
+    "email": "carolyn.kimura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sofia Hernandez"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Fernandez",
+    "email": "sofia.fernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "George White"
+  },
+  {
+    "first_name": "Ronald",
+    "last_name": "Kruger",
+    "email": "ronald.kruger@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karim Hall"
+  },
+  {
+    "first_name": "Gregory",
+    "last_name": "Doyle",
+    "email": "gregory.doyle@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Angela Novak"
+  },
+  {
+    "first_name": "Mary",
+    "last_name": "Singh",
+    "email": "mary.singh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Debra Ahmed"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Boateng",
+    "email": "jacob.boateng@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Thompson"
+  },
+  {
+    "first_name": "Hana",
+    "last_name": "Sanchez",
+    "email": "hana.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Yusuf Koch"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Becker",
+    "email": "thomas.becker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Patel"
+  },
+  {
+    "first_name": "David",
+    "last_name": "Walter",
+    "email": "david.walter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Konig"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Khan",
+    "email": "sarah.khan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karim Hall"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Fernandez",
+    "email": "nicole.fernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dmitri Park"
+  },
+  {
+    "first_name": "Barbara",
+    "last_name": "Hill",
+    "email": "barbara.hill@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Brian Walter"
+  },
+  {
+    "first_name": "Jeffrey",
+    "last_name": "Carter",
+    "email": "jeffrey.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Walker"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "Kovac",
+    "email": "heather.kovac@corporate.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Wei Meyer"
+  },
+  {
+    "first_name": "William",
+    "last_name": "Konig",
+    "email": "william.konig@acme.co",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nia Lewis"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Jackson",
+    "email": "emily.jackson@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Richter"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "Toure",
+    "email": "lena.toure@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima White"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Green",
+    "email": "dennis.green@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amy Fernandez"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Lange",
+    "email": "larry.lange@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Green"
+  },
+  {
+    "first_name": "Alexander",
+    "last_name": "Young",
+    "email": "alexander.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Murphy"
+  },
+  {
+    "first_name": "George",
+    "last_name": "Wolf",
+    "email": "george.wolf@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Debra Ahmed"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Boateng",
+    "email": "michael.boateng@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patrick Schwarz"
+  },
+  {
+    "first_name": "Jessica",
+    "last_name": "Novak",
+    "email": "jessica.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Katherine Nguyen"
+  },
+  {
+    "first_name": "Kimberly",
+    "last_name": "Cisse",
+    "email": "kimberly.cisse@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Thompson"
+  },
+  {
+    "first_name": "Yuki",
+    "last_name": "Weber",
+    "email": "yuki.weber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Viktor Scott"
+  },
+  {
+    "first_name": "Barbara",
+    "last_name": "Ryan",
+    "email": "barbara.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Koga"
+  },
+  {
+    "first_name": "Camila",
+    "last_name": "Kumar",
+    "email": "camila.kumar@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Matthew Brennan"
+  },
+  {
+    "first_name": "Danya",
+    "last_name": "Brennan",
+    "email": "danya.brennan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kevin OConnor"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Weber",
+    "email": "nicole.weber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Harris"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Clark",
+    "email": "kofi.clark@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patricia Krause"
+  },
+  {
+    "first_name": "Javier",
+    "last_name": "Sharma",
+    "email": "javier.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Isabela OConnor"
+  },
+  {
+    "first_name": "John",
+    "last_name": "Young",
+    "email": "john.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rachel Schmidt"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Davis",
+    "email": "deborah.davis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Thompson"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Neumann",
+    "email": "rebecca.neumann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karim Hall"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Lopez",
+    "email": "nour.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Diallo"
+  },
+  {
+    "first_name": "Aaliya",
+    "last_name": "Huber",
+    "email": "aaliya.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Richter"
+  },
+  {
+    "first_name": "Gary",
+    "last_name": "Rivera",
+    "email": "gary.rivera@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Mary Walsh"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Koga",
+    "email": "jacob.koga@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Eric Hill"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Malik",
+    "email": "jacob.malik@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christopher Kobayashi"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Young",
+    "email": "patrick.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Coulibaly"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Robinson",
+    "email": "linda.robinson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jennifer Schmidt"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Malik",
+    "email": "donna.malik1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Ali"
+  },
+  {
+    "first_name": "Pamela",
+    "last_name": "Cisse",
+    "email": "pamela.cisse@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Flores"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Diallo",
+    "email": "elena.diallo@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Herrmann"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Kobayashi",
+    "email": "deborah.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kimberly Hoffmann"
+  },
+  {
+    "first_name": "Anna",
+    "last_name": "Park",
+    "email": "anna.park@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Laura Okafor"
+  },
+  {
+    "first_name": "Ryan",
+    "last_name": "Abdullah",
+    "email": "ryan.abdullah@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jeffrey Kruger"
+  },
+  {
+    "first_name": "Matthew",
+    "last_name": "Kruger",
+    "email": "matthew.kruger@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Gregory Ryan"
+  },
+  {
+    "first_name": "Amanda",
+    "last_name": "Rodriguez",
+    "email": "amanda.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donna Kumar"
+  },
+  {
+    "first_name": "Shirley",
+    "last_name": "Martin",
+    "email": "shirley.martin@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Hill"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Coulibaly",
+    "email": "diego.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Moore"
+  },
+  {
+    "first_name": "Priya",
+    "last_name": "Martinez",
+    "email": "priya.martinez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Taro Patel"
+  },
+  {
+    "first_name": "Cynthia",
+    "last_name": "Becker",
+    "email": "cynthia.becker@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Emily Hill"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "White",
+    "email": "dorothy.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Allen"
+  },
+  {
+    "first_name": "Debra",
+    "last_name": "Okafor",
+    "email": "debra.okafor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Eric Sheikh"
+  },
+  {
+    "first_name": "Angela",
+    "last_name": "Gonzalez",
+    "email": "angela.gonzalez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Angela Muller"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Rahman",
+    "email": "karen.rahman@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Wagner"
+  },
+  {
+    "first_name": "Jack",
+    "last_name": "Williams",
+    "email": "jack.williams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth Novak"
+  },
+  {
+    "first_name": "Michelle",
+    "last_name": "Meyer",
+    "email": "michelle.meyer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Okafor"
+  },
+  {
+    "first_name": "Kenji",
+    "last_name": "Harris",
+    "email": "kenji.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Herrmann"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "Koch",
+    "email": "heather.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emily Fischer"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Novak",
+    "email": "nicole.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald Petrov"
+  },
+  {
+    "first_name": "Daniel",
+    "last_name": "Flores",
+    "email": "daniel.flores@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Miller"
+  },
+  {
+    "first_name": "David",
+    "last_name": "Wright",
+    "email": "david.wright@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sebastian Asante"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Nakamura",
+    "email": "betty.nakamura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas OConnor"
+  },
+  {
+    "first_name": "Ryan",
+    "last_name": "Thompson",
+    "email": "ryan.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rachel Schmidt"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Ahmed",
+    "email": "thomas.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Sullivan"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Nguyen",
+    "email": "diego.nguyen@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Ashley Kumar"
+  },
+  {
+    "first_name": "Kenji",
+    "last_name": "Sharma",
+    "email": "kenji.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Williams"
+  },
+  {
+    "first_name": "Sebastian",
+    "last_name": "White",
+    "email": "sebastian.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Sullivan"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Ivanov",
+    "email": "elizabeth.ivanov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Roberts"
+  },
+  {
+    "first_name": "Margaret",
+    "last_name": "Schwarz",
+    "email": "margaret.schwarz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Carol Fischer"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "OConnor",
+    "email": "nour.oconnor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Tariq Okafor"
+  },
+  {
+    "first_name": "Brian",
+    "last_name": "Taylor",
+    "email": "brian.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Brown"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "Novak",
+    "email": "andrew.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria Hassan"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Harris",
+    "email": "donna.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jeffrey Richter"
+  },
+  {
+    "first_name": "Hamid",
+    "last_name": "Rahman",
+    "email": "hamid.rahman@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Laura Brennan"
+  },
+  {
+    "first_name": "Donald",
+    "last_name": "Schmidt",
+    "email": "donald.schmidt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mateo Neumann"
+  },
+  {
+    "first_name": "Ann",
+    "last_name": "Sanchez",
+    "email": "ann.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Ryan"
+  },
+  {
+    "first_name": "Melissa",
+    "last_name": "Sheikh",
+    "email": "melissa.sheikh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald Qureshi"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Krause",
+    "email": "brenda.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Khan"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Krause",
+    "email": "helen.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Lehmann"
+  },
+  {
+    "first_name": "Nadia",
+    "last_name": "Weber",
+    "email": "nadia.weber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Laura Lehmann"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Tanaka",
+    "email": "elena.tanaka1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia McCarthy"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Koch",
+    "email": "nicole.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Angela Clark"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Rivera",
+    "email": "aisha.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Coulibaly"
+  },
+  {
+    "first_name": "Joseph",
+    "last_name": "White",
+    "email": "joseph.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amy Singh"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Dubois",
+    "email": "brenda.dubois@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Brenda Sanchez"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Garcia",
+    "email": "dorothy.garcia@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Sarah Murphy"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Schmitt",
+    "email": "nicole.schmitt@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Lena Boateng"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Ramirez",
+    "email": "sarah.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Hartmann"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Ali",
+    "email": "patrick.ali@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Hill"
+  },
+  {
+    "first_name": "Frank",
+    "last_name": "Rossi",
+    "email": "frank.rossi@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Camila Rahman"
+  },
+  {
+    "first_name": "John",
+    "last_name": "Herrmann",
+    "email": "john.herrmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Robinson"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "Mitchell",
+    "email": "raj.mitchell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Mohammed"
+  },
+  {
+    "first_name": "Danya",
+    "last_name": "Richter",
+    "email": "danya.richter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patrick Schwarz"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Schmitz",
+    "email": "dennis.schmitz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah McCarthy"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Wright",
+    "email": "steven.wright@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Janet Toure"
+  },
+  {
+    "first_name": "Nicholas",
+    "last_name": "Hayashi",
+    "email": "nicholas.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Brennan"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Kobayashi",
+    "email": "emily.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kimberly Garcia"
+  },
+  {
+    "first_name": "Jessica",
+    "last_name": "White",
+    "email": "jessica.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hana Rossi"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Johnson",
+    "email": "nicole.johnson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Nelson"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Kumar",
+    "email": "emily.kumar@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Baker"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "White",
+    "email": "linda.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Wolf"
+  },
+  {
+    "first_name": "Matthew",
+    "last_name": "Schulz",
+    "email": "matthew.schulz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jeffrey Richter"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Ali",
+    "email": "kofi.ali@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Cynthia Diallo"
+  },
+  {
+    "first_name": "Rachel",
+    "last_name": "Martinez",
+    "email": "rachel.martinez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Justin Mayer"
+  },
+  {
+    "first_name": "Nicholas",
+    "last_name": "Brown",
+    "email": "nicholas.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "George Jackson"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Neumann",
+    "email": "larry.neumann1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Asante"
+  },
+  {
+    "first_name": "Priya",
+    "last_name": "Tanaka",
+    "email": "priya.tanaka@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah Herrmann"
+  },
+  {
+    "first_name": "George",
+    "last_name": "Werner",
+    "email": "george.werner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hana Becker"
+  },
+  {
+    "first_name": "Brian",
+    "last_name": "Wolf",
+    "email": "brian.wolf@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patrick Clark"
+  },
+  {
+    "first_name": "Layla",
+    "last_name": "Kovac",
+    "email": "layla.kovac@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Herrmann"
+  },
+  {
+    "first_name": "Edward",
+    "last_name": "Kruger",
+    "email": "edward.kruger@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samantha Koch"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Clark",
+    "email": "nour.clark@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Hartmann"
+  },
+  {
+    "first_name": "Laura",
+    "last_name": "Hill",
+    "email": "laura.hill@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Perez"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "Saito",
+    "email": "andrew.saito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Schmidt"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Ivanov",
+    "email": "viktor.ivanov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Angela Hoffmann"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Hill",
+    "email": "eric.hill@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michelle Koga"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "OBrien",
+    "email": "nancy.obrien@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Carter"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Richter",
+    "email": "steven.richter@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Rami Campbell"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Walker",
+    "email": "linda.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Sullivan"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "Campbell",
+    "email": "lena.campbell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Mohammed"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Lee",
+    "email": "dorothy.lee@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Hernandez"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Hall",
+    "email": "linda.hall@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emily Hill"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Kobayashi",
+    "email": "jacob.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Hernandez"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Scott",
+    "email": "donna.scott@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Katherine Nguyen"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Krause",
+    "email": "kwame.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Sheikh"
+  },
+  {
+    "first_name": "Hamid",
+    "last_name": "Meier",
+    "email": "hamid.meier@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Clark"
+  },
+  {
+    "first_name": "Kenji",
+    "last_name": "Mensah",
+    "email": "kenji.mensah@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Diallo"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Walter",
+    "email": "diego.walter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amir Malik"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Chaudhry",
+    "email": "taro.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ashley Walsh"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Schmidt",
+    "email": "taro.schmidt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donna Nakamura"
+  },
+  {
+    "first_name": "Nicholas",
+    "last_name": "Lopez",
+    "email": "nicholas.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Herrmann"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Mensah",
+    "email": "kofi.mensah@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Kenneth Doyle"
+  },
+  {
+    "first_name": "Alexander",
+    "last_name": "Lewis",
+    "email": "alexander.lewis@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Larry Owusu"
+  },
+  {
+    "first_name": "Debra",
+    "last_name": "Brennan",
+    "email": "debra.brennan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Ramirez"
+  },
+  {
+    "first_name": "Sebastian",
+    "last_name": "Kruger",
+    "email": "sebastian.kruger@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dorothy Werner"
+  },
+  {
+    "first_name": "Nia",
+    "last_name": "Jackson",
+    "email": "nia.jackson@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anthony Sharma"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Carter",
+    "email": "karim.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Danya Hill"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Muller",
+    "email": "viktor.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Schulz"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Richter",
+    "email": "michael.richter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Nguyen"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Herrmann",
+    "email": "dennis.herrmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Rivera"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Jones",
+    "email": "larry.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth Novak"
+  },
+  {
+    "first_name": "Matthew",
+    "last_name": "Zimmermann",
+    "email": "matthew.zimmermann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Lopez"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Mohammed",
+    "email": "tariq.mohammed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Muller"
+  },
+  {
+    "first_name": "Stephanie",
+    "last_name": "Muller",
+    "email": "stephanie.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Brown"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Kimura",
+    "email": "karim.kimura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "William Richter"
+  },
+  {
+    "first_name": "Hana",
+    "last_name": "Hernandez",
+    "email": "hana.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Lehmann"
+  },
+  {
+    "first_name": "William",
+    "last_name": "Muller",
+    "email": "william.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amara Yamamoto"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Hayashi",
+    "email": "michael.hayashi1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Thompson"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Malik",
+    "email": "sandra.malik@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth Schmitz"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Harris",
+    "email": "patrick.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Coulibaly"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Dubois",
+    "email": "christine.dubois@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brian Martin"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Clark",
+    "email": "elizabeth.clark@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Richter"
+  },
+  {
+    "first_name": "Shirley",
+    "last_name": "Hall",
+    "email": "shirley.hall@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Campbell"
+  },
+  {
+    "first_name": "George",
+    "last_name": "Jones",
+    "email": "george.jones1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry OBrien"
+  },
+  {
+    "first_name": "Kathleen",
+    "last_name": "Lehmann",
+    "email": "kathleen.lehmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Lange"
+  },
+  {
+    "first_name": "Kimberly",
+    "last_name": "Young",
+    "email": "kimberly.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donna Young"
+  },
+  {
+    "first_name": "James",
+    "last_name": "Schmitz",
+    "email": "james.schmitz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Young"
+  },
+  {
+    "first_name": "Paul",
+    "last_name": "Smith",
+    "email": "paul.smith@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald Allen"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Allen",
+    "email": "wei.allen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Rodriguez"
+  },
+  {
+    "first_name": "Samantha",
+    "last_name": "Lange",
+    "email": "samantha.lange@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Isabela Martinez"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Rahman",
+    "email": "jacob.rahman@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "John Scott"
+  },
+  {
+    "first_name": "William",
+    "last_name": "Wilson",
+    "email": "william.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Hartmann"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Saito",
+    "email": "viktor.saito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jonathan Garcia"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Lehmann",
+    "email": "fatima.lehmann@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Sofia Kumar"
+  },
+  {
+    "first_name": "Brian",
+    "last_name": "Martinez",
+    "email": "brian.martinez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Kobayashi"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Hoffmann",
+    "email": "susan.hoffmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samantha Suzuki"
+  },
+  {
+    "first_name": "Kevin",
+    "last_name": "Adams",
+    "email": "kevin.adams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Alexander Clark"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Qureshi",
+    "email": "diego.qureshi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Richter"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Ramirez",
+    "email": "thomas.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Yamamoto"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Davis",
+    "email": "emily.davis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Perez"
+  },
+  {
+    "first_name": "Alexander",
+    "last_name": "Rivera",
+    "email": "alexander.rivera@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Helen Wilson"
+  },
+  {
+    "first_name": "Jeffrey",
+    "last_name": "Suzuki",
+    "email": "jeffrey.suzuki@provider.io",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Khan"
+  },
+  {
+    "first_name": "George",
+    "last_name": "Jones",
+    "email": "george.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Ali"
+  },
+  {
+    "first_name": "Amara",
+    "last_name": "Dubois",
+    "email": "amara.dubois@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kevin Adams"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Hoffmann",
+    "email": "sofia.hoffmann@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Miller"
+  },
+  {
+    "first_name": "Hana",
+    "last_name": "Wright",
+    "email": "hana.wright@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Meier"
+  },
+  {
+    "first_name": "George",
+    "last_name": "Hall",
+    "email": "george.hall@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sofia Kumar"
+  },
+  {
+    "first_name": "Donald",
+    "last_name": "Wilson",
+    "email": "donald.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Danya Wolf"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Green",
+    "email": "dennis.green@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Danya Hill"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Thompson",
+    "email": "larry.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Brown"
+  },
+  {
+    "first_name": "Ryan",
+    "last_name": "Hernandez",
+    "email": "ryan.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "George Gonzalez"
+  },
+  {
+    "first_name": "Carolyn",
+    "last_name": "Gonzalez",
+    "email": "carolyn.gonzalez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anthony Sharma"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Baker",
+    "email": "elena.baker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Schroeder"
+  },
+  {
+    "first_name": "Hamid",
+    "last_name": "Rossi",
+    "email": "hamid.rossi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Diego Boateng"
+  },
+  {
+    "first_name": "Zara",
+    "last_name": "Owusu",
+    "email": "zara.owusu@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Taro Williams"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Mohammed",
+    "email": "kofi.mohammed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Baker"
+  },
+  {
+    "first_name": "Anthony",
+    "last_name": "Schwarz",
+    "email": "anthony.schwarz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Konig"
+  },
+  {
+    "first_name": "Omar",
+    "last_name": "Lewis",
+    "email": "omar.lewis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Carter"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "Nakamura",
+    "email": "andrew.nakamura@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Fernandez"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "Huber",
+    "email": "andrew.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christopher Gonzalez"
+  },
+  {
+    "first_name": "Nia",
+    "last_name": "Baker",
+    "email": "nia.baker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Carter"
+  },
+  {
+    "first_name": "Alexander",
+    "last_name": "Kruger",
+    "email": "alexander.kruger@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew White"
+  },
+  {
+    "first_name": "Amanda",
+    "last_name": "Neumann",
+    "email": "amanda.neumann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Tariq Okafor"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "Suzuki",
+    "email": "heather.suzuki@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Lehmann"
+  },
+  {
+    "first_name": "Melissa",
+    "last_name": "Garcia",
+    "email": "melissa.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Javier Cisse"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "Sanchez",
+    "email": "andrew.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Konig"
+  },
+  {
+    "first_name": "Frank",
+    "last_name": "Schmitz",
+    "email": "frank.schmitz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Jackson"
+  },
+  {
+    "first_name": "Edward",
+    "last_name": "Krause",
+    "email": "edward.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Diallo"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Patel",
+    "email": "christine.patel@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Patel"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Johnson",
+    "email": "fatima.johnson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Thompson"
+  },
+  {
+    "first_name": "Amara",
+    "last_name": "Herrmann",
+    "email": "amara.herrmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "William Richter"
+  },
+  {
+    "first_name": "Barbara",
+    "last_name": "Walter",
+    "email": "barbara.walter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Campbell"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "McCarthy",
+    "email": "karen.mccarthy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sana Nelson"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Walsh",
+    "email": "christine.walsh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Gonzalez"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Mensah",
+    "email": "raymond.mensah@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Brian Walter"
+  },
+  {
+    "first_name": "Layla",
+    "last_name": "Moore",
+    "email": "layla.moore@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brian Diallo"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Sheikh",
+    "email": "sarah.sheikh@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "William Richter"
+  },
+  {
+    "first_name": "Melissa",
+    "last_name": "Lewis",
+    "email": "melissa.lewis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicholas Klein"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "Lee",
+    "email": "heather.lee@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Danya Miller"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Johnson",
+    "email": "rebecca.johnson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Walsh"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Kruger",
+    "email": "mark.kruger@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Roberts"
+  },
+  {
+    "first_name": "Scott",
+    "last_name": "Fischer",
+    "email": "scott.fischer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Carol Walsh"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Konig",
+    "email": "kwame.konig@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Matthew Sheikh"
+  },
+  {
+    "first_name": "Nicholas",
+    "last_name": "Watanabe",
+    "email": "nicholas.watanabe@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Eric Sheikh"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Neumann",
+    "email": "sofia.neumann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Flores"
+  },
+  {
+    "first_name": "Alexander",
+    "last_name": "Koch",
+    "email": "alexander.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Charles McCarthy"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Wilson",
+    "email": "sandra.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Dubois"
+  },
+  {
+    "first_name": "Anthony",
+    "last_name": "Baker",
+    "email": "anthony.baker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Ali"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Fischer",
+    "email": "donna.fischer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Timothy Wolf"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Garcia",
+    "email": "helen.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Walsh"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Rivera",
+    "email": "mark.rivera@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Herrmann"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Allen",
+    "email": "elizabeth.allen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Angela Muller"
+  },
+  {
+    "first_name": "Jennifer",
+    "last_name": "Wagner",
+    "email": "jennifer.wagner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christopher Robinson"
+  },
+  {
+    "first_name": "Paul",
+    "last_name": "Brown",
+    "email": "paul.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Harris"
+  },
+  {
+    "first_name": "Mary",
+    "last_name": "Krause",
+    "email": "mary.krause@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Jacob Schulz"
+  },
+  {
+    "first_name": "Camila",
+    "last_name": "Lewis",
+    "email": "camila.lewis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Sato"
+  },
+  {
+    "first_name": "Pamela",
+    "last_name": "Hernandez",
+    "email": "pamela.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Helen Schroeder"
+  },
+  {
+    "first_name": "Carolyn",
+    "last_name": "Park",
+    "email": "carolyn.park@provider.io",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie King"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Neumann",
+    "email": "larry.neumann@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Ronald Petrov"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Braun",
+    "email": "nour.braun@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Herrmann"
+  },
+  {
+    "first_name": "Hamid",
+    "last_name": "Clark",
+    "email": "hamid.clark@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Carolyn OConnor"
+  },
+  {
+    "first_name": "Maria",
+    "last_name": "Huber",
+    "email": "maria.huber@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Perez"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Ramirez",
+    "email": "fatima.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Thomas"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Ramirez",
+    "email": "deborah.ramirez@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Dmitri Walker"
+  },
+  {
+    "first_name": "Aaliya",
+    "last_name": "Kovac",
+    "email": "aaliya.kovac@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Matthew Sheikh"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Kato",
+    "email": "brenda.kato@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "James Thompson"
+  },
+  {
+    "first_name": "Joseph",
+    "last_name": "Roberts",
+    "email": "joseph.roberts@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Laura Okafor"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "Jones",
+    "email": "nancy.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Muller"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Neumann",
+    "email": "sofia.neumann1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Hartmann"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Kruger",
+    "email": "kwame.kruger@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Barbara Qureshi"
+  },
+  {
+    "first_name": "Nadia",
+    "last_name": "Ahmed",
+    "email": "nadia.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Gonzalez"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Schmitz",
+    "email": "eric.schmitz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sana Klein"
+  },
+  {
+    "first_name": "Scott",
+    "last_name": "Wolf",
+    "email": "scott.wolf@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lisa Garcia"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Hoffmann",
+    "email": "karim.hoffmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amanda Sullivan"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "Coulibaly",
+    "email": "lena.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Lehmann"
+  },
+  {
+    "first_name": "Nia",
+    "last_name": "Mayer",
+    "email": "nia.mayer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joshua Carter"
+  },
+  {
+    "first_name": "Samantha",
+    "last_name": "Schulz",
+    "email": "samantha.schulz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dennis Nguyen"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Ali",
+    "email": "betty.ali@acme.co",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Deborah Owusu"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Green",
+    "email": "wei.green@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Wolf"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Asante",
+    "email": "lisa.asante@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mateo Lewis"
+  },
+  {
+    "first_name": "George",
+    "last_name": "OConnor",
+    "email": "george.oconnor@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Aisha Novak"
+  },
+  {
+    "first_name": "Maria",
+    "last_name": "Rahman",
+    "email": "maria.rahman@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Jackson"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "Sato",
+    "email": "lena.sato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donna Kumar"
+  },
+  {
+    "first_name": "Kevin",
+    "last_name": "Hassan",
+    "email": "kevin.hassan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Walsh"
+  },
+  {
+    "first_name": "Jason",
+    "last_name": "Qureshi",
+    "email": "jason.qureshi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Camila Walker"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "Boateng",
+    "email": "raj.boateng@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donald Kovac"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Roberts",
+    "email": "tariq.roberts@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Cynthia Koch"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Thompson",
+    "email": "yusuf.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Isabela Campbell"
+  },
+  {
+    "first_name": "George",
+    "last_name": "Harris",
+    "email": "george.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Williams"
+  },
+  {
+    "first_name": "Jennifer",
+    "last_name": "Schroeder",
+    "email": "jennifer.schroeder@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Barbara Qureshi"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Schroeder",
+    "email": "mark.schroeder@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Lehmann"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Ryan",
+    "email": "deborah.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Mohammed"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Carter",
+    "email": "jerry.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicholas Martinez"
+  },
+  {
+    "first_name": "Stephanie",
+    "last_name": "Green",
+    "email": "stephanie.green@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gregory Ryan"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Keita",
+    "email": "nicole.keita@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Matthew Brennan"
+  },
+  {
+    "first_name": "Kenji",
+    "last_name": "Traore",
+    "email": "kenji.traore@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Deborah Hill"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Muller",
+    "email": "larry.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amir Saito"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Hill",
+    "email": "christine.hill@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah Patel"
+  },
+  {
+    "first_name": "Javier",
+    "last_name": "Wagner",
+    "email": "javier.wagner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Perez"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Nguyen",
+    "email": "elena.nguyen1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Daniel Hassan"
+  },
+  {
+    "first_name": "Anthony",
+    "last_name": "Garcia",
+    "email": "anthony.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patricia Harris"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Tanaka",
+    "email": "rebecca.tanaka@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lisa Dubois"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Mitchell",
+    "email": "michael.mitchell@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Frank Krause"
+  },
+  {
+    "first_name": "Jonathan",
+    "last_name": "Gonzalez",
+    "email": "jonathan.gonzalez@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hana Walter"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Moore",
+    "email": "sana.moore@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "James Nelson"
+  },
+  {
+    "first_name": "Kenneth",
+    "last_name": "Qureshi",
+    "email": "kenneth.qureshi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sebastian Becker"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Torres",
+    "email": "taro.torres@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Robinson"
+  },
+  {
+    "first_name": "Jeffrey",
+    "last_name": "Fischer",
+    "email": "jeffrey.fischer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Saito"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Neumann",
+    "email": "susan.neumann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amanda Nguyen"
+  },
+  {
+    "first_name": "Kenji",
+    "last_name": "Kumar",
+    "email": "kenji.kumar@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Kruger"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Toure",
+    "email": "patrick.toure@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michelle Martin"
+  },
+  {
+    "first_name": "Ashley",
+    "last_name": "Schmitt",
+    "email": "ashley.schmitt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Malik"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Martin",
+    "email": "fatima.martin@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth Meyer"
+  },
+  {
+    "first_name": "Jack",
+    "last_name": "Mitchell",
+    "email": "jack.mitchell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Kruger"
+  },
+  {
+    "first_name": "Mary",
+    "last_name": "Hayashi",
+    "email": "mary.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Campbell"
+  },
+  {
+    "first_name": "Nicholas",
+    "last_name": "Doyle",
+    "email": "nicholas.doyle@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Mohammed"
+  },
+  {
+    "first_name": "John",
+    "last_name": "Moore",
+    "email": "john.moore@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Lehmann"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Nakamura",
+    "email": "nour.nakamura@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Zara Fischer"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Hernandez",
+    "email": "yusuf.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gregory Richter"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Schulz",
+    "email": "steven.schulz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Eric Hill"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Torres",
+    "email": "christopher.torres@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Muller"
+  },
+  {
+    "first_name": "Yuki",
+    "last_name": "Sharma",
+    "email": "yuki.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Perez"
+  },
+  {
+    "first_name": "Frank",
+    "last_name": "Ito",
+    "email": "frank.ito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Carter"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Schwarz",
+    "email": "raymond.schwarz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Muller"
+  },
+  {
+    "first_name": "Patricia",
+    "last_name": "Schmidt",
+    "email": "patricia.schmidt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Tariq Kimura"
+  },
+  {
+    "first_name": "Ibrahim",
+    "last_name": "Dubois",
+    "email": "ibrahim.dubois@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Nelson"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Braun",
+    "email": "amir.braun1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gregory Meier"
+  },
+  {
+    "first_name": "Cynthia",
+    "last_name": "Coulibaly",
+    "email": "cynthia.coulibaly@provider.io",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Martin"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Jones",
+    "email": "yusuf.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Robert Walker"
+  },
+  {
+    "first_name": "Joshua",
+    "last_name": "Owusu",
+    "email": "joshua.owusu@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ashley Neumann"
+  },
+  {
+    "first_name": "Amy",
+    "last_name": "Rivera",
+    "email": "amy.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hamid Roberts"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Garcia",
+    "email": "tariq.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Angela Lewis"
+  },
+  {
+    "first_name": "Debra",
+    "last_name": "Wright",
+    "email": "debra.wright@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Abdullah"
+  },
+  {
+    "first_name": "Kenji",
+    "last_name": "Anderson",
+    "email": "kenji.anderson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Richter"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Kobayashi",
+    "email": "helen.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Kruger"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Brown",
+    "email": "sandra.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Alexander Perez"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Weber",
+    "email": "christopher.weber@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Ashley Neumann"
+  },
+  {
+    "first_name": "Jennifer",
+    "last_name": "Sharma",
+    "email": "jennifer.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dorothy Okafor"
+  },
+  {
+    "first_name": "Jeffrey",
+    "last_name": "Ito",
+    "email": "jeffrey.ito@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Mateo Suzuki"
+  },
+  {
+    "first_name": "Amy",
+    "last_name": "Sharma",
+    "email": "amy.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Qureshi"
+  },
+  {
+    "first_name": "Matthew",
+    "last_name": "Sanchez",
+    "email": "matthew.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicholas Murphy"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Hernandez",
+    "email": "dorothy.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jennifer Mensah"
+  },
+  {
+    "first_name": "Ashley",
+    "last_name": "Ito",
+    "email": "ashley.ito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Janet Sullivan"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Sharma",
+    "email": "jerry.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Ahmed"
+  },
+  {
+    "first_name": "Robert",
+    "last_name": "Walker",
+    "email": "robert.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Hall"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Sharma",
+    "email": "sana.sharma1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Larry Harris"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Anderson",
+    "email": "emily.anderson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dennis Abdullah"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Qureshi",
+    "email": "betty.qureshi@acme.co",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joshua Torres"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Kobayashi",
+    "email": "rami.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Carter"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Lehmann",
+    "email": "wei.lehmann@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Christine Keita"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Nguyen",
+    "email": "rebecca.nguyen@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Walker"
+  },
+  {
+    "first_name": "Joshua",
+    "last_name": "Sato",
+    "email": "joshua.sato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Lange"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Thomas",
+    "email": "elizabeth.thomas@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Robert Keita"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Hartmann",
+    "email": "wei.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Aaliya Hill"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Singh",
+    "email": "larry.singh@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Mei Rahman"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Keita",
+    "email": "jerry.keita@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Gonzalez"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Hartmann",
+    "email": "christine.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patricia Krause"
+  },
+  {
+    "first_name": "George",
+    "last_name": "Miller",
+    "email": "george.miller@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Brian Martin"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Rivera",
+    "email": "fatima.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Hill"
+  },
+  {
+    "first_name": "Stephanie",
+    "last_name": "Hill",
+    "email": "stephanie.hill@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Williams"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Sheikh",
+    "email": "karim.sheikh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Rivera"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Krause",
+    "email": "deborah.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Rivera"
+  },
+  {
+    "first_name": "Samantha",
+    "last_name": "Allen",
+    "email": "samantha.allen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ashley Kumar"
+  },
+  {
+    "first_name": "Cynthia",
+    "last_name": "Muller",
+    "email": "cynthia.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Hartmann"
+  },
+  {
+    "first_name": "Frank",
+    "last_name": "Sato",
+    "email": "frank.sato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Laura Brennan"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Young",
+    "email": "jacob.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jacob Kelly"
+  },
+  {
+    "first_name": "Layla",
+    "last_name": "Williams",
+    "email": "layla.williams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Rahman"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Hayashi",
+    "email": "patrick.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Coulibaly"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "King",
+    "email": "sandra.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria Sato"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Moore",
+    "email": "nour.moore@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Ann Mohammed"
+  },
+  {
+    "first_name": "Donald",
+    "last_name": "Ryan",
+    "email": "donald.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Rivera"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Hartmann",
+    "email": "samuel.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Roberts"
+  },
+  {
+    "first_name": "Gary",
+    "last_name": "Nakamura",
+    "email": "gary.nakamura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Melissa Suzuki"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "White",
+    "email": "michael.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Kruger"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Walker",
+    "email": "lisa.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Walker"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Saito",
+    "email": "helen.saito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jeffrey Patel"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Kobayashi",
+    "email": "yusuf.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Fernandez"
+  },
+  {
+    "first_name": "Kenneth",
+    "last_name": "Nakamura",
+    "email": "kenneth.nakamura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Konig"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Wilson",
+    "email": "elizabeth.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brandon OBrien"
+  },
+  {
+    "first_name": "Isabela",
+    "last_name": "Kimura",
+    "email": "isabela.kimura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Koch"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Braun",
+    "email": "christopher.braun@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Gonzalez"
+  },
+  {
+    "first_name": "Priya",
+    "last_name": "Schwarz",
+    "email": "priya.schwarz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Mayer"
+  },
+  {
+    "first_name": "Carol",
+    "last_name": "Rossi",
+    "email": "carol.rossi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew Saito"
+  },
+  {
+    "first_name": "Ryan",
+    "last_name": "Coulibaly",
+    "email": "ryan.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Dubois"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Allen",
+    "email": "dorothy.allen@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew Schroeder"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Sanchez",
+    "email": "samuel.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Kobayashi"
+  },
+  {
+    "first_name": "Javier",
+    "last_name": "Hill",
+    "email": "javier.hill@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Schmitt"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Rossi",
+    "email": "katherine.rossi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria Lehmann"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Lopez",
+    "email": "fatima.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth Schmitz"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Yamamoto",
+    "email": "nour.yamamoto@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samantha Koch"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Wilson",
+    "email": "aisha.wilson@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Jerry Walsh"
+  },
+  {
+    "first_name": "Brian",
+    "last_name": "Traore",
+    "email": "brian.traore@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Carol Fischer"
+  },
+  {
+    "first_name": "Frank",
+    "last_name": "Wilson",
+    "email": "frank.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jeffrey Sanchez"
+  },
+  {
+    "first_name": "Anna",
+    "last_name": "Asante",
+    "email": "anna.asante@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donald Meier"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Novak",
+    "email": "diego.novak@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Dmitri Walker"
+  },
+  {
+    "first_name": "Ibrahim",
+    "last_name": "Brown",
+    "email": "ibrahim.brown@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Robinson"
+  },
+  {
+    "first_name": "Laura",
+    "last_name": "Garcia",
+    "email": "laura.garcia1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Harris"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Chaudhry",
+    "email": "jacob.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Kumar"
+  },
+  {
+    "first_name": "Sharon",
+    "last_name": "Ivanov",
+    "email": "sharon.ivanov@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Eric Keita"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Kato",
+    "email": "susan.kato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Owusu"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Lehmann",
+    "email": "taro.lehmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Sullivan"
+  },
+  {
+    "first_name": "Joshua",
+    "last_name": "Ahmed",
+    "email": "joshua.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Rossi"
+  },
+  {
+    "first_name": "Richard",
+    "last_name": "Sanchez",
+    "email": "richard.sanchez@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lisa Dubois"
+  },
+  {
+    "first_name": "Sebastian",
+    "last_name": "Martin",
+    "email": "sebastian.martin@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Carter"
+  },
+  {
+    "first_name": "Stephanie",
+    "last_name": "Hayashi",
+    "email": "stephanie.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicole Ahmed"
+  },
+  {
+    "first_name": "Mateo",
+    "last_name": "Muller",
+    "email": "mateo.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samantha Koch"
+  },
+  {
+    "first_name": "Zara",
+    "last_name": "Koch",
+    "email": "zara.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Koga"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Meyer",
+    "email": "michael.meyer@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Deborah Green"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Malik",
+    "email": "viktor.malik@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Miller"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "McCarthy",
+    "email": "raj.mccarthy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Robert Walker"
+  },
+  {
+    "first_name": "Jack",
+    "last_name": "Herrmann",
+    "email": "jack.herrmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Malik"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Mitchell",
+    "email": "dorothy.mitchell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Lopez"
+  },
+  {
+    "first_name": "Nadia",
+    "last_name": "Ramirez",
+    "email": "nadia.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Melissa Novak"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Schroeder",
+    "email": "tariq.schroeder@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Priya Young"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Kumar",
+    "email": "elena.kumar@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Katherine OConnor"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Hoffmann",
+    "email": "lisa.hoffmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Green"
+  },
+  {
+    "first_name": "Stephen",
+    "last_name": "OConnor",
+    "email": "stephen.oconnor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Debra Wagner"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Wilson",
+    "email": "dennis.wilson@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kimberly Hoffmann"
+  },
+  {
+    "first_name": "Sharon",
+    "last_name": "King",
+    "email": "sharon.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Hill"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Schwarz",
+    "email": "kwame.schwarz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Melissa Mensah"
+  },
+  {
+    "first_name": "Nia",
+    "last_name": "Moore",
+    "email": "nia.moore@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Williams"
+  },
+  {
+    "first_name": "Stephen",
+    "last_name": "Thomas",
+    "email": "stephen.thomas@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nia Wilson"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Meyer",
+    "email": "nicole.meyer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Ahmed"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Kovac",
+    "email": "betty.kovac@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Owusu"
+  },
+  {
+    "first_name": "Stephen",
+    "last_name": "Zimmermann",
+    "email": "stephen.zimmermann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Ali"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Walker",
+    "email": "wei.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Keita"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Taylor",
+    "email": "susan.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Lange"
+  },
+  {
+    "first_name": "Daniel",
+    "last_name": "Fischer",
+    "email": "daniel.fischer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Martinez"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Hartmann",
+    "email": "karim.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Coulibaly"
+  },
+  {
+    "first_name": "Gregory",
+    "last_name": "Cisse",
+    "email": "gregory.cisse@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sana Malik"
+  },
+  {
+    "first_name": "Amara",
+    "last_name": "Mayer",
+    "email": "amara.mayer@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Hartmann"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Patel",
+    "email": "linda.patel@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amanda Nguyen"
+  },
+  {
+    "first_name": "Kenji",
+    "last_name": "Hartmann",
+    "email": "kenji.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Viktor Yamamoto"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "King",
+    "email": "lena.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Flores"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "Owusu",
+    "email": "nancy.owusu@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah Murphy"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Walker",
+    "email": "sana.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Muller"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Park",
+    "email": "rami.park@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sofia Schmidt"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Sanchez",
+    "email": "linda.sanchez@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Rami Campbell"
+  },
+  {
+    "first_name": "Ronald",
+    "last_name": "Dubois",
+    "email": "ronald.dubois@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ryan Hartmann"
+  },
+  {
+    "first_name": "Kathleen",
+    "last_name": "Hartmann",
+    "email": "kathleen.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Robinson"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Koch",
+    "email": "wei.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Flores"
+  },
+  {
+    "first_name": "Jonathan",
+    "last_name": "Sharma",
+    "email": "jonathan.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Kobayashi"
+  },
+  {
+    "first_name": "Mei",
+    "last_name": "Taylor",
+    "email": "mei.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Dubois"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Muller",
+    "email": "dorothy.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Hill"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Ramirez",
+    "email": "wei.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Zimmermann"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Walsh",
+    "email": "brenda.walsh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Yusuf Ito"
+  },
+  {
+    "first_name": "Justin",
+    "last_name": "Muller",
+    "email": "justin.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mateo Lewis"
+  },
+  {
+    "first_name": "Hana",
+    "last_name": "Kimura",
+    "email": "hana.kimura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donald Doyle"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Hassan",
+    "email": "kofi.hassan@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Janet Thomas"
+  },
+  {
+    "first_name": "Kathleen",
+    "last_name": "Doyle",
+    "email": "kathleen.doyle@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Yamamoto"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Fischer",
+    "email": "deborah.fischer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Rahman"
+  },
+  {
+    "first_name": "Ann",
+    "last_name": "Ryan",
+    "email": "ann.ryan@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Omar Klein"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Ivanov",
+    "email": "thomas.ivanov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia McCarthy"
+  },
+  {
+    "first_name": "Mei",
+    "last_name": "Huber",
+    "email": "mei.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Muller"
+  },
+  {
+    "first_name": "Janet",
+    "last_name": "Hall",
+    "email": "janet.hall@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia McCarthy"
+  },
+  {
+    "first_name": "Jason",
+    "last_name": "Lopez",
+    "email": "jason.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Mensah"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Johnson",
+    "email": "amir.johnson@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Nicholas Murphy"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Koch",
+    "email": "donna.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Wei Abdullah"
+  },
+  {
+    "first_name": "Jack",
+    "last_name": "Walker",
+    "email": "jack.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ryan Chaudhry"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Schulz",
+    "email": "christine.schulz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lena Boateng"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Qureshi",
+    "email": "kofi.qureshi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Fernandez"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Nakamura",
+    "email": "katherine.nakamura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Lange"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Ramirez",
+    "email": "eric.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Kruger"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Coulibaly",
+    "email": "eric.coulibaly@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Melissa Owusu"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Dubois",
+    "email": "christine.dubois1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hamid Braun"
+  },
+  {
+    "first_name": "Mary",
+    "last_name": "Owusu",
+    "email": "mary.owusu@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Carol Becker"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Coulibaly",
+    "email": "helen.coulibaly@acme.co",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicole Ahmed"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Doyle",
+    "email": "kofi.doyle@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kathleen Werner"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Martin",
+    "email": "christine.martin@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Timothy Wolf"
+  },
+  {
+    "first_name": "Yuki",
+    "last_name": "Rodriguez",
+    "email": "yuki.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Rossi"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Malik",
+    "email": "donna.malik@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Elena Ito"
+  },
+  {
+    "first_name": "Michelle",
+    "last_name": "Sato",
+    "email": "michelle.sato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hamid Miller"
+  },
+  {
+    "first_name": "Emma",
+    "last_name": "Chaudhry",
+    "email": "emma.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Gonzalez"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Huber",
+    "email": "katherine.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Tariq Kimura"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Rivera",
+    "email": "diego.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Elena Lehmann"
+  },
+  {
+    "first_name": "Margaret",
+    "last_name": "Clark",
+    "email": "margaret.clark@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Javier Cisse"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Rahman",
+    "email": "diego.rahman@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "David Patel"
+  },
+  {
+    "first_name": "Jonathan",
+    "last_name": "Smith",
+    "email": "jonathan.smith@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Angela Clark"
+  },
+  {
+    "first_name": "Richard",
+    "last_name": "Mensah",
+    "email": "richard.mensah@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Walker"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Hartmann",
+    "email": "christopher.hartmann@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Cisse"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "Rossi",
+    "email": "andrew.rossi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Miller"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Kruger",
+    "email": "nour.kruger@provider.io",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Raj Ahmed"
+  },
+  {
+    "first_name": "Joshua",
+    "last_name": "Walsh",
+    "email": "joshua.walsh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Scott Fischer"
+  },
+  {
+    "first_name": "Carolyn",
+    "last_name": "Roberts",
+    "email": "carolyn.roberts@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicole Ahmed"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Kato",
+    "email": "wei.kato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "George Muller"
+  },
+  {
+    "first_name": "Benjamin",
+    "last_name": "Lopez",
+    "email": "benjamin.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Robert Keita"
+  },
+  {
+    "first_name": "Jeffrey",
+    "last_name": "Hill",
+    "email": "jeffrey.hill@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Qureshi"
+  },
+  {
+    "first_name": "Timothy",
+    "last_name": "McCarthy",
+    "email": "timothy.mccarthy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald Tanaka"
+  },
+  {
+    "first_name": "Mateo",
+    "last_name": "Wright",
+    "email": "mateo.wright@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brian Diallo"
+  },
+  {
+    "first_name": "Kimberly",
+    "last_name": "Brennan",
+    "email": "kimberly.brennan@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Jerry Fernandez"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Hayashi",
+    "email": "fatima.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicholas Klein"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Gonzalez",
+    "email": "rebecca.gonzalez1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kevin OConnor"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Scott",
+    "email": "dorothy.scott@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sebastian King"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "Young",
+    "email": "raj.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Walter"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Taylor",
+    "email": "sofia.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Torres"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "Asante",
+    "email": "nancy.asante@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Sullivan"
+  },
+  {
+    "first_name": "John",
+    "last_name": "Hayashi",
+    "email": "john.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Asante"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Carter",
+    "email": "jerry.carter1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Robert Walker"
+  },
+  {
+    "first_name": "William",
+    "last_name": "Watanabe",
+    "email": "william.watanabe@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Smith"
+  },
+  {
+    "first_name": "Daniel",
+    "last_name": "Torres",
+    "email": "daniel.torres@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Taro Patel"
+  },
+  {
+    "first_name": "Justin",
+    "last_name": "Khan",
+    "email": "justin.khan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Schulz"
+  },
+  {
+    "first_name": "Scott",
+    "last_name": "Allen",
+    "email": "scott.allen@test.org",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Janet Thomas"
+  },
+  {
+    "first_name": "Gary",
+    "last_name": "McCarthy",
+    "email": "gary.mccarthy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Konig"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Lewis",
+    "email": "larry.lewis@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Ivanov"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Flores",
+    "email": "betty.flores@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Hoffmann"
+  },
+  {
+    "first_name": "Javier",
+    "last_name": "Thompson",
+    "email": "javier.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Ali"
+  },
+  {
+    "first_name": "Ibrahim",
+    "last_name": "Ivanov",
+    "email": "ibrahim.ivanov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Melissa Keita"
+  },
+  {
+    "first_name": "Barbara",
+    "last_name": "White",
+    "email": "barbara.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Raj Ahmed"
+  },
+  {
+    "first_name": "Patricia",
+    "last_name": "Schmidt",
+    "email": "patricia.schmidt@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joshua Neumann"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Adams",
+    "email": "donna.adams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dennis Abdullah"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Nelson",
+    "email": "sandra.nelson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Rossi"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Taylor",
+    "email": "helen.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Thompson"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Park",
+    "email": "dorothy.park@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Boateng"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Lewis",
+    "email": "samuel.lewis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Allen"
+  },
+  {
+    "first_name": "Shirley",
+    "last_name": "Petrov",
+    "email": "shirley.petrov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Thompson"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Schmitz",
+    "email": "michael.schmitz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Eric Okafor"
+  },
+  {
+    "first_name": "William",
+    "last_name": "Rivera",
+    "email": "william.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Hoffmann"
+  },
+  {
+    "first_name": "Dmitri",
+    "last_name": "Sanchez",
+    "email": "dmitri.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Campbell"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "Schmitt",
+    "email": "heather.schmitt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Cynthia Koch"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Khan",
+    "email": "karim.khan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Schroeder"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Jones",
+    "email": "raymond.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donald Doyle"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Rivera",
+    "email": "amir.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Lee"
+  },
+  {
+    "first_name": "Zara",
+    "last_name": "Murphy",
+    "email": "zara.murphy@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Omar Klein"
+  },
+  {
+    "first_name": "Patricia",
+    "last_name": "Ali",
+    "email": "patricia.ali@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Hill"
+  },
+  {
+    "first_name": "Shirley",
+    "last_name": "Ivanov",
+    "email": "shirley.ivanov@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amanda Keita"
+  },
+  {
+    "first_name": "Kevin",
+    "last_name": "Hall",
+    "email": "kevin.hall@mail.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Jacob Schulz"
+  },
+  {
+    "first_name": "Benjamin",
+    "last_name": "Mayer",
+    "email": "benjamin.mayer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Moore"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Robinson",
+    "email": "jerry.robinson@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Omar Kumar"
+  },
+  {
+    "first_name": "Jack",
+    "last_name": "Campbell",
+    "email": "jack.campbell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kathleen Lehmann"
+  },
+  {
+    "first_name": "Yuki",
+    "last_name": "Walter",
+    "email": "yuki.walter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Walter"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Hernandez",
+    "email": "sofia.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria Moore"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "OBrien",
+    "email": "jerry.obrien@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lisa Cisse"
+  },
+  {
+    "first_name": "Samantha",
+    "last_name": "Schmidt",
+    "email": "samantha.schmidt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Helen Lewis"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "McCarthy",
+    "email": "dorothy.mccarthy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lena Boateng"
+  },
+  {
+    "first_name": "Mateo",
+    "last_name": "Brown",
+    "email": "mateo.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Coulibaly"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Martin",
+    "email": "nicole.martin@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Schroeder"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Owusu",
+    "email": "viktor.owusu@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Harris"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Keita",
+    "email": "susan.keita@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Melissa Owusu"
+  },
+  {
+    "first_name": "Amanda",
+    "last_name": "Herrmann",
+    "email": "amanda.herrmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Lewis"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Perez",
+    "email": "nour.perez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "William Traore"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Hassan",
+    "email": "fatima.hassan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie King"
+  },
+  {
+    "first_name": "Aaliya",
+    "last_name": "Boateng",
+    "email": "aaliya.boateng@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Robert Keita"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Wolf",
+    "email": "dennis.wolf@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Jerry Ramirez"
+  },
+  {
+    "first_name": "Priya",
+    "last_name": "Yamamoto",
+    "email": "priya.yamamoto@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brandon Kruger"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Thompson",
+    "email": "sana.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Sato"
+  },
+  {
+    "first_name": "Zara",
+    "last_name": "Wilson",
+    "email": "zara.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Baker"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Ahmed",
+    "email": "kofi.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Elizabeth Mayer"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Neumann",
+    "email": "rami.neumann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Raj Dubois"
+  },
+  {
+    "first_name": "Scott",
+    "last_name": "Clark",
+    "email": "scott.clark@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amir Saito"
+  },
+  {
+    "first_name": "Yuki",
+    "last_name": "Lehmann",
+    "email": "yuki.lehmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Rossi"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Singh",
+    "email": "kwame.singh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donna Young"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Murphy",
+    "email": "nour.murphy@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hamid Weber"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Werner",
+    "email": "diego.werner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Carol Moore"
+  },
+  {
+    "first_name": "Zara",
+    "last_name": "Novak",
+    "email": "zara.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jonathan Garcia"
+  },
+  {
+    "first_name": "Aaliya",
+    "last_name": "Fischer",
+    "email": "aaliya.fischer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lena Kelly"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Werner",
+    "email": "raymond.werner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Herrmann"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Huber",
+    "email": "mark.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jeffrey Richter"
+  },
+  {
+    "first_name": "Daniel",
+    "last_name": "Lewis",
+    "email": "daniel.lewis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "John McCarthy"
+  },
+  {
+    "first_name": "Zara",
+    "last_name": "Chaudhry",
+    "email": "zara.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Ali"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Thompson",
+    "email": "elizabeth.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Walsh"
+  },
+  {
+    "first_name": "Janet",
+    "last_name": "Schmitt",
+    "email": "janet.schmitt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Harris"
+  },
+  {
+    "first_name": "Kimberly",
+    "last_name": "Mayer",
+    "email": "kimberly.mayer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dorothy Okafor"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Kovac",
+    "email": "samuel.kovac@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Hill"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Watanabe",
+    "email": "brenda.watanabe@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Roberts"
+  },
+  {
+    "first_name": "Danya",
+    "last_name": "Adams",
+    "email": "danya.adams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Cynthia Qureshi"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Perez",
+    "email": "tariq.perez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jacob Schulz"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Koch",
+    "email": "kwame.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christopher Scott"
+  },
+  {
+    "first_name": "Jason",
+    "last_name": "Weber",
+    "email": "jason.weber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Nakamura"
+  },
+  {
+    "first_name": "Carol",
+    "last_name": "Garcia",
+    "email": "carol.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth Doyle"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Yamamoto",
+    "email": "raymond.yamamoto@company.net",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Nadia Jackson"
+  },
+  {
+    "first_name": "Gregory",
+    "last_name": "Kato",
+    "email": "gregory.kato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brandon Martin"
+  },
+  {
+    "first_name": "Amara",
+    "last_name": "Thompson",
+    "email": "amara.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Janet Adams"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Suzuki",
+    "email": "taro.suzuki@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Campbell"
+  },
+  {
+    "first_name": "Anna",
+    "last_name": "Braun",
+    "email": "anna.braun@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jacob Hayashi"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "Kobayashi",
+    "email": "nancy.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Helen Wilson"
+  },
+  {
+    "first_name": "Sebastian",
+    "last_name": "Rodriguez",
+    "email": "sebastian.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Hernandez"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Nakamura",
+    "email": "tariq.nakamura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Ito"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Ramirez",
+    "email": "patrick.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Perez"
+  },
+  {
+    "first_name": "Gregory",
+    "last_name": "Hernandez",
+    "email": "gregory.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Ryan"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Adams",
+    "email": "rebecca.adams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jacob Adams"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Koch",
+    "email": "samuel.koch@example.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Yusuf Flores"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Roberts",
+    "email": "jacob.roberts@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria King"
+  },
+  {
+    "first_name": "Jeffrey",
+    "last_name": "Hassan",
+    "email": "jeffrey.hassan@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amara Yamamoto"
+  },
+  {
+    "first_name": "Ibrahim",
+    "last_name": "Gonzalez",
+    "email": "ibrahim.gonzalez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Fernandez"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Schroeder",
+    "email": "kofi.schroeder@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kathleen Boateng"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Allen",
+    "email": "brenda.allen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christopher Kobayashi"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Doyle",
+    "email": "sarah.doyle@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Stephanie Kruger"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Novak",
+    "email": "samuel.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sofia Schmidt"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "Ito",
+    "email": "raj.ito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Lewis"
+  },
+  {
+    "first_name": "Anna",
+    "last_name": "Ryan",
+    "email": "anna.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sana Malik"
+  },
+  {
+    "first_name": "Paul",
+    "last_name": "Novak",
+    "email": "paul.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Robert Koga"
+  },
+  {
+    "first_name": "Ashley",
+    "last_name": "Mensah",
+    "email": "ashley.mensah@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Keita"
+  },
+  {
+    "first_name": "Kimberly",
+    "last_name": "Muller",
+    "email": "kimberly.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Sato"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Ito",
+    "email": "kofi.ito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jacob Adams"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Walker",
+    "email": "mark.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Martin"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Rahman",
+    "email": "steven.rahman@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Alexander Clark"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Hassan",
+    "email": "raymond.hassan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Larry Campbell"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Sullivan",
+    "email": "amir.sullivan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Hartmann"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Richter",
+    "email": "dorothy.richter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Rahman"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Martinez",
+    "email": "patrick.martinez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Baker"
+  },
+  {
+    "first_name": "Amara",
+    "last_name": "Lehmann",
+    "email": "amara.lehmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dennis Perez"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Watanabe",
+    "email": "karim.watanabe@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Walter"
+  },
+  {
+    "first_name": "David",
+    "last_name": "Rahman",
+    "email": "david.rahman@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Melissa Keita"
+  },
+  {
+    "first_name": "Priya",
+    "last_name": "Nelson",
+    "email": "priya.nelson@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Betty Kruger"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Campbell",
+    "email": "larry.campbell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Kato"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "OBrien",
+    "email": "steven.obrien@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dmitri Walker"
+  },
+  {
+    "first_name": "Jonathan",
+    "last_name": "Chaudhry",
+    "email": "jonathan.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christopher Robinson"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Schroeder",
+    "email": "aisha.schroeder@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Alexander Clark"
+  },
+  {
+    "first_name": "Danya",
+    "last_name": "King",
+    "email": "danya.king1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Daniel Hassan"
+  },
+  {
+    "first_name": "Margaret",
+    "last_name": "Schmitz",
+    "email": "margaret.schmitz@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Jason Lehmann"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Sullivan",
+    "email": "taro.sullivan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Doyle"
+  },
+  {
+    "first_name": "Melissa",
+    "last_name": "Park",
+    "email": "melissa.park@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Margaret Ahmed"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Malik",
+    "email": "taro.malik@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Daniel Hassan"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Meyer",
+    "email": "emily.meyer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Allen"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Mayer",
+    "email": "raymond.mayer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kevin Adams"
+  },
+  {
+    "first_name": "Richard",
+    "last_name": "Schulz",
+    "email": "richard.schulz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Qureshi"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Suzuki",
+    "email": "nicole.suzuki@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Ryan"
+  },
+  {
+    "first_name": "Mary",
+    "last_name": "Wright",
+    "email": "mary.wright@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Katherine Wagner"
+  },
+  {
+    "first_name": "Jessica",
+    "last_name": "Wagner",
+    "email": "jessica.wagner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Barbara Walsh"
+  },
+  {
+    "first_name": "Mateo",
+    "last_name": "Hayashi",
+    "email": "mateo.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Meyer"
+  },
+  {
+    "first_name": "John",
+    "last_name": "Roberts",
+    "email": "john.roberts@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Kumar"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Coulibaly",
+    "email": "sofia.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Muller"
+  },
+  {
+    "first_name": "Edward",
+    "last_name": "Brennan",
+    "email": "edward.brennan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Aaliya Meier"
+  },
+  {
+    "first_name": "Amy",
+    "last_name": "Nakamura",
+    "email": "amy.nakamura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jacob Nakamura"
+  },
+  {
+    "first_name": "Mei",
+    "last_name": "Young",
+    "email": "mei.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Hill"
+  },
+  {
+    "first_name": "Stephanie",
+    "last_name": "Mayer",
+    "email": "stephanie.mayer@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Justin Mohammed"
+  },
+  {
+    "first_name": "Pamela",
+    "last_name": "Torres",
+    "email": "pamela.torres@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah Campbell"
+  },
+  {
+    "first_name": "Samantha",
+    "last_name": "Hartmann",
+    "email": "samantha.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sofia Becker"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "Dubois",
+    "email": "raj.dubois@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Raj Carter"
+  },
+  {
+    "first_name": "Hamid",
+    "last_name": "Walsh",
+    "email": "hamid.walsh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria King"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Baker",
+    "email": "fatima.baker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amir Saito"
+  },
+  {
+    "first_name": "Emma",
+    "last_name": "Kato",
+    "email": "emma.kato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Fernandez"
+  },
+  {
+    "first_name": "Sharon",
+    "last_name": "Campbell",
+    "email": "sharon.campbell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Larry Campbell"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Qureshi",
+    "email": "rami.qureshi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David OBrien"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Ali",
+    "email": "linda.ali@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Hamid Braun"
+  },
+  {
+    "first_name": "Mary",
+    "last_name": "Sullivan",
+    "email": "mary.sullivan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dorothy Chaudhry"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Mohammed",
+    "email": "christopher.mohammed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Nelson"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Walter",
+    "email": "helen.walter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Ivanov"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "OConnor",
+    "email": "nicole.oconnor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Ahmed"
+  },
+  {
+    "first_name": "Jessica",
+    "last_name": "Lehmann",
+    "email": "jessica.lehmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Muller"
+  },
+  {
+    "first_name": "Brian",
+    "last_name": "Muller",
+    "email": "brian.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Diallo"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Nguyen",
+    "email": "elena.nguyen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anna Dubois"
+  },
+  {
+    "first_name": "Danya",
+    "last_name": "King",
+    "email": "danya.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Rodriguez"
+  },
+  {
+    "first_name": "Nadia",
+    "last_name": "Rivera",
+    "email": "nadia.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah McCarthy"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Braun",
+    "email": "amir.braun@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rachel Schmidt"
+  },
+  {
+    "first_name": "David",
+    "last_name": "Singh",
+    "email": "david.singh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Elena Thomas"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Thomas",
+    "email": "steven.thomas@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Wei Owusu"
+  },
+  {
+    "first_name": "Robert",
+    "last_name": "Torres",
+    "email": "robert.torres@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jacob Diallo"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Rahman",
+    "email": "katherine.rahman@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Mensah"
+  },
+  {
+    "first_name": "Anna",
+    "last_name": "Muller",
+    "email": "anna.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy King"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Smith",
+    "email": "raymond.smith@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Deborah Green"
+  },
+  {
+    "first_name": "Gary",
+    "last_name": "Davis",
+    "email": "gary.davis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Watanabe"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Kato",
+    "email": "michael.kato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Meier"
+  },
+  {
+    "first_name": "Gregory",
+    "last_name": "Doyle",
+    "email": "gregory.doyle1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lena Kelly"
+  },
+  {
+    "first_name": "Paul",
+    "last_name": "Malik",
+    "email": "paul.malik@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Fernandez"
+  },
+  {
+    "first_name": "Gregory",
+    "last_name": "Nelson",
+    "email": "gregory.nelson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Yamamoto"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Roberts",
+    "email": "sarah.roberts@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Patel"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "Traore",
+    "email": "lena.traore@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Nicholas Walter"
+  },
+  {
+    "first_name": "Stephen",
+    "last_name": "OBrien",
+    "email": "stephen.obrien@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Carol Fischer"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Young",
+    "email": "emily.young@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Angela Kimura"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Gonzalez",
+    "email": "wei.gonzalez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Schmitz"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Kovac",
+    "email": "aisha.kovac@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Raj Carter"
+  },
+  {
+    "first_name": "Brandon",
+    "last_name": "Huber",
+    "email": "brandon.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Deborah Hill"
+  },
+  {
+    "first_name": "Isabela",
+    "last_name": "Khan",
+    "email": "isabela.khan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Raymond Neumann"
+  },
+  {
+    "first_name": "Jessica",
+    "last_name": "Chaudhry",
+    "email": "jessica.chaudhry@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ashley Walsh"
+  },
+  {
+    "first_name": "Dmitri",
+    "last_name": "Lehmann",
+    "email": "dmitri.lehmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Adams"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Baker",
+    "email": "nour.baker@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michelle Koga"
+  },
+  {
+    "first_name": "Omar",
+    "last_name": "Huber",
+    "email": "omar.huber@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Timothy Lange"
+  },
+  {
+    "first_name": "Jack",
+    "last_name": "Richter",
+    "email": "jack.richter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Fernandez"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Doyle",
+    "email": "deborah.doyle@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Keita"
+  },
+  {
+    "first_name": "Gary",
+    "last_name": "Lopez",
+    "email": "gary.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas OConnor"
+  },
+  {
+    "first_name": "Daniel",
+    "last_name": "Singh",
+    "email": "daniel.singh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Traore"
+  },
+  {
+    "first_name": "Jessica",
+    "last_name": "Huber",
+    "email": "jessica.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Rossi"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Tanaka",
+    "email": "elizabeth.tanaka@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Murphy"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Garcia",
+    "email": "thomas.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Tariq Kimura"
+  },
+  {
+    "first_name": "Scott",
+    "last_name": "Zimmermann",
+    "email": "scott.zimmermann@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Raymond Doyle"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Davis",
+    "email": "brenda.davis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Campbell"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Rossi",
+    "email": "karen.rossi@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Janet Sullivan"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Schmitt",
+    "email": "brenda.schmitt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Tariq Tanaka"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Miller",
+    "email": "kwame.miller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Keita"
+  },
+  {
+    "first_name": "James",
+    "last_name": "Ahmed",
+    "email": "james.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joseph Dubois"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Sharma",
+    "email": "sana.sharma@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hana Becker"
+  },
+  {
+    "first_name": "Brenda",
+    "last_name": "Weber",
+    "email": "brenda.weber@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Samantha Singh"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Hassan",
+    "email": "rebecca.hassan@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Lisa Cisse"
+  },
+  {
+    "first_name": "William",
+    "last_name": "Scott",
+    "email": "william.scott@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Moore"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Watanabe",
+    "email": "rebecca.watanabe@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Camila Cisse"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Fischer",
+    "email": "katherine.fischer@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Frank Krause"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Suzuki",
+    "email": "rebecca.suzuki@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Saito"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "Brown",
+    "email": "andrew.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Elizabeth Mayer"
+  },
+  {
+    "first_name": "Benjamin",
+    "last_name": "Carter",
+    "email": "benjamin.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Heather Harris"
+  },
+  {
+    "first_name": "Brandon",
+    "last_name": "Wolf",
+    "email": "brandon.wolf@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Sebastian Schulz"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Asante",
+    "email": "samuel.asante@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Helen Meier"
+  },
+  {
+    "first_name": "Nadia",
+    "last_name": "Klein",
+    "email": "nadia.klein@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Sharma"
+  },
+  {
+    "first_name": "Donald",
+    "last_name": "Rossi",
+    "email": "donald.rossi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Nelson"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Taylor",
+    "email": "aisha.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Coulibaly"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Torres",
+    "email": "linda.torres@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jennifer Schmidt"
+  },
+  {
+    "first_name": "David",
+    "last_name": "Ryan",
+    "email": "david.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Rossi"
+  },
+  {
+    "first_name": "Rachel",
+    "last_name": "Park",
+    "email": "rachel.park@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Janet Toure"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Allen",
+    "email": "thomas.allen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Rossi"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Mitchell",
+    "email": "susan.mitchell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Huber"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Wright",
+    "email": "rami.wright@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kathleen Lehmann"
+  },
+  {
+    "first_name": "Carolyn",
+    "last_name": "Braun",
+    "email": "carolyn.braun@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Aaliya Traore"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Lewis",
+    "email": "lisa.lewis@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Larry Campbell"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Coulibaly",
+    "email": "kofi.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah Patel"
+  },
+  {
+    "first_name": "James",
+    "last_name": "Nguyen",
+    "email": "james.nguyen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Fernandez"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Thompson",
+    "email": "dennis.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Hernandez"
+  },
+  {
+    "first_name": "Layla",
+    "last_name": "Owusu",
+    "email": "layla.owusu@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Konig"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Chaudhry",
+    "email": "katherine.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Carter"
+  },
+  {
+    "first_name": "Shirley",
+    "last_name": "Green",
+    "email": "shirley.green@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patricia Krause"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Roberts",
+    "email": "thomas.roberts@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Walker"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Lewis",
+    "email": "jacob.lewis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Rivera"
+  },
+  {
+    "first_name": "Paul",
+    "last_name": "Abdullah",
+    "email": "paul.abdullah@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Young"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Doyle",
+    "email": "helen.doyle@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Ivanov"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Coulibaly",
+    "email": "rebecca.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Ibrahim Thompson"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Krause",
+    "email": "jerry.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Qureshi"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Koch",
+    "email": "steven.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Timothy White"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Wolf",
+    "email": "lisa.wolf@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ryan Chaudhry"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Walter",
+    "email": "amir.walter@company.net",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Brown"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "Hernandez",
+    "email": "nancy.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Gonzalez"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Wright",
+    "email": "diego.wright@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Cynthia Diallo"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Keita",
+    "email": "tariq.keita@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Timothy White"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Tanaka",
+    "email": "elena.tanaka@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Rossi"
+  },
+  {
+    "first_name": "Alexander",
+    "last_name": "King",
+    "email": "alexander.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Yamamoto"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Qureshi",
+    "email": "eric.qureshi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Herrmann"
+  },
+  {
+    "first_name": "Robert",
+    "last_name": "Novak",
+    "email": "robert.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah Patel"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Kumar",
+    "email": "michael.kumar@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Kobayashi"
+  },
+  {
+    "first_name": "Janet",
+    "last_name": "Kato",
+    "email": "janet.kato@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Susan Koga"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Taylor",
+    "email": "lisa.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Fernandez"
+  },
+  {
+    "first_name": "Pamela",
+    "last_name": "Adams",
+    "email": "pamela.adams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Qureshi"
+  },
+  {
+    "first_name": "Charles",
+    "last_name": "Krause",
+    "email": "charles.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Carol Weber"
+  },
+  {
+    "first_name": "William",
+    "last_name": "Hartmann",
+    "email": "william.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brian Diallo"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Young",
+    "email": "diego.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Doyle"
+  },
+  {
+    "first_name": "Emma",
+    "last_name": "Ahmed",
+    "email": "emma.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Anthony Sharma"
+  },
+  {
+    "first_name": "James",
+    "last_name": "Tanaka",
+    "email": "james.tanaka@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth White"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Meier",
+    "email": "rami.meier@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Abdullah"
+  },
+  {
+    "first_name": "Margaret",
+    "last_name": "Neumann",
+    "email": "margaret.neumann@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Ashley Walsh"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Wagner",
+    "email": "diego.wagner@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Brenda Schmidt"
+  },
+  {
+    "first_name": "Maria",
+    "last_name": "Kovac",
+    "email": "maria.kovac@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Priya Malik"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Hall",
+    "email": "mark.hall@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Sanchez"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Schmitt",
+    "email": "christine.schmitt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Kruger"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "White",
+    "email": "heather.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon White"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Adams",
+    "email": "eric.adams@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kimberly Smith"
+  },
+  {
+    "first_name": "Charles",
+    "last_name": "Martinez",
+    "email": "charles.martinez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Gonzalez"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Young",
+    "email": "helen.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Lewis"
+  },
+  {
+    "first_name": "Kathleen",
+    "last_name": "Yamamoto",
+    "email": "kathleen.yamamoto@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Carter"
+  },
+  {
+    "first_name": "Mei",
+    "last_name": "Hayashi",
+    "email": "mei.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Janet Adams"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Doyle",
+    "email": "sofia.doyle@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Gonzalez"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Suzuki",
+    "email": "nour.suzuki@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Alexander Clark"
+  },
+  {
+    "first_name": "Benjamin",
+    "last_name": "Rodriguez",
+    "email": "benjamin.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Moore"
+  },
+  {
+    "first_name": "Ann",
+    "last_name": "Davis",
+    "email": "ann.davis@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Weber"
+  },
+  {
+    "first_name": "Andrew",
+    "last_name": "King",
+    "email": "andrew.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Camila Lee"
+  },
+  {
+    "first_name": "John",
+    "last_name": "Harris",
+    "email": "john.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Taylor"
+  },
+  {
+    "first_name": "Camila",
+    "last_name": "Jones",
+    "email": "camila.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Yamamoto"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Rodriguez",
+    "email": "betty.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Rivera"
+  },
+  {
+    "first_name": "Anna",
+    "last_name": "Coulibaly",
+    "email": "anna.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dennis Perez"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Koch",
+    "email": "karen.koch@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sebastian King"
+  },
+  {
+    "first_name": "Frank",
+    "last_name": "Thompson",
+    "email": "frank.thompson@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Samuel Kovac"
+  },
+  {
+    "first_name": "Sebastian",
+    "last_name": "Okafor",
+    "email": "sebastian.okafor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Herrmann"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Hayashi",
+    "email": "wei.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald OConnor"
+  },
+  {
+    "first_name": "Anthony",
+    "last_name": "Hayashi",
+    "email": "anthony.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephanie Schulz"
+  },
+  {
+    "first_name": "Kimberly",
+    "last_name": "Herrmann",
+    "email": "kimberly.herrmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Owusu"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Mitchell",
+    "email": "diego.mitchell@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Fischer"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Walter",
+    "email": "raymond.walter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emily Mitchell"
+  },
+  {
+    "first_name": "Laura",
+    "last_name": "Garcia",
+    "email": "laura.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Sanchez"
+  },
+  {
+    "first_name": "Ashley",
+    "last_name": "Scott",
+    "email": "ashley.scott@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicholas Murphy"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Watanabe",
+    "email": "dorothy.watanabe@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Rodriguez"
+  },
+  {
+    "first_name": "Omar",
+    "last_name": "Schmitz",
+    "email": "omar.schmitz@acme.co",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Patrick Schwarz"
+  },
+  {
+    "first_name": "Danya",
+    "last_name": "Novak",
+    "email": "danya.novak@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Scott Ahmed"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Muller",
+    "email": "helen.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Meier"
+  },
+  {
+    "first_name": "Amanda",
+    "last_name": "Wilson",
+    "email": "amanda.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amanda Sullivan"
+  },
+  {
+    "first_name": "Robert",
+    "last_name": "Ali",
+    "email": "robert.ali@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Susan Koga"
+  },
+  {
+    "first_name": "Kofi",
+    "last_name": "Dubois",
+    "email": "kofi.dubois@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kimberly Mitchell"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "Johnson",
+    "email": "lena.johnson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Walsh"
+  },
+  {
+    "first_name": "Carol",
+    "last_name": "Walker",
+    "email": "carol.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Allen"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Johnson",
+    "email": "christopher.johnson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima White"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Kovac",
+    "email": "rami.kovac@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Eric Okafor"
+  },
+  {
+    "first_name": "Kimberly",
+    "last_name": "Thompson",
+    "email": "kimberly.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Muller"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Hartmann",
+    "email": "susan.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Coulibaly"
+  },
+  {
+    "first_name": "Sharon",
+    "last_name": "Young",
+    "email": "sharon.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sofia Kumar"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Kato",
+    "email": "christopher.kato@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Patricia Richter"
+  },
+  {
+    "first_name": "Amara",
+    "last_name": "Meyer",
+    "email": "amara.meyer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Thompson"
+  },
+  {
+    "first_name": "Eric",
+    "last_name": "Sullivan",
+    "email": "eric.sullivan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brian Walter"
+  },
+  {
+    "first_name": "Angela",
+    "last_name": "Krause",
+    "email": "angela.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Yusuf Koch"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Kimura",
+    "email": "viktor.kimura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lena Boateng"
+  },
+  {
+    "first_name": "Rami",
+    "last_name": "Scott",
+    "email": "rami.scott@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Novak"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Brown",
+    "email": "betty.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michael Garcia"
+  },
+  {
+    "first_name": "Ashley",
+    "last_name": "Perez",
+    "email": "ashley.perez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald Petrov"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "Fernandez",
+    "email": "lena.fernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth King"
+  },
+  {
+    "first_name": "Laura",
+    "last_name": "Rodriguez",
+    "email": "laura.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Pamela Mensah"
+  },
+  {
+    "first_name": "Joseph",
+    "last_name": "Khan",
+    "email": "joseph.khan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Cynthia Qureshi"
+  },
+  {
+    "first_name": "Raj",
+    "last_name": "Rahman",
+    "email": "raj.rahman@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Braun"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Doyle",
+    "email": "karen.doyle@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donald Kovac"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Okafor",
+    "email": "nicole.okafor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Edward Ito"
+  },
+  {
+    "first_name": "Jonathan",
+    "last_name": "Walsh",
+    "email": "jonathan.walsh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth Schmitz"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Schroeder",
+    "email": "emily.schroeder@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brenda Ahmed"
+  },
+  {
+    "first_name": "Brandon",
+    "last_name": "Keita",
+    "email": "brandon.keita@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Barbara Qureshi"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Patel",
+    "email": "karim.patel@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Layla Hoffmann"
+  },
+  {
+    "first_name": "Steven",
+    "last_name": "Ryan",
+    "email": "steven.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christopher Gonzalez"
+  },
+  {
+    "first_name": "Robert",
+    "last_name": "Carter",
+    "email": "robert.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Rossi"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Richter",
+    "email": "yusuf.richter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Walsh"
+  },
+  {
+    "first_name": "Charles",
+    "last_name": "Harris",
+    "email": "charles.harris@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Margaret Hoffmann"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Singh",
+    "email": "yusuf.singh@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah McCarthy"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Gonzalez",
+    "email": "rebecca.gonzalez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Ahmed"
+  },
+  {
+    "first_name": "Camila",
+    "last_name": "Ahmed",
+    "email": "camila.ahmed@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Aisha Richter"
+  },
+  {
+    "first_name": "Carol",
+    "last_name": "Chaudhry",
+    "email": "carol.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Rivera"
+  },
+  {
+    "first_name": "Zara",
+    "last_name": "Kimura",
+    "email": "zara.kimura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Rivera"
+  },
+  {
+    "first_name": "Stephanie",
+    "last_name": "Garcia",
+    "email": "stephanie.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Herrmann"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Patel",
+    "email": "jerry.patel@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Fernandez"
+  },
+  {
+    "first_name": "Angela",
+    "last_name": "Rivera",
+    "email": "angela.rivera@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Keita"
+  },
+  {
+    "first_name": "Margaret",
+    "last_name": "Ahmed",
+    "email": "margaret.ahmed@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Torres"
+  },
+  {
+    "first_name": "Ryan",
+    "last_name": "Sanchez",
+    "email": "ryan.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gary Ivanov"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Schwarz",
+    "email": "linda.schwarz@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Rodriguez"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Ahmed",
+    "email": "rebecca.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Edward Ito"
+  },
+  {
+    "first_name": "Richard",
+    "last_name": "Carter",
+    "email": "richard.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Ivanov"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Kovac",
+    "email": "larry.kovac@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Emma Malik"
+  },
+  {
+    "first_name": "Taro",
+    "last_name": "Young",
+    "email": "taro.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Patrick Clark"
+  },
+  {
+    "first_name": "Stephanie",
+    "last_name": "Koga",
+    "email": "stephanie.koga@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Melissa Suzuki"
+  },
+  {
+    "first_name": "Edward",
+    "last_name": "Klein",
+    "email": "edward.klein@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amanda Nguyen"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Kobayashi",
+    "email": "linda.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Wolf"
+  },
+  {
+    "first_name": "Debra",
+    "last_name": "Lee",
+    "email": "debra.lee@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Traore"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Wolf",
+    "email": "nicole.wolf@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Melissa Owusu"
+  },
+  {
+    "first_name": "Kenneth",
+    "last_name": "Flores",
+    "email": "kenneth.flores@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Flores"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Herrmann",
+    "email": "viktor.herrmann@example.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Layla Coulibaly"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Ahmed",
+    "email": "yusuf.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Ito"
+  },
+  {
+    "first_name": "Ashley",
+    "last_name": "Martin",
+    "email": "ashley.martin1@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Muller"
+  },
+  {
+    "first_name": "James",
+    "last_name": "Jackson",
+    "email": "james.jackson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Martinez"
+  },
+  {
+    "first_name": "Brian",
+    "last_name": "Ahmed",
+    "email": "brian.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Lehmann"
+  },
+  {
+    "first_name": "Jonathan",
+    "last_name": "Johnson",
+    "email": "jonathan.johnson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nia Ivanov"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Brown",
+    "email": "dorothy.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Coulibaly"
+  },
+  {
+    "first_name": "Ann",
+    "last_name": "Khan",
+    "email": "ann.khan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Green"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Davis",
+    "email": "emily.davis1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "William Traore"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Petrov",
+    "email": "kwame.petrov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Perez"
+  },
+  {
+    "first_name": "Samuel",
+    "last_name": "Owusu",
+    "email": "samuel.owusu@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mateo Nelson"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Hayashi",
+    "email": "katherine.hayashi@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Rami Robinson"
+  },
+  {
+    "first_name": "Michelle",
+    "last_name": "Clark",
+    "email": "michelle.clark@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ibrahim Mohammed"
+  },
+  {
+    "first_name": "Katherine",
+    "last_name": "Thompson",
+    "email": "katherine.thompson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brandon Kruger"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Schulz",
+    "email": "jacob.schulz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Roberts"
+  },
+  {
+    "first_name": "Helen",
+    "last_name": "Boateng",
+    "email": "helen.boateng@acme.co",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Richter"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Flores",
+    "email": "larry.flores@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Mayer"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Hayashi",
+    "email": "michael.hayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Koga"
+  },
+  {
+    "first_name": "Jennifer",
+    "last_name": "Hartmann",
+    "email": "jennifer.hartmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Krause"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Martin",
+    "email": "mark.martin@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Perez"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Tanaka",
+    "email": "michael.tanaka@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Debra Hartmann"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Jones",
+    "email": "yusuf.jones@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sandra Koga"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Perez",
+    "email": "elizabeth.perez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Martinez"
+  },
+  {
+    "first_name": "Javier",
+    "last_name": "Brennan",
+    "email": "javier.brennan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Alexander Baker"
+  },
+  {
+    "first_name": "Nour",
+    "last_name": "Wright",
+    "email": "nour.wright@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Khan"
+  },
+  {
+    "first_name": "Daniel",
+    "last_name": "King",
+    "email": "daniel.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sofia Schmidt"
+  },
+  {
+    "first_name": "Michelle",
+    "last_name": "Kimura",
+    "email": "michelle.kimura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Rivera"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Richter",
+    "email": "mark.richter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Shirley Hartmann"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Wilson",
+    "email": "jerry.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew Saito"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Rossi",
+    "email": "susan.rossi@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Sarah Campbell"
+  },
+  {
+    "first_name": "Christopher",
+    "last_name": "Taylor",
+    "email": "christopher.taylor@example.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Helen Park"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Krause",
+    "email": "fatima.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew Tanaka"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Watanabe",
+    "email": "yusuf.watanabe@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jennifer Schmidt"
+  },
+  {
+    "first_name": "Jacob",
+    "last_name": "Flores",
+    "email": "jacob.flores@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew Schroeder"
+  },
+  {
+    "first_name": "Kenneth",
+    "last_name": "Jones",
+    "email": "kenneth.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donald Murphy"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "Miller",
+    "email": "heather.miller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Keita"
+  },
+  {
+    "first_name": "Ann",
+    "last_name": "Coulibaly",
+    "email": "ann.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Meyer"
+  },
+  {
+    "first_name": "Hamid",
+    "last_name": "Thomas",
+    "email": "hamid.thomas@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Braun"
+  },
+  {
+    "first_name": "Jason",
+    "last_name": "Wolf",
+    "email": "jason.wolf@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Diego Brown"
+  },
+  {
+    "first_name": "Heather",
+    "last_name": "Schwarz",
+    "email": "heather.schwarz@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour White"
+  },
+  {
+    "first_name": "Danya",
+    "last_name": "Muller",
+    "email": "danya.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Elena Lewis"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Lopez",
+    "email": "sarah.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Torres"
+  },
+  {
+    "first_name": "Scott",
+    "last_name": "Suzuki",
+    "email": "scott.suzuki@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nicole Torres"
+  },
+  {
+    "first_name": "Yuki",
+    "last_name": "Hayashi",
+    "email": "yuki.hayashi@provider.io",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Hartmann"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Chaudhry",
+    "email": "lisa.chaudhry@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mary Schwarz"
+  },
+  {
+    "first_name": "Camila",
+    "last_name": "Weber",
+    "email": "camila.weber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Meyer"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Walter",
+    "email": "sarah.walter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jason Fernandez"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Hernandez",
+    "email": "kwame.hernandez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Khan"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "Ali",
+    "email": "viktor.ali@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Laura Brennan"
+  },
+  {
+    "first_name": "Gary",
+    "last_name": "Kobayashi",
+    "email": "gary.kobayashi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Brian Diallo"
+  },
+  {
+    "first_name": "Richard",
+    "last_name": "Nguyen",
+    "email": "richard.nguyen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Doyle"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Nguyen",
+    "email": "aisha.nguyen@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Wei Rivera"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Brown",
+    "email": "lisa.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth White"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Rivera",
+    "email": "elena.rivera@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joseph Kimura"
+  },
+  {
+    "first_name": "Gregory",
+    "last_name": "Mohammed",
+    "email": "gregory.mohammed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Daniel Hassan"
+  },
+  {
+    "first_name": "Jonathan",
+    "last_name": "Meyer",
+    "email": "jonathan.meyer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Kato"
+  },
+  {
+    "first_name": "Benjamin",
+    "last_name": "Young",
+    "email": "benjamin.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Danya Rossi"
+  },
+  {
+    "first_name": "Shirley",
+    "last_name": "Ramirez",
+    "email": "shirley.ramirez@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sarah Wright"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Schmitt",
+    "email": "deborah.schmitt@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Meyer"
+  },
+  {
+    "first_name": "Ibrahim",
+    "last_name": "OConnor",
+    "email": "ibrahim.oconnor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Laura Nelson"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Richter",
+    "email": "sandra.richter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Tariq Malik"
+  },
+  {
+    "first_name": "Diego",
+    "last_name": "Garcia",
+    "email": "diego.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Linda Ivanov"
+  },
+  {
+    "first_name": "Camila",
+    "last_name": "Rodriguez",
+    "email": "camila.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Danya Novak"
+  },
+  {
+    "first_name": "Viktor",
+    "last_name": "King",
+    "email": "viktor.king@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michelle Koga"
+  },
+  {
+    "first_name": "Emma",
+    "last_name": "Becker",
+    "email": "emma.becker@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Richard Dubois"
+  },
+  {
+    "first_name": "David",
+    "last_name": "Schroeder",
+    "email": "david.schroeder@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Charles Nguyen"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Murphy",
+    "email": "elizabeth.murphy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nia Green"
+  },
+  {
+    "first_name": "Anthony",
+    "last_name": "Nelson",
+    "email": "anthony.nelson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Sato"
+  },
+  {
+    "first_name": "Melissa",
+    "last_name": "Robinson",
+    "email": "melissa.robinson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ryan Werner"
+  },
+  {
+    "first_name": "Mark",
+    "last_name": "Thomas",
+    "email": "mark.thomas@provider.io",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Huber"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Keita",
+    "email": "susan.keita@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sebastian Becker"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Walker",
+    "email": "thomas.walker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Rossi"
+  },
+  {
+    "first_name": "David",
+    "last_name": "Herrmann",
+    "email": "david.herrmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Herrmann"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "McCarthy",
+    "email": "karen.mccarthy1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Barbara Mayer"
+  },
+  {
+    "first_name": "Jerry",
+    "last_name": "Fischer",
+    "email": "jerry.fischer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kevin Adams"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Coulibaly",
+    "email": "betty.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Angela Clark"
+  },
+  {
+    "first_name": "Ann",
+    "last_name": "Ahmed",
+    "email": "ann.ahmed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew Wilson"
+  },
+  {
+    "first_name": "Isabela",
+    "last_name": "Carter",
+    "email": "isabela.carter@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Sofia Flores"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Sheikh",
+    "email": "emily.sheikh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Roberts"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Rossi",
+    "email": "sandra.rossi@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Mayer"
+  },
+  {
+    "first_name": "Kevin",
+    "last_name": "Wolf",
+    "email": "kevin.wolf@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Cynthia Diallo"
+  },
+  {
+    "first_name": "Kathleen",
+    "last_name": "Asante",
+    "email": "kathleen.asante@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Michelle Koga"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Keita",
+    "email": "christine.keita@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sebastian Asante"
+  },
+  {
+    "first_name": "Hamid",
+    "last_name": "Krause",
+    "email": "hamid.krause@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hamid Roberts"
+  },
+  {
+    "first_name": "Yuki",
+    "last_name": "Petrov",
+    "email": "yuki.petrov@test.org",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Layla Coulibaly"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Huber",
+    "email": "linda.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Lehmann"
+  },
+  {
+    "first_name": "Jack",
+    "last_name": "Roberts",
+    "email": "jack.roberts@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Moore"
+  },
+  {
+    "first_name": "Pamela",
+    "last_name": "Coulibaly",
+    "email": "pamela.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Keita"
+  },
+  {
+    "first_name": "Michelle",
+    "last_name": "Young",
+    "email": "michelle.young@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Karen Mayer"
+  },
+  {
+    "first_name": "Javier",
+    "last_name": "Patel",
+    "email": "javier.patel@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jeffrey Kruger"
+  },
+  {
+    "first_name": "Betty",
+    "last_name": "Wolf",
+    "email": "betty.wolf@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Deborah Green"
+  },
+  {
+    "first_name": "Sarah",
+    "last_name": "Garcia",
+    "email": "sarah.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Elena Lewis"
+  },
+  {
+    "first_name": "Matthew",
+    "last_name": "Krause",
+    "email": "matthew.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jerry Hartmann"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Toure",
+    "email": "raymond.toure@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sharon Doyle"
+  },
+  {
+    "first_name": "Debra",
+    "last_name": "Green",
+    "email": "debra.green@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Brenda Sanchez"
+  },
+  {
+    "first_name": "Tariq",
+    "last_name": "Kelly",
+    "email": "tariq.kelly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Aaliya Traore"
+  },
+  {
+    "first_name": "Donna",
+    "last_name": "Petrov",
+    "email": "donna.petrov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Nelson"
+  },
+  {
+    "first_name": "Charles",
+    "last_name": "Brown",
+    "email": "charles.brown@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Priya Flores"
+  },
+  {
+    "first_name": "Anthony",
+    "last_name": "Nelson",
+    "email": "anthony.nelson1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "David Huber"
+  },
+  {
+    "first_name": "Ronald",
+    "last_name": "Huber",
+    "email": "ronald.huber@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Mayer"
+  },
+  {
+    "first_name": "Charles",
+    "last_name": "Yamamoto",
+    "email": "charles.yamamoto@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Richter"
+  },
+  {
+    "first_name": "Omar",
+    "last_name": "Smith",
+    "email": "omar.smith@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Gary Okafor"
+  },
+  {
+    "first_name": "Justin",
+    "last_name": "Cisse",
+    "email": "justin.cisse@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Huber"
+  },
+  {
+    "first_name": "Lisa",
+    "last_name": "Ivanov",
+    "email": "lisa.ivanov@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Lange"
+  },
+  {
+    "first_name": "Rebecca",
+    "last_name": "Weber",
+    "email": "rebecca.weber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Betty Lange"
+  },
+  {
+    "first_name": "Amara",
+    "last_name": "Thompson",
+    "email": "amara.thompson1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Danya Schroeder"
+  },
+  {
+    "first_name": "Nia",
+    "last_name": "Patel",
+    "email": "nia.patel@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hana Rossi"
+  },
+  {
+    "first_name": "Mei",
+    "last_name": "Klein",
+    "email": "mei.klein@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kathleen Boateng"
+  },
+  {
+    "first_name": "Patrick",
+    "last_name": "Owusu",
+    "email": "patrick.owusu@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Anthony Singh"
+  },
+  {
+    "first_name": "Amir",
+    "last_name": "Carter",
+    "email": "amir.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Andrew Saito"
+  },
+  {
+    "first_name": "Sofia",
+    "last_name": "Klein",
+    "email": "sofia.klein@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Fatima Hartmann"
+  },
+  {
+    "first_name": "Emma",
+    "last_name": "Carter",
+    "email": "emma.carter@acme.co",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Koga"
+  },
+  {
+    "first_name": "Elizabeth",
+    "last_name": "Johnson",
+    "email": "elizabeth.johnson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joshua Torres"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Schwarz",
+    "email": "elena.schwarz@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Jerry Weber"
+  },
+  {
+    "first_name": "Edward",
+    "last_name": "Muller",
+    "email": "edward.muller@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Ahmed"
+  },
+  {
+    "first_name": "Amy",
+    "last_name": "Wagner",
+    "email": "amy.wagner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Justin Mayer"
+  },
+  {
+    "first_name": "Christine",
+    "last_name": "Yamamoto",
+    "email": "christine.yamamoto@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Michelle Lehmann"
+  },
+  {
+    "first_name": "Amanda",
+    "last_name": "Ito",
+    "email": "amanda.ito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Joshua Carter"
+  },
+  {
+    "first_name": "Robert",
+    "last_name": "Mayer",
+    "email": "robert.mayer@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samuel Kovac"
+  },
+  {
+    "first_name": "Deborah",
+    "last_name": "Garcia",
+    "email": "deborah.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenneth White"
+  },
+  {
+    "first_name": "Isabela",
+    "last_name": "Harris",
+    "email": "isabela.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nadia Meier"
+  },
+  {
+    "first_name": "Sebastian",
+    "last_name": "Neumann",
+    "email": "sebastian.neumann@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Dorothy Chaudhry"
+  },
+  {
+    "first_name": "Susan",
+    "last_name": "Khan",
+    "email": "susan.khan@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Susan Martinez"
+  },
+  {
+    "first_name": "Dennis",
+    "last_name": "Huber",
+    "email": "dennis.huber@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Hall"
+  },
+  {
+    "first_name": "Jeffrey",
+    "last_name": "Taylor",
+    "email": "jeffrey.taylor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Danya Wolf"
+  },
+  {
+    "first_name": "Aisha",
+    "last_name": "Schmidt",
+    "email": "aisha.schmidt@test.org",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Frank Hall"
+  },
+  {
+    "first_name": "Jennifer",
+    "last_name": "Rodriguez",
+    "email": "jennifer.rodriguez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Benjamin Lehmann"
+  },
+  {
+    "first_name": "Carolyn",
+    "last_name": "Harris",
+    "email": "carolyn.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Edward Allen"
+  },
+  {
+    "first_name": "Stephen",
+    "last_name": "Hill",
+    "email": "stephen.hill@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria Lehmann"
+  },
+  {
+    "first_name": "Larry",
+    "last_name": "Carter",
+    "email": "larry.carter@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Lena Boateng"
+  },
+  {
+    "first_name": "Raymond",
+    "last_name": "Mensah",
+    "email": "raymond.mensah1@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Samantha Suzuki"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Jones",
+    "email": "kwame.jones@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mei Kelly"
+  },
+  {
+    "first_name": "Justin",
+    "last_name": "Koga",
+    "email": "justin.koga@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ann Kruger"
+  },
+  {
+    "first_name": "Elena",
+    "last_name": "Wagner",
+    "email": "elena.wagner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Christine Allen"
+  },
+  {
+    "first_name": "Justin",
+    "last_name": "Martinez",
+    "email": "justin.martinez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Paul Ivanov"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Diallo",
+    "email": "thomas.diallo@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria Hassan"
+  },
+  {
+    "first_name": "Mateo",
+    "last_name": "Murphy",
+    "email": "mateo.murphy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Taro Williams"
+  },
+  {
+    "first_name": "Emily",
+    "last_name": "Green",
+    "email": "emily.green@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Rami Hall"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Nelson",
+    "email": "sana.nelson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mark Rivera"
+  },
+  {
+    "first_name": "Nadia",
+    "last_name": "Lopez",
+    "email": "nadia.lopez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Stephen Hernandez"
+  },
+  {
+    "first_name": "Dmitri",
+    "last_name": "Klein",
+    "email": "dmitri.klein@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "James Lewis"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Schmidt",
+    "email": "kwame.schmidt@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Thompson"
+  },
+  {
+    "first_name": "Kwame",
+    "last_name": "Ito",
+    "email": "kwame.ito@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Mateo Neumann"
+  },
+  {
+    "first_name": "Michael",
+    "last_name": "Walsh",
+    "email": "michael.walsh@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jessica Rodriguez"
+  },
+  {
+    "first_name": "Mateo",
+    "last_name": "Keita",
+    "email": "mateo.keita@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Hoffmann"
+  },
+  {
+    "first_name": "Brandon",
+    "last_name": "Harris",
+    "email": "brandon.harris@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Wei Werner"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Becker",
+    "email": "sana.becker@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Gregory Meier"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Lehmann",
+    "email": "karen.lehmann@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sana Klein"
+  },
+  {
+    "first_name": "Nicholas",
+    "last_name": "Werner",
+    "email": "nicholas.werner@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Jack Mitchell"
+  },
+  {
+    "first_name": "Justin",
+    "last_name": "Nelson",
+    "email": "justin.nelson@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Stephen Harris"
+  },
+  {
+    "first_name": "Lena",
+    "last_name": "White",
+    "email": "lena.white@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Aisha Novak"
+  },
+  {
+    "first_name": "Alexander",
+    "last_name": "Watanabe",
+    "email": "alexander.watanabe@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Yusuf Ito"
+  },
+  {
+    "first_name": "Mei",
+    "last_name": "OConnor",
+    "email": "mei.oconnor@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "William Richter"
+  },
+  {
+    "first_name": "Shirley",
+    "last_name": "Sanchez",
+    "email": "shirley.sanchez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Fernandez"
+  },
+  {
+    "first_name": "Linda",
+    "last_name": "Mohammed",
+    "email": "linda.mohammed@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Amanda Nguyen"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Traore",
+    "email": "dorothy.traore@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nancy Ryan"
+  },
+  {
+    "first_name": "Kenneth",
+    "last_name": "Abdullah",
+    "email": "kenneth.abdullah@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Mary Asante"
+  },
+  {
+    "first_name": "Paul",
+    "last_name": "Schulz",
+    "email": "paul.schulz@mail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Margaret Ahmed"
+  },
+  {
+    "first_name": "Wei",
+    "last_name": "Robinson",
+    "email": "wei.robinson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour White"
+  },
+  {
+    "first_name": "Yusuf",
+    "last_name": "Koga",
+    "email": "yusuf.koga@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hana Anderson"
+  },
+  {
+    "first_name": "Nicole",
+    "last_name": "Nelson",
+    "email": "nicole.nelson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kwame Herrmann"
+  },
+  {
+    "first_name": "Karim",
+    "last_name": "Garcia",
+    "email": "karim.garcia@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Schulz"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Ramirez",
+    "email": "karen.ramirez@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Wei Suzuki"
+  },
+  {
+    "first_name": "Joseph",
+    "last_name": "Krause",
+    "email": "joseph.krause@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Ronald Muller"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Nakamura",
+    "email": "karen.nakamura@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Maria Moore"
+  },
+  {
+    "first_name": "Karen",
+    "last_name": "Ryan",
+    "email": "karen.ryan@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Dorothy Chaudhry"
+  },
+  {
+    "first_name": "Jason",
+    "last_name": "Kumar",
+    "email": "jason.kumar@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hamid Kimura"
+  },
+  {
+    "first_name": "Carol",
+    "last_name": "Wilson",
+    "email": "carol.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Nour Kruger"
+  },
+  {
+    "first_name": "Sandra",
+    "last_name": "Coulibaly",
+    "email": "sandra.coulibaly@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Omar Meier"
+  },
+  {
+    "first_name": "Benjamin",
+    "last_name": "McCarthy",
+    "email": "benjamin.mccarthy@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Richard Perez"
+  },
+  {
+    "first_name": "Fatima",
+    "last_name": "Abdullah",
+    "email": "fatima.abdullah@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kofi Patel"
+  },
+  {
+    "first_name": "Mateo",
+    "last_name": "Thomas",
+    "email": "mateo.thomas@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Diego Campbell"
+  },
+  {
+    "first_name": "Kevin",
+    "last_name": "Sato",
+    "email": "kevin.sato@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Donald Hassan"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "Robinson",
+    "email": "nancy.robinson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Rami Mayer"
+  },
+  {
+    "first_name": "Nancy",
+    "last_name": "Martin",
+    "email": "nancy.martin@corporate.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Zara Thompson"
+  },
+  {
+    "first_name": "Anna",
+    "last_name": "Doyle",
+    "email": "anna.doyle@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Sebastian Schulz"
+  },
+  {
+    "first_name": "Dorothy",
+    "last_name": "Wright",
+    "email": "dorothy.wright@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Hamid Kimura"
+  },
+  {
+    "first_name": "Omar",
+    "last_name": "Martin",
+    "email": "omar.martin@gmail.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Kenji Thomas"
+  },
+  {
+    "first_name": "Emma",
+    "last_name": "Wilson",
+    "email": "emma.wilson@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Debra Hartmann"
+  },
+  {
+    "first_name": "Sana",
+    "last_name": "Lee",
+    "email": "sana.lee@external.com",
+    "type": "external-user",
+    "enabled": true,
+    "sponsor": "Thomas Koch"
+  },
+  {
+    "first_name": "Thomas",
+    "last_name": "Carter",
+    "email": "thomas.carter@external.com",
+    "type": "external-user",
+    "enabled": false,
+    "sponsor": "Priya Fernandez"
+  }
+]

@@ -1,0 +1,13 @@
+services:
+  app:
+    build: ./services/app
+    image: user-search_app:dev
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/appdb
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data-output/model-cache:/root/.cache/huggingface/hub

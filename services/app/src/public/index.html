@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Total User Search</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         background:#f5f5f5;color:#333;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 16px}
+    h1{font-size:1.5rem;margin-bottom:24px;color:#1a1a1a}
+    .search-box{width:100%;max-width:620px;display:flex;flex-direction:column;gap:6px;margin-bottom:32px}
+    label{font-weight:600;font-size:.95rem}
+    input[type="text"]{width:100%;padding:12px 16px;font-size:1rem;border:1px solid #ccc;border-radius:6px;outline:none;transition:border .15s}
+    input[type="text"]:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .hint{font-size:.8rem;color:#888}
+    #results{width:100%;max-width:620px}
+    .result-card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:14px 18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer;transition:box-shadow .15s,border-color .15s}
+    .result-card:hover{border-color:#3b82f6;box-shadow:0 2px 8px rgba(59,130,246,.12)}
+    .result-card .left{display:flex;flex-direction:column;gap:2px}
+    .result-card .name{font-weight:600;font-size:1rem}
+    .result-card .email{font-size:.88rem;color:#555}
+    .result-card .meta{font-size:.78rem;color:#888;margin-top:2px}
+    .result-card .contacts{font-size:.78rem;color:#666;margin-top:4px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;text-transform:uppercase;white-space:nowrap}
+    .badge.active_directory{background:#dbeafe;color:#1e40af}
+    .badge.netforum_members{background:#dcfce7;color:#166534}
+    .badge.external_users{background:#fef9c3;color:#854d0e}
+    .badge.distribution_groups{background:#f3e8ff;color:#6b21a8}
+    .badge.distribution_group_sync_logs{background:#fce7f3;color:#9d174d}
+    .badge.active_directory_activity_logs{background:#dde8ff;color:#1e3a8a}
+    .badge.external_user_activity_logs{background:#fef3c7;color:#92400e}
+    .badge.netforum_activity_logs{background:#ccfbf1;color:#134e4a}
+    .spinner{display:none;margin:12px auto;width:28px;height:28px;border:3px solid #e0e0e0;border-top-color:#3b82f6;border-radius:50%;animation:spin .6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{text-align:center;color:#aaa;font-size:.9rem;margin-top:12px}
+    .parsed-banner{width:100%;max-width:620px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.84rem;color:#3730a3;display:none}
+    .parsed-banner.active{display:block}
+    .parsed-banner strong{font-weight:700}
+    .badge-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+    .badge-row .badge{font-size:.68rem;padding:1px 6px}
+    /* ── Detail overlay ──────────────────────────────────────────────── */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;justify-content:center;align-items:flex-start;padding:60px 16px}
+    .overlay.open{display:flex}
+    .detail-panel{background:#fff;border-radius:10px;width:100%;max-width:680px;max-height:80vh;overflow-y:auto;padding:28px 24px;box-shadow:0 8px 30px rgba(0,0,0,.18);position:relative}
+    .detail-panel .close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#888}
+    .detail-panel .close:hover{color:#333}
+    .detail-panel h2{font-size:1.15rem;margin-bottom:18px}
+    .detail-section{border:1px solid #e0e0e0;border-radius:8px;padding:14px 16px;margin-bottom:12px}
+    .detail-section .source-label{font-weight:700;font-size:.82rem;text-transform:uppercase;margin-bottom:8px;display:inline-block}
+    .detail-section .source-label.active_directory{color:#1e40af}
+    .detail-section .source-label.netforum_members{color:#166534}
+    .detail-section .source-label.external_users{color:#854d0e}
+    .detail-section .source-label.distribution_groups{color:#6b21a8}
+    .detail-section .source-label.distribution_group_sync_logs{color:#9d174d}
+    .detail-section .source-label.active_directory_activity_logs{color:#1e3a8a}
+    .detail-section .source-label.external_user_activity_logs{color:#92400e}
+    .detail-section .source-label.netforum_activity_logs{color:#134e4a}
+    .detail-row{display:flex;gap:8px;font-size:.88rem;line-height:1.6;flex-wrap:wrap}
+    .detail-row .field{color:#888;min-width:90px;flex-shrink:0}
+    .detail-row .value{color:#333;word-break:break-all}
+    .detail-contacts{margin-top:8px;font-size:.82rem;color:#555}
+    .detail-contacts table{width:100%;border-collapse:collapse;margin-top:4px}
+    .detail-contacts th,.detail-contacts td{text-align:left;padding:3px 8px;border-bottom:1px solid #f0f0f0;font-size:.8rem}
+    .detail-contacts th{color:#888;font-weight:600}
+    .sync-history-header{font-weight:700;font-size:.95rem;color:#9d174d;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid #fce7f3}
+    .activity-log-history-header{font-weight:700;font-size:.95rem;color:#4c1d95;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid #ede9fe}
+    .notes-preview{font-style:italic;color:#777;margin-top:3px}
+    .more-link{background:none;border:none;color:#3b82f6;font-size:.83rem;cursor:pointer;padding:2px 0 10px 2px;text-decoration:underline;display:block}
+    .more-link:hover{color:#1d4ed8}
+  </style>
+</head>
+<body>
+  <h1>Total User Search</h1>
+
+  <div class="search-box">
+    <label for="query">Total User Search</label>
+    <input type="text" id="query" placeholder="Search by name, email, or try: users in active directory and netforum" autocomplete="off" />
+    <span class="hint">Semantic search across Active Directory, netForum, External Users, Distribution Groups, Sync Logs &amp; Activity Logs
+      <br/>Try: <em>"users in active directory and netforum"</em> · <em>"in ad and not in external users"</em> · <em>"in ad activity logs"</em> · <em>"john in netforum activity"</em></span>
+  </div>
+
+  <div class="spinner" id="spinner"></div>
+  <div id="parsed-banner" class="parsed-banner"></div>
+  <div id="results"></div>
+
+  <!-- Detail overlay -->
+  <div class="overlay" id="overlay">
+    <div class="detail-panel" id="detail-panel">
+      <button class="close" id="detail-close">&times;</button>
+      <h2 id="detail-title">Loading…</h2>
+      <div id="detail-body"></div>
+    </div>
+  </div>
+
+  <script>
+    const input   = document.getElementById('query');
+    const results = document.getElementById('results');
+    const spinner = document.getElementById('spinner');
+    const overlay = document.getElementById('overlay');
+    const parsedBanner = document.getElementById('parsed-banner');
+    const detailTitle = document.getElementById('detail-title');
+    const detailBody  = document.getElementById('detail-body');
+    let debounce  = null;
+
+    const SOURCE_LABELS = {
+      active_directory:    'Active Directory',
+      netforum_members:    'netForum',
+      external_users:      'External User',
+      distribution_groups: 'Distribution Group',
+      distribution_group_sync_logs:      'DG Sync Log',
+      active_directory_activity_logs:    'AD Activity Log',
+      external_user_activity_logs:       'Ext User Activity Log',
+      netforum_activity_logs:            'netForum Activity Log',
+      intersection:        'Multi-Source',
+    };
+
+    // Close detail overlay
+    document.getElementById('detail-close').addEventListener('click', () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('open'); });
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(search, 300);
+    });
+
+    async function search() {
+      const q = input.value.trim();
+      if (!q) { results.innerHTML = ''; parsedBanner.classList.remove('active'); return; }
+
+      spinner.style.display = 'block';
+      parsedBanner.classList.remove('active');
+      try {
+        const res  = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        // Show parsed-query banner when an intersection query was detected
+        if (data.parsed && data.parsed.type === 'intersection') {
+          const srcNames = data.parsed.sources.map(s => SOURCE_LABELS[s] || s);
+          const excNames = data.parsed.exclude.map(s => SOURCE_LABELS[s] || s);
+          let desc = `<strong>Interpreted:</strong> Users in <strong>${srcNames.join('</strong> AND <strong>')}</strong>`;
+          if (excNames.length) desc += ` but NOT in <strong>${excNames.join('</strong>, <strong>')}</strong>`;
+          if (data.parsed.searchTerm) desc += ` matching "<strong>${esc(data.parsed.searchTerm)}</strong>"`;
+          desc += ` — ${data.results.length} result${data.results.length !== 1 ? 's' : ''}`;
+          parsedBanner.innerHTML = desc;
+          parsedBanner.classList.add('active');
+        }
+
+        if (!data.results || data.results.length === 0) {
+          results.innerHTML = '<p class="empty">No results found.</p>';
+          return;
+        }
+
+        results.innerHTML = data.results.map(r => {
+          // Intersection result
+          if (r.source === 'intersection') {
+            const name = `${r.firstName} ${r.lastName}`;
+            const badgeHtml = (r.presentIn || []).map(s =>
+              `<span class="badge ${s}">${SOURCE_LABELS[s] || s}</span>`
+            ).join('');
+            const scoreHtml = r.distance != null ? ` · ${((1 - r.distance) * 100).toFixed(1)}% match` : '';
+            return `
+              <div class="result-card" onclick="openDetail('${esc(r.email)}')">
+                <div class="left">
+                  <span class="name">${esc(name)}</span>
+                  <span class="email">${esc(r.email)}</span>
+                  <span class="meta">Type: ${esc(r.type || '–')}${scoreHtml}</span>
+                  <div class="badge-row">${badgeHtml}</div>
+                </div>
+              </div>`;
+          }
+
+          // Standard ANN result
+          const isGroup = r.source === 'distribution_groups';
+          const isSyncLog = r.source === 'distribution_group_sync_logs';
+          const isActivityLog = r.source === 'active_directory_activity_logs' || r.source === 'external_user_activity_logs' || r.source === 'netforum_activity_logs';
+          const name    = isSyncLog ? r.firstName : (isGroup ? r.firstName : `${r.firstName} ${r.lastName}`);
+          const meta    = isSyncLog
+            ? `Sync: ${r.syncTimestamp ? new Date(r.syncTimestamp).toLocaleString() : '–'}`
+            : isActivityLog
+              ? `Activity: ${r.syncTimestamp ? new Date(r.syncTimestamp).toLocaleString() : '–'}`
+              : (isGroup
+                ? `Alias: ${r.lastName}`
+                : `Type: ${r.type || '–'}`);
+
+          let extraMeta = '';
+          let contactsHtml = '';
+          if (r.source === 'active_directory') {
+            extraMeta += ` · Enabled: ${r.enabled === false ? 'No' : 'Yes'}`;
+            extraMeta += ` · Locked: ${r.locked === true ? 'Yes' : 'No'}`;
+            if (r.passwordLastReset) extraMeta += ` · PW Reset: ${new Date(r.passwordLastReset).toLocaleDateString()}`;
+          } else if (r.source === 'distribution_groups') {
+            if (r.createdAt) extraMeta += ` · Created: ${new Date(r.createdAt).toLocaleDateString()}`;
+          } else if (r.source === 'distribution_group_sync_logs') {
+            const addedCount = r.accountsAdded ? r.accountsAdded.length : 0;
+            const removedCount = r.accountsRemoved ? r.accountsRemoved.length : 0;
+            if (addedCount) extraMeta += ` · +${addedCount} added`;
+            if (removedCount) extraMeta += ` · -${removedCount} removed`;
+            if (r.notes) contactsHtml = `<div class="contacts notes-preview">${esc(r.notes)}</div>`;
+          } else if (r.source === 'external_users') {
+            extraMeta += ` · Enabled: ${r.enabled === false ? 'No' : 'Yes'}`;
+            if (r.sponsor) extraMeta += ` · Sponsor: ${r.sponsor}`;
+            if (r.createdAt) extraMeta += ` · Created: ${new Date(r.createdAt).toLocaleDateString()}`;
+          } else if (r.source === 'netforum_members') {
+            extraMeta += ` · Enabled: ${r.enabled === false ? 'No' : 'Yes'}`;
+            if (r.lastLogin) extraMeta += ` · Last Login: ${new Date(r.lastLogin).toLocaleDateString()}`;
+            if (r.createdAt) extraMeta += ` · Created: ${new Date(r.createdAt).toLocaleDateString()}`;
+          } else if (isActivityLog) {
+            if (r.sponsor) extraMeta += ` · Changed by: ${r.sponsor}`;
+            if (r.notes) contactsHtml = `<div class="contacts notes-preview">${esc(r.notes)}</div>`;
+          }
+          if (isGroup && r.contacts && r.contacts.length) {
+            const list = r.contacts.map(c => `${c.first_name} ${c.last_name}`).join(', ');
+            contactsHtml = `<div class="contacts">Members: ${list}</div>`;
+          }
+          if (isSyncLog) {
+            const parts = [];
+            if (r.accountsAdded && r.accountsAdded.length) {
+              parts.push('Added: ' + r.accountsAdded.map(a => `${a.first_name} ${a.last_name}`).join(', '));
+            }
+            if (r.accountsRemoved && r.accountsRemoved.length) {
+              parts.push('Removed: ' + r.accountsRemoved.map(a => `${a.first_name} ${a.last_name}`).join(', '));
+            }
+            if (parts.length) contactsHtml = `<div class="contacts">${parts.join(' · ')}</div>`;
+          }
+
+          const score = ((1 - r.distance) * 100).toFixed(1);
+
+          return `
+            <div class="result-card" onclick="openDetail('${esc(r.email || r.firstName)}')">
+              <div class="left">
+                <span class="name">${esc(name)}</span>
+                <span class="email">${esc(r.email)}</span>
+                <span class="meta">${esc(meta)}${extraMeta} · ${score}% match</span>
+                ${contactsHtml}
+              </div>
+              <span class="badge ${r.source}">${SOURCE_LABELS[r.source] || r.source}</span>
+            </div>`;
+        }).join('');
+      } catch (err) {
+        results.innerHTML = '<p class="empty">Search failed.</p>';
+        console.error(err);
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    // ── Detail lookup ───────────────────────────────────────────────────────
+    async function openDetail(identifier) {
+      detailTitle.textContent = identifier;
+      detailBody.innerHTML = '<p class="empty">Loading…</p>';
+      overlay.classList.add('open');
+
+      try {
+        const res  = await fetch(`/api/lookup?email=${encodeURIComponent(identifier)}`);
+        const data = await res.json();
+
+        if (!data.records || data.records.length === 0) {
+          detailBody.innerHTML = '<p class="empty">No records found.</p>';
+          return;
+        }
+
+        // Separate person/group records from sync-log and activity-log records
+        const ACTIVITY_LOG_SOURCES = ['active_directory_activity_logs', 'external_user_activity_logs', 'netforum_activity_logs'];
+        const mainRecords = data.records.filter(r => r.source !== 'distribution_group_sync_logs' && !ACTIVITY_LOG_SOURCES.includes(r.source));
+        const syncRecords = data.records.filter(r => r.source === 'distribution_group_sync_logs');
+        const activityLogs = data.records.filter(r => ACTIVITY_LOG_SOURCES.includes(r.source));
+
+        // Determine title
+        const firstMain = mainRecords[0];
+        if (firstMain) {
+          const isGrp = firstMain.source === 'distribution_groups';
+          detailTitle.textContent = isGrp
+            ? `Details for ${firstMain.name || identifier}`
+            : `All records for ${firstMain.email || identifier}`;
+        } else {
+          detailTitle.textContent = `Sync history for ${identifier}`;
+        }
+
+        let html = '';
+
+        // Render main records
+        html += mainRecords.map(r => {
+          const isGroup = r.source === 'distribution_groups';
+          const label = SOURCE_LABELS[r.source] || r.source;
+
+          let rows = '';
+          if (isGroup) {
+            rows += field('Name', r.name);
+            rows += field('Alias', r.alias);
+            rows += field('Email', r.email);
+            rows += field('Created', fmtDate(r.createdAt));
+            if (r.contacts && r.contacts.length) {
+              rows += `<div class="detail-contacts"><strong>Contacts (${r.contacts.length}):</strong>
+                <table><tr><th>Name</th><th>Email</th></tr>
+                ${r.contacts.map(c => `<tr><td>${esc(c.first_name)} ${esc(c.last_name)}</td><td>${esc(c.email)}</td></tr>`).join('')}
+                </table></div>`;
+            }
+          } else if (r.source === 'active_directory') {
+            rows += field('First Name', r.firstName);
+            rows += field('Last Name', r.lastName);
+            rows += field('Email', r.email);
+            rows += field('Type', r.type);
+            rows += field('Enabled', fmtBool(r.enabled));
+            rows += field('Locked', fmtBool(r.locked));
+            rows += field('Password Last Reset', fmtDate(r.passwordLastReset));
+            rows += field('Created', fmtDate(r.createdAt));
+          } else if (r.source === 'netforum_members') {
+            rows += field('First Name', r.firstName);
+            rows += field('Last Name', r.lastName);
+            rows += field('Email', r.email);
+            rows += field('Type', r.type);
+            rows += field('Enabled', fmtBool(r.enabled));
+            rows += field('Last Login', fmtDate(r.lastLogin));
+            rows += field('Created', fmtDate(r.createdAt));
+          } else if (r.source === 'external_users') {
+            rows += field('First Name', r.firstName);
+            rows += field('Last Name', r.lastName);
+            rows += field('Email', r.email);
+            rows += field('Type', r.type);
+            rows += field('Enabled', fmtBool(r.enabled));
+            rows += field('Sponsor', r.sponsor);
+            rows += field('Created', fmtDate(r.createdAt));
+          } else {
+            rows += field('First Name', r.firstName);
+            rows += field('Last Name', r.lastName);
+            rows += field('Email', r.email);
+            rows += field('Type', r.type);
+            rows += field('Created', fmtDate(r.createdAt));
+          }
+
+          return `<div class="detail-section">
+            <span class="source-label ${r.source}">${label}</span>
+            ${rows}
+          </div>`;
+        }).join('');
+
+        // Render sync log history
+        if (syncRecords.length) {
+          html += `<div class="sync-history-header">Sync History (${syncRecords.length} entries)</div>`;
+          html += syncRecords.map(r => {
+            let rows = '';
+            rows += field('Group', r.name);
+            rows += field('Sync Timestamp', fmtDate(r.syncTimestamp));
+            if (r.notes) rows += field('Notes', r.notes);
+            if (r.accountsAdded && r.accountsAdded.length) {
+              rows += `<div class="detail-contacts"><strong>Accounts Added (${r.accountsAdded.length}):</strong>
+                <table><tr><th>Name</th><th>Email</th></tr>
+                ${r.accountsAdded.map(a => `<tr><td>${esc(a.first_name)} ${esc(a.last_name)}</td><td>${esc(a.email)}</td></tr>`).join('')}
+                </table></div>`;
+            }
+            if (r.accountsRemoved && r.accountsRemoved.length) {
+              rows += `<div class="detail-contacts"><strong>Accounts Removed (${r.accountsRemoved.length}):</strong>
+                <table><tr><th>Name</th><th>Email</th></tr>
+                ${r.accountsRemoved.map(a => `<tr><td>${esc(a.first_name)} ${esc(a.last_name)}</td><td>${esc(a.email)}</td></tr>`).join('')}
+                </table></div>`;
+            }
+            return `<div class="detail-section">
+              <span class="source-label distribution_group_sync_logs">DG Sync Log</span>
+              ${rows}
+            </div>`;
+          }).join('');
+        }
+
+        // Render activity log history – grouped by source, 3-entry preview + More… toggle
+        if (activityLogs.length) {
+          // Group by source
+          const bySource = {};
+          for (const r of activityLogs) {
+            if (!bySource[r.source]) bySource[r.source] = [];
+            bySource[r.source].push(r);
+          }
+          // Sort each group newest-first
+          for (const src of Object.keys(bySource)) {
+            bySource[src].sort((a, b) => {
+              const ta = a.syncTimestamp ? new Date(a.syncTimestamp).getTime() : 0;
+              const tb = b.syncTimestamp ? new Date(b.syncTimestamp).getTime() : 0;
+              return tb - ta;
+            });
+          }
+
+          for (const [src, logs] of Object.entries(bySource)) {
+            const label   = SOURCE_LABELS[src] || src;
+            const preview = logs.slice(0, 3);
+            const rest    = logs.slice(3);
+            const moreId  = `more-${src.replace(/_/g, '-')}-${Date.now()}`;
+
+            html += `<div class="activity-log-history-header">${esc(label)} (${logs.length} entr${logs.length === 1 ? 'y' : 'ies'})</div>`;
+            html += preview.map(r => renderActivityEntry(r, src, label)).join('');
+
+            if (rest.length) {
+              html += `<div id="${moreId}" style="display:none">${rest.map(r => renderActivityEntry(r, src, label)).join('')}</div>`;
+              html += `<button class="more-link" onclick="(function(btn){
+                var el=document.getElementById('${moreId}');
+                if(el.style.display==='none'){el.style.display='';btn.textContent='Show less';}
+                else{el.style.display='none';btn.textContent='More\u2026 (${rest.length} more)';}
+              })(this)">More&hellip; (${rest.length} more)</button>`;
+            }
+          }
+        }
+
+        detailBody.innerHTML = html;
+      } catch (err) {
+        detailBody.innerHTML = '<p class="empty">Lookup failed.</p>';
+        console.error(err);
+      }
+    }
+
+    function renderActivityEntry(r, src, label) {
+      let rows = '';
+      rows += field('Timestamp', fmtDate(r.syncTimestamp));
+      if (r.sponsor) rows += field('Changed By', r.sponsor);
+      if (r.notes)   rows += field('Notes', r.notes);
+      return `<div class="detail-section">
+        <span class="source-label ${src}">${esc(label)}</span>
+        ${rows}
+      </div>`;
+    }
+
+    function field(label, value) {
+      return `<div class="detail-row"><span class="field">${esc(label)}:</span><span class="value">${esc(value || '–')}</span></div>`;
+    }
+
+    function fmtDate(d) {
+      if (!d) return '–';
+      return new Date(d).toLocaleString();
+    }
+
+    function fmtBool(v) {
+      if (v === true) return 'Yes';
+      if (v === false) return 'No';
+      return '–';
+    }
+
+    function esc(s) {
+      if (s == null) return '';
+      const d = document.createElement('div');
+      d.textContent = String(s);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

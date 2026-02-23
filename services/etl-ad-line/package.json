@@ -1,0 +1,14 @@
+{
+  "name": "etl-ad-line",
+  "version": "0.1.0",
+  "description": "Merged ETL vectorizer for active_directory + active_directory_activity_logs",
+  "main": "vectorize.js",
+  "scripts": {
+    "start": "node vectorize.js"
+  },
+  "dependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "node-cron": "^3.0.3",
+    "pg": "^8.13.0"
+  }
+}

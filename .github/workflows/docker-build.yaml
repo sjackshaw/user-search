@@ -1,0 +1,17 @@
+# yaml (.github/workflows/docker-build.yml)
+name: Build and push images (test)
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build images (base + postgres + app)
+        run: |
+          docker compose -f docker-compose.base.yml -f docker-compose.postgres.yml -f docker-compose.app.yml build

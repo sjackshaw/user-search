@@ -1,0 +1,4 @@
+# text (.gitignore)
+node_modules
+data-output
+.env
