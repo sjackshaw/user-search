@@ -68,6 +68,17 @@
     .notes-preview{font-style:italic;color:#777;margin-top:3px}
     .more-link{background:none;border:none;color:#3b82f6;font-size:.83rem;cursor:pointer;padding:2px 0 10px 2px;text-decoration:underline;display:block}
     .more-link:hover{color:#1d4ed8}
+    /* ── Change History section ──────────────────────────────────── */
+    .change-history-header{font-weight:700;font-size:.95rem;color:#0369a1;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid #bae6fd}
+    .change-entry{border:1px solid #e0e0e0;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:.84rem}
+    .change-entry .change-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;text-transform:uppercase;margin-right:6px}
+    .change-badge.created{background:#dcfce7;color:#166534}
+    .change-badge.updated{background:#dbeafe;color:#1e40af}
+    .change-badge.deleted{background:#fee2e2;color:#991b1b}
+    .change-entry .change-meta{color:#888;font-size:.78rem;margin-top:4px}
+    .change-entry .change-diff{margin-top:4px;font-size:.82rem}
+    .change-entry .change-diff .old-val{color:#991b1b;text-decoration:line-through}
+    .change-entry .change-diff .new-val{color:#166534}
   </style>
 </head>
 <body>
@@ -400,11 +411,47 @@
           }
         }
 
+        // ── Render source change history ──────────────────────────────
+        const changeLogs = data.changeLogs || [];
+        if (changeLogs.length) {
+          html += `<div class="change-history-header">Change History (${changeLogs.length} entr${changeLogs.length === 1 ? 'y' : 'ies'})</div>`;
+          const preview = changeLogs.slice(0, 5);
+          const rest    = changeLogs.slice(5);
+          const changeMoreId = `change-more-${Date.now()}`;
+
+          html += preview.map(renderChangeEntry).join('');
+
+          if (rest.length) {
+            html += `<div id="${changeMoreId}" style="display:none">${rest.map(renderChangeEntry).join('')}</div>`;
+            html += `<button class="more-link" onclick="(function(btn){
+              var el=document.getElementById('${changeMoreId}');
+              if(el.style.display==='none'){el.style.display='';btn.textContent='Show less';}
+              else{el.style.display='none';btn.textContent='More\u2026 (${rest.length} more)';}
+            })(this)">More&hellip; (${rest.length} more)</button>`;
+          }
+        }
+
         detailBody.innerHTML = html;
       } catch (err) {
         detailBody.innerHTML = '<p class="empty">Lookup failed.</p>';
         console.error(err);
       }
+    }
+
+    function renderChangeEntry(c) {
+      const SOURCE_NICE = {
+        active_directory: 'Active Directory',
+        netforum_members: 'netForum',
+        external_users: 'External Users',
+        distribution_groups: 'Distribution Groups',
+      };
+      let body = `<span class="change-badge ${c.changeType}">${esc(c.changeType)}</span>`;
+      body += `<strong>${esc(SOURCE_NICE[c.sourceTable] || c.sourceTable)}</strong>`;
+      if (c.changeType === 'updated' && c.fieldName) {
+        body += `<div class="change-diff">${esc(c.fieldName)}: <span class="old-val">${esc(c.oldValue || '(empty)')}</span> → <span class="new-val">${esc(c.newValue || '(empty)')}</span></div>`;
+      }
+      body += `<div class="change-meta">${fmtDate(c.detectedAt)}${c.etlJobId ? ' · Job #' + c.etlJobId : ''}</div>`;
+      return `<div class="change-entry">${body}</div>`;
     }
 
     function renderActivityEntry(r, src, label) {

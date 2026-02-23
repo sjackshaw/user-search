@@ -9,7 +9,7 @@ Evolve the existing vector search application into a conversational GenAI platfo
 
 ### 2. Current State Analysis
 
-*   **Architecture**: The project is a Dockerized application orchestrated via `docker-compose`. It consists of a PostgreSQL database with the `pgvector` extension, multiple Node.js ETL services for different data sources, and a Node.js/Express web application.
+*   **Architecture**: The project is a Dockerized application orchestrated via `docker-compose`. It consists of a PostgreSQL database with the `pgvector` extension, four consolidated Node.js ETL **line** services, and a Node.js/Express web application. Each line service handles both its primary data source table and its associated activity/sync log table within a single container, sharing one SBERT model instance and one Postgres connection pool — reducing per-container memory by ~350–500 MB compared to running them as separate containers.
 *   **Data Sources**:
     *   `active_directory`
     *   `netforum_members`
@@ -50,12 +50,12 @@ This project will be executed in the following sequence:
 1.  **Create Logging Schemas**:
     *   Add a new SQL file (`infra/db/init/07_logging_tables.sql`) to define the `etl_job_logs` and `source_change_logs` tables.
 
-2.  **Enhance ETL Services**:
-    *   Modify the `active-directory` ETL service (`vectorize.js`) to:
-        *   Implement change-detection logic by comparing incoming data against the existing state in Postgres.
-        *   Write start, completion, and failure records to the `etl_job_logs` table.
-        *   Write all detected data changes to the `source_change_logs` table.
-    *   Repeat the process for the `netForum` ETL service.
+2.  **Enhance ETL Line Services**:
+    *   All four line services (`etl-ad-line`, `etl-netforum-line`, `etl-eu-line`, `etl-dg-line`) already handle both their primary and activity/sync log tables within a single container. Enhance each service's `vectorize.js` to:
+        *   Implement change-detection logic in `runPrimary()` by comparing incoming data against the existing state in Postgres.
+        *   Write start, completion, and failure records to the `etl_job_logs` table at the start and end of each `runPrimary()` and `runLogs()` phase.
+        *   Write all detected data changes to the `source_change_logs` table during `runPrimary()`.
+    *   Apply this enhancement to all four line services, prioritising `etl-ad-line` and `etl-netforum-line` as the highest-value sources.
 
 3.  **Integrate Logs into UI**:
     *   Update the main application's `/api/lookup` endpoint to also retrieve records from `source_change_logs` for a given user.

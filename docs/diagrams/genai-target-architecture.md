@@ -23,8 +23,11 @@ graph TB
 
         Postgres["🗄️ PostgreSQL + pgvector<br/><br/>Existing 9 tables<br/>+ etl_job_logs (NEW)<br/>+ chat_messages (NEW)<br/>+ source_change_logs (NEW)"]:::database
 
-        subgraph ETLServices [" 8 ETL Services (existing) "]
-            ETL["Transform → Vectorize → Upsert"]:::existing
+        subgraph ETLServices [" 4 ETL Line Services (existing, consolidated) "]
+            ETL_AD["etl-ad-line<br/>active_directory + activity_logs"]:::existing
+            ETL_NF["etl-netforum-line<br/>netforum_members + activity_logs"]:::existing
+            ETL_EU["etl-eu-line<br/>external_users + activity_logs"]:::existing
+            ETL_DG["etl-dg-line<br/>distribution_groups + sync_logs"]:::existing
         end
     end
 
@@ -37,6 +40,9 @@ graph TB
     GenAI -->|"RAG context retrieval"| Postgres
     GenAI -->|"LLM inference"| Ollama
     GenAI -->|"Store conversation"| Postgres
-    ETL -->|"Vectors + change logs"| Postgres
+    ETL_AD -->|"Vectors + change logs"| Postgres
+    ETL_NF -->|"Vectors + change logs"| Postgres
+    ETL_EU -->|"Vectors + change logs"| Postgres
+    ETL_DG -->|"Vectors + change logs"| Postgres
     App -.->|"SBERT model"| HF
 ```

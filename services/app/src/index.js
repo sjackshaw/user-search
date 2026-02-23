@@ -503,14 +503,37 @@ const LOOKUP_SQL = `
   ORDER BY source, created_at;
 `;
 
+// ── Source change logs lookup ─────────────────────────────────────────────────
+const CHANGE_LOGS_SQL = `
+  SELECT id, source_table, email, change_type, field_name,
+         old_value, new_value, detected_at, etl_job_id
+  FROM   source_change_logs
+  WHERE  email = $1
+  ORDER  BY detected_at DESC
+  LIMIT  100;
+`;
+
+// ── ETL job logs ──────────────────────────────────────────────────────────────
+const ETL_JOBS_SQL = `
+  SELECT id, service, phase, target_table, status,
+         records_processed, records_created, records_updated, records_deleted,
+         error_message, started_at, finished_at
+  FROM   etl_job_logs
+  ORDER  BY started_at DESC
+  LIMIT  50;
+`;
+
 app.get('/api/lookup', async (req, res) => {
   const email = (req.query.email || '').trim().toLowerCase();
-  if (!email) return res.json({ records: [] });
+  if (!email) return res.json({ records: [], changeLogs: [] });
 
   try {
-    const { rows } = await pool.query(LOOKUP_SQL, [email]);
+    const [lookupResult, changeResult] = await Promise.all([
+      pool.query(LOOKUP_SQL, [email]),
+      pool.query(CHANGE_LOGS_SQL, [email]),
+    ]);
 
-    const records = rows.map(r => ({
+    const records = lookupResult.rows.map(r => ({
       source:            r.source,
       id:                r.id,
       firstName:         r.first_name,
@@ -532,10 +555,46 @@ app.get('/api/lookup', async (req, res) => {
       notes:             r.notes,
     }));
 
-    res.json({ records });
+    const changeLogs = changeResult.rows.map(r => ({
+      id:          r.id,
+      sourceTable: r.source_table,
+      email:       r.email,
+      changeType:  r.change_type,
+      fieldName:   r.field_name,
+      oldValue:    r.old_value,
+      newValue:    r.new_value,
+      detectedAt:  r.detected_at,
+      etlJobId:    r.etl_job_id,
+    }));
+
+    res.json({ records, changeLogs });
   } catch (err) {
     console.error('Lookup error:', err);
     res.status(500).json({ error: 'Lookup failed' });
+  }
+});
+
+app.get('/api/etl-jobs', async (req, res) => {
+  try {
+    const { rows } = await pool.query(ETL_JOBS_SQL);
+    const jobs = rows.map(r => ({
+      id:               r.id,
+      service:          r.service,
+      phase:            r.phase,
+      targetTable:      r.target_table,
+      status:           r.status,
+      recordsProcessed: r.records_processed,
+      recordsCreated:   r.records_created,
+      recordsUpdated:   r.records_updated,
+      recordsDeleted:   r.records_deleted,
+      errorMessage:     r.error_message,
+      startedAt:        r.started_at,
+      finishedAt:       r.finished_at,
+    }));
+    res.json({ jobs });
+  } catch (err) {
+    console.error('ETL jobs error:', err);
+    res.status(500).json({ error: 'ETL jobs query failed' });
   }
 });
 
