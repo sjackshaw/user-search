@@ -4,8 +4,9 @@ flowchart TB
     classDef container fill:#1168BD,stroke:#0E5BA7,color:#fff
     classDef database fill:#2D882D,stroke:#226622,color:#fff
     classDef etl fill:#7B4F8A,stroke:#6A3D7A,color:#fff
+    classDef genai fill:#D4451A,stroke:#B83A15,color:#fff
 
-    User([IT Administrator]):::person
+    User(["IT Administrator"]):::person
 
     subgraph ETL["ETL Line Services — shared model + pool per container"]
         ETL_AD["etl-ad-line\nAD primary + AD activity logs"]:::etl
@@ -14,13 +15,23 @@ flowchart TB
         ETL_DG["etl-dg-line\nDistribution Groups primary + DG sync logs"]:::etl
     end
 
-    subgraph Platform["Docker Platform - user-search"]
-        App["App Container Node.js Express Port 3000"]:::container
-        Postgres["PostgreSQL pgvector 9 tables HNSW indexes"]:::database
+    subgraph GenAIStack["GenAI Stack"]
+        Ollama["Ollama\nLlama 3.1 8B\nPort 11434"]:::genai
+        GenAI["GenAI Service\nNode.js\nIntent + RAG\nPort 3001"]:::genai
     end
 
-    User -->|"api/search and api/lookup"| App
+    subgraph Platform["Docker Platform - user-search"]
+        App["App Container\nNode.js Express\nSearch UI + Chat UI\nPort 3000"]:::container
+        Postgres["PostgreSQL + pgvector\n11 tables\n(8 with HNSW indexes)\nETL logs + chat history"]:::database
+    end
+
+    User -->|"search / lookup / chat"| App
     App -->|"SQL cosine similarity"| Postgres
+    App -->|"POST /api/chat (proxy)"| GenAI
+    GenAI -->|"RAG context retrieval"| Postgres
+    GenAI -->|"Vector search"| App
+    GenAI -->|"LLM inference"| Ollama
+    GenAI -->|"persist chat_messages"| Postgres
 
     ETL_AD -->|"embed and upsert"| Postgres
     ETL_NF -->|"embed and upsert"| Postgres

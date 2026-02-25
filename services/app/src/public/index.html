@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Total User Search</title>
+  <title>Total User Search — GenAI</title>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -79,15 +79,52 @@
     .change-entry .change-diff{margin-top:4px;font-size:.82rem}
     .change-entry .change-diff .old-val{color:#991b1b;text-decoration:line-through}
     .change-entry .change-diff .new-val{color:#166534}
+    /* ── Chat panel ─────────────────────────────────────────────────── */
+    .chat-toggle{position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:#3b82f6;color:#fff;border:none;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.4);z-index:200;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+    .chat-toggle:hover{background:#2563eb;transform:scale(1.07)}
+    .chat-panel{position:fixed;bottom:88px;right:24px;width:420px;max-width:calc(100vw - 32px);height:620px;max-height:calc(100vh - 120px);background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.18);z-index:200;display:none;flex-direction:column;overflow:hidden;border:1px solid #e0e0e0}
+    .chat-panel.open{display:flex}
+    .chat-header{padding:14px 16px;background:#3b82f6;color:#fff;font-weight:700;font-size:.95rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+    .chat-header span{font-size:.78rem;font-weight:400;opacity:.85}
+    .chat-header-close{background:none;border:none;color:#fff;font-size:1.25rem;cursor:pointer;line-height:1;padding:0 2px}
+    .chat-messages{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:10px}
+    .chat-empty{text-align:center;color:#aaa;font-size:.85rem;margin:auto;padding:20px 10px}
+    .chat-empty p{margin-bottom:12px}
+    .chat-prompts{display:flex;flex-direction:column;gap:6px;align-items:center}
+    .chat-prompt-chip{background:#f0f4ff;border:1px solid #c7d2fe;color:#3730a3;font-size:.78rem;padding:6px 12px;border-radius:20px;cursor:pointer;text-align:center;transition:background .15s}
+    .chat-prompt-chip:hover{background:#e0e7ff}
+    .chat-msg{max-width:88%;padding:9px 13px;border-radius:10px;font-size:.86rem;line-height:1.55;word-break:break-word}
+    .chat-msg.user{align-self:flex-end;background:#3b82f6;color:#fff;border-bottom-right-radius:3px}
+    .chat-msg.assistant{align-self:flex-start;background:#f3f4f6;color:#1a1a1a;border-bottom-left-radius:3px}
+    .chat-msg.assistant table{border-collapse:collapse;width:100%;font-size:.8rem;margin-top:6px}
+    .chat-msg.assistant th,.chat-msg.assistant td{border:1px solid #d1d5db;padding:3px 7px;text-align:left}
+    .chat-msg.assistant th{background:#e5e7eb;font-weight:600}
+    .chat-msg.assistant pre{background:#e5e7eb;border-radius:6px;padding:7px 10px;overflow-x:auto;font-size:.78rem;margin-top:6px}
+    .chat-msg.assistant code{font-family:monospace;background:#e5e7eb;padding:1px 4px;border-radius:3px}
+    .chat-msg.assistant strong,.chat-msg.assistant b{font-weight:700}
+    .chat-msg.assistant ul{padding-left:18px;margin-top:4px}
+    .chat-msg.assistant ol{padding-left:18px;margin-top:4px}
+    .chat-msg.assistant li{margin-bottom:2px}
+    .chat-msg.assistant p{margin-bottom:6px}
+    .chat-msg.assistant p:last-child{margin-bottom:0}
+    .chat-msg.assistant hr{border:none;border-top:1px solid #d1d5db;margin:8px 0}
+    .chat-input-area{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #e0e0e0;flex-shrink:0;background:#fff}
+    .chat-input{flex:1;padding:9px 12px;border:1px solid #ccc;border-radius:20px;font-size:.88rem;outline:none;resize:none;max-height:100px;overflow-y:auto;transition:border .15s;font-family:inherit}
+    .chat-input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+    .chat-send{padding:9px 16px;background:#3b82f6;color:#fff;border:none;border-radius:20px;font-size:.88rem;cursor:pointer;font-weight:600;transition:background .15s;flex-shrink:0}
+    .chat-send:hover:not(:disabled){background:#2563eb}
+    .chat-send:disabled{opacity:.55;cursor:default}
+    .chat-thinking{align-self:flex-start;padding:9px 13px;border-radius:10px;background:#f3f4f6;font-size:.86rem;color:#888;font-style:italic}
+    .chat-intent-badge{display:inline-block;padding:1px 7px;border-radius:8px;font-size:.68rem;font-weight:600;text-transform:uppercase;margin-bottom:4px;background:#dbeafe;color:#1e40af}
   </style>
 </head>
 <body>
-  <h1>Total User Search</h1>
+  <h1>Total User Search <span style="font-size:.65em;color:#3b82f6;vertical-align:middle">GenAI</span></h1>
 
   <div class="search-box">
-    <label for="query">Total User Search</label>
+    <label for="query">Semantic Search</label>
     <input type="text" id="query" placeholder="Search by name, email, or try: users in active directory and netforum" autocomplete="off" />
-    <span class="hint">Semantic search across Active Directory, netForum, External Users, Distribution Groups, Sync Logs &amp; Activity Logs
+    <span class="hint">Semantic search across Active Directory, netForum, External Users, Distribution Groups, Sync Logs &amp; Activity Logs — or use the 💬 chat for natural language questions
       <br/>Try: <em>"users in active directory and netforum"</em> · <em>"in ad and not in external users"</em> · <em>"in ad activity logs"</em> · <em>"john in netforum activity"</em></span>
   </div>
 
@@ -485,6 +522,194 @@
       const d = document.createElement('div');
       d.textContent = String(s);
       return d.innerHTML;
+    }
+  </script>
+  <!-- Chat toggle button -->
+  <button class="chat-toggle" id="chat-toggle" title="Ask AI">💬</button>
+
+  <!-- Chat panel -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <div>
+        GenAI Assistant
+        <span>&nbsp;· qwen2.5:3b</span>
+      </div>
+      <button class="chat-header-close" id="chat-close" title="Close">&times;</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-empty" id="chat-empty">
+        <p>Ask me anything about your users, ETL pipelines, or change history.</p>
+        <div class="chat-prompts">
+          <button class="chat-prompt-chip">What changed for james.smith@corporate.com last week?</button>
+          <button class="chat-prompt-chip">Show me failed ETL runs</button>
+          <button class="chat-prompt-chip">Show last ETL run for Active Directory</button>
+          <button class="chat-prompt-chip">Who are the members of the Engineering All group?</button>
+          <button class="chat-prompt-chip">Who sponsors jane.doe@external.com?</button>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ask a question…"></textarea>
+      <button class="chat-send" id="chat-send">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Chat ──────────────────────────────────────────────────────────────────
+    const SESSION_KEY = 'genai_session_id';
+
+    function getSessionId() {
+      let sid = localStorage.getItem(SESSION_KEY);
+      if (!sid) {
+        sid = crypto.randomUUID();
+        localStorage.setItem(SESSION_KEY, sid);
+      }
+      return sid;
+    }
+
+    const chatToggle   = document.getElementById('chat-toggle');
+    const chatPanel    = document.getElementById('chat-panel');
+    const chatClose    = document.getElementById('chat-close');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatEmpty    = document.getElementById('chat-empty');
+    const chatInput    = document.getElementById('chat-input');
+    const chatSend     = document.getElementById('chat-send');
+
+    chatToggle.addEventListener('click', () => {
+      chatPanel.classList.toggle('open');
+      if (chatPanel.classList.contains('open')) chatInput.focus();
+    });
+    chatClose.addEventListener('click', () => chatPanel.classList.remove('open'));
+
+    // Auto-resize textarea
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+    });
+
+    // Send on Enter (Shift+Enter = newline)
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    chatSend.addEventListener('click', sendMessage);
+
+    // Example prompt chips
+    document.querySelectorAll('.chat-prompt-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        chatInput.value = chip.textContent.trim();
+        chatInput.dispatchEvent(new Event('input'));
+        sendMessage();
+      });
+    });
+
+    // Simple markdown → HTML converter (no external library)
+    function renderMarkdown(text) {
+      let html = text
+        // Escape HTML first
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        // Fenced code blocks
+        .replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) => `<pre>${code.trim()}</pre>`)
+        // Inline code
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Bold
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        // HR
+        .replace(/^={3,}$/gm, '<hr>').replace(/^-{3,}$/gm, '<hr>')
+        // Headers → bold paragraph
+        .replace(/^#{1,3}\s+(.+)$/gm, '<strong>$1</strong>');
+
+      // Tables
+      const tableRe = /(\|.+\|\n)([\| -:]+\|\n)((?:\|.+\|\n?)*)/g;
+      html = html.replace(tableRe, (_, header, _sep, body) => {
+        const ths = header.split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
+        const tbody = body.trim().split('\n').map(row => {
+          const tds = row.split('|').filter(c => c.trim() !== '|' && c !== '').map(c => `<td>${c.trim()}</td>`).join('');
+          return `<tr>${tds}</tr>`;
+        }).join('');
+        return `<table><thead><tr>${ths}</tr></thead><tbody>${tbody}</tbody></table>`;
+      });
+
+      // Lists
+      html = html.replace(/((?:^- .+\n?)+)/gm, match => {
+        const items = match.trim().split('\n').map(l => `<li>${l.replace(/^- /, '')}</li>`).join('');
+        return `<ul>${items}</ul>`;
+      });
+      html = html.replace(/((?:^\d+\. .+\n?)+)/gm, match => {
+        const items = match.trim().split('\n').map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
+        return `<ol>${items}</ol>`;
+      });
+
+      // Paragraphs (double newline)
+      html = html.split(/\n{2,}/).map(p => {
+        p = p.trim();
+        if (!p || p.startsWith('<')) return p;
+        return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+      }).join('\n');
+
+      return html;
+    }
+
+    function appendMessage(role, content, intent) {
+      if (chatEmpty) chatEmpty.style.display = 'none';
+      const div = document.createElement('div');
+      div.className = `chat-msg ${role}`;
+      if (role === 'assistant') {
+        let inner = '';
+        if (intent) inner += `<div class="chat-intent-badge">${intent.replace(/_/g, ' ')}</div>`;
+        inner += renderMarkdown(content);
+        div.innerHTML = inner;
+      } else {
+        div.textContent = content;
+      }
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return div;
+    }
+
+    function appendThinking() {
+      const div = document.createElement('div');
+      div.className = 'chat-thinking';
+      div.textContent = 'Thinking…';
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return div;
+    }
+
+    async function sendMessage() {
+      const text = chatInput.value.trim();
+      if (!text || chatSend.disabled) return;
+
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+      chatSend.disabled = true;
+
+      appendMessage('user', text);
+      const thinking = appendThinking();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ sessionId: getSessionId(), message: text }),
+        });
+        const data = await res.json();
+        thinking.remove();
+        if (data.error) {
+          appendMessage('assistant', `⚠️ ${data.error}`);
+        } else {
+          appendMessage('assistant', data.reply, data.intent);
+        }
+      } catch (err) {
+        thinking.remove();
+        appendMessage('assistant', '⚠️ Could not reach the GenAI service. Please try again.');
+        console.error('Chat error:', err);
+      } finally {
+        chatSend.disabled = false;
+        chatInput.focus();
+      }
     }
   </script>
 </body>

@@ -39,41 +39,35 @@ const pool = new Pool({
   password: process.env.PGPASSWORD || 'postgres',
 });
 
-// ── Job Logging Helpers ───────────────────────────────────────────────────────
+// ── Job Logging Helpers (via stored procedures) ──────────────────────────────
 
 async function startJob(phase, targetTable) {
   const { rows } = await pool.query(
-    `INSERT INTO etl_job_logs (service, phase, target_table, status, started_at)
-     VALUES ($1, $2, $3, 'running', now()) RETURNING id`,
+    'SELECT * FROM sp_etl_start_job($1, $2, $3)',
     [SERVICE_NAME, phase, targetTable],
   );
-  return rows[0].id;
+  return rows[0].sp_etl_start_job;
 }
 
 async function completeJob(jobId, stats) {
   await pool.query(
-    `UPDATE etl_job_logs
-     SET status = 'completed', records_processed = $2, records_created = $3,
-         records_updated = $4, records_deleted = $5, finished_at = now()
-     WHERE id = $1`,
+    'CALL sp_etl_complete_job($1, $2, $3, $4, $5)',
     [jobId, stats.processed, stats.created, stats.updated, stats.deleted],
   );
 }
 
 async function failJob(jobId, error) {
   await pool.query(
-    `UPDATE etl_job_logs SET status = 'failed', error_message = $2, finished_at = now() WHERE id = $1`,
+    'CALL sp_etl_fail_job($1, $2)',
     [jobId, String(error)],
   );
 }
 
-// ── Change Detection Helpers ──────────────────────────────────────────────────
+// ── Change Detection Helpers (via stored procedures) ──────────────────────────────
 
 async function logChange(client, sourceTable, email, changeType, fieldName, oldValue, newValue, jobId) {
   await client.query(
-    `INSERT INTO source_change_logs
-       (source_table, email, change_type, field_name, old_value, new_value, etl_job_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    'CALL sp_etl_log_change($1, $2, $3, $4, $5, $6, $7)',
     [sourceTable, email, changeType, fieldName, oldValue, newValue, jobId],
   );
 }
@@ -111,17 +105,7 @@ async function upsertPrimaryBatch(records, embeddings, existingByEmail, jobId) {
       const existing = existingByEmail.get(r.email);
 
       await client.query(
-        `INSERT INTO active_directory
-           (first_name, last_name, email, type, enabled, locked, passwordlastreset, embedding)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector)
-         ON CONFLICT (email) DO UPDATE SET
-           first_name        = EXCLUDED.first_name,
-           last_name         = EXCLUDED.last_name,
-           type              = EXCLUDED.type,
-           enabled           = EXCLUDED.enabled,
-           locked            = EXCLUDED.locked,
-           passwordlastreset = EXCLUDED.passwordlastreset,
-           embedding         = EXCLUDED.embedding`,
+        'CALL sp_upsert_active_directory($1, $2, $3, $4, $5, $6, $7, $8)',
         [
           r.first_name, r.last_name, r.email, r.type || 'user',
           r.enabled !== undefined ? r.enabled : true,
@@ -173,7 +157,7 @@ async function runPrimary() {
   try {
     // Load existing records for change detection
     const { rows: existingRows } = await pool.query(
-      'SELECT email, first_name, last_name, type, enabled, locked, passwordlastreset FROM active_directory',
+      'SELECT * FROM sp_get_existing_active_directory()',
     );
     const existingByEmail = new Map(existingRows.map(r => [r.email, r]));
 
@@ -184,7 +168,13 @@ async function runPrimary() {
 
     for (let i = 0; i < records.length; i += BATCH_SIZE) {
       const batch = records.slice(i, i + BATCH_SIZE);
-      const texts = batch.map(r => `${r.first_name} ${r.last_name} ${r.email}`);
+      const texts = batch.map(r => [
+        r.first_name, r.last_name, r.email,
+        `type=${r.type || 'user'}`,
+        `enabled=${r.enabled !== undefined ? r.enabled : true}`,
+        `locked=${r.locked !== undefined ? r.locked : false}`,
+        r.passwordlastreset ? `passwordLastReset=${r.passwordlastreset}` : '',
+      ].filter(Boolean).join(' '));
       const embeddings = await vectorizeBatch(texts);
       const batchStats = await upsertPrimaryBatch(batch, embeddings, existingByEmail, jobId);
       stats.created += batchStats.created;
@@ -200,7 +190,7 @@ async function runPrimary() {
       for (const [email] of existingByEmail) {
         if (!incomingEmails.has(email)) {
           await logChange(client, 'active_directory', email, 'deleted', null, null, null, jobId);
-          await client.query('DELETE FROM active_directory WHERE email = $1', [email]);
+          await client.query('CALL sp_delete_active_directory($1)', [email]);
           stats.deleted++;
         }
       }
@@ -230,9 +220,7 @@ async function upsertLogsBatch(records, embeddings) {
       const r   = records[i];
       const emb = `[${embeddings[i].join(',')}]`;
       await client.query(
-        `INSERT INTO active_directory_activity_logs
-           (log_timestamp, first_name, last_name, email, changed_by, notes, embedding)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::vector)`,
+        'CALL sp_insert_ad_activity_log($1, $2, $3, $4, $5, $6, $7)',
         [r.timestamp, r.first_name, r.last_name, r.email, r.changed_by || null, r.notes || null, emb],
       );
     }
@@ -253,7 +241,7 @@ async function runLogs() {
     // Truncate logs table (append-only from source file each run)
     const client = await pool.connect();
     try {
-      await client.query('TRUNCATE TABLE active_directory_activity_logs RESTART IDENTITY');
+      await client.query('CALL sp_truncate_ad_activity_logs()');
       console.log(`[${SERVICE_NAME}] Truncated active_directory_activity_logs.`);
     } finally {
       client.release();
@@ -265,7 +253,7 @@ async function runLogs() {
     for (let i = 0; i < records.length; i += BATCH_SIZE) {
       const batch = records.slice(i, i + BATCH_SIZE);
       const texts = batch.map(r =>
-        [`${r.first_name} ${r.last_name}`, r.email, r.changed_by || '', r.notes || ''].join(' '),
+        [`${r.first_name} ${r.last_name}`, r.email, r.changed_by ? `changed_by=${r.changed_by}` : '', r.notes || ''].filter(Boolean).join(' '),
       );
       const embeddings = await vectorizeBatch(texts);
       await upsertLogsBatch(batch, embeddings);

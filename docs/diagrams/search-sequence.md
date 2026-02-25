@@ -18,8 +18,8 @@ sequenceDiagram
         A->>+P: SELECT *, embedding <=> $vector AS dist<br/>FROM active_directory<br/>ORDER BY dist LIMIT 20
         P-->>-A: Ranked results (≤20 rows)
     else Unfiltered Query
-        A->>+P: 9× UNION ALL<br/>SELECT *, embedding <=> $vector AS dist<br/>FROM each_table<br/>ORDER BY dist LIMIT 20
-        P-->>-A: Ranked results (≤180 rows)
+        A->>+P: 8× UNION ALL<br/>SELECT *, embedding <=> $vector AS dist<br/>FROM each_table<br/>ORDER BY dist LIMIT 20
+        P-->>-A: Ranked results (≤160 rows)
     end
 
     Note over A: Sort combined results by distance<br/>Slice to TOP_K (20)

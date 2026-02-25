@@ -1,29 +1,29 @@
-# GenAI Expansion — Target Architecture (C4 Container)
+# GenAI Architecture (C4 Container — Current State)
 
-> Per `docs/genai_expansion_plan.md` — this is the planned future state.
+> Implemented as of February 23, 2026. See `docs/genai_expansion_plan.md` for the full implementation history.
 
 ```mermaid
 graph TB
     classDef person fill:#08427B,stroke:#073B6F,color:#fff
     classDef existing fill:#1168BD,stroke:#0E5BA7,color:#fff
-    classDef new fill:#D4451A,stroke:#B83A15,color:#fff
+    classDef genai fill:#D4451A,stroke:#B83A15,color:#fff
     classDef database fill:#2D882D,stroke:#226622,color:#fff
     classDef external fill:#999999,stroke:#6B6B6B,color:#fff
 
     User["👤 IT Administrator"]:::person
 
-    subgraph DockerPlatform [" Docker Platform — user-search (Future State) "]
+    subgraph DockerPlatform [" Docker Platform — user-search "]
         direction TB
 
-        App["📦 App Container<br/><br/>Node.js / Express<br/>Search UI + Chat UI<br/>Port 3000"]:::existing
+        App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + Chat UI + SBERT<br/>Port 3000"]:::existing
 
-        GenAI["🤖 GenAI Service<br/>(NEW)<br/><br/>Node.js<br/>Conversational logic<br/>RAG orchestration<br/>Prompt engineering"]:::new
+        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>Intent classification<br/>RAG orchestration<br/>Vector search proxy<br/>Port 3001"]:::genai
 
-        Ollama["🧠 Ollama Container<br/>(NEW)<br/><br/>Llama 3.1 8B<br/>Local LLM inference<br/>Port 11434"]:::new
+        Ollama["🧠 Ollama Container<br/><br/>Llama 3.1 8B<br/>Local LLM inference<br/>Port 11434"]:::genai
 
-        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>Existing 9 tables<br/>+ etl_job_logs (NEW)<br/>+ chat_messages (NEW)<br/>+ source_change_logs (NEW)"]:::database
+        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>11 tables (8 with HNSW indexes)<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages"]:::database
 
-        subgraph ETLServices [" 4 ETL Line Services (existing, consolidated) "]
+        subgraph ETLServices [" 4 ETL Line Services "]
             ETL_AD["etl-ad-line<br/>active_directory + activity_logs"]:::existing
             ETL_NF["etl-netforum-line<br/>netforum_members + activity_logs"]:::existing
             ETL_EU["etl-eu-line<br/>external_users + activity_logs"]:::existing
@@ -35,14 +35,15 @@ graph TB
 
     User -->|"Search queries"| App
     User -->|"Natural language questions<br/>'What changed for jsmith last week?'"| App
-    App -->|"Search API"| Postgres
-    App -->|"Chat requests"| GenAI
+    App -->|"Search API + SBERT embeddings"| Postgres
+    App -->|"Chat proxy POST /api/chat"| GenAI
     GenAI -->|"RAG context retrieval"| Postgres
+    GenAI -->|"Vector search /api/search"| App
     GenAI -->|"LLM inference"| Ollama
-    GenAI -->|"Store conversation"| Postgres
+    GenAI -->|"Persist conversation"| Postgres
     ETL_AD -->|"Vectors + change logs"| Postgres
     ETL_NF -->|"Vectors + change logs"| Postgres
     ETL_EU -->|"Vectors + change logs"| Postgres
     ETL_DG -->|"Vectors + change logs"| Postgres
-    App -.->|"SBERT model"| HF
+    App -.->|"SBERT model weights"| HF
 ```

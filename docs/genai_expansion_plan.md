@@ -2,6 +2,7 @@
 
 **AI Implementer:** Claude Opus 4.6
 **Date:** February 20, 2026
+**Last Updated:** February 23, 2026
 
 ### 1. Objective
 
@@ -45,41 +46,77 @@ The new architecture will introduce a robust logging layer and a dedicated GenAI
 
 ### 4. Implementation Plan & Sequence of Steps
 
-This project will be executed in the following sequence:
+#### ✅ Phase 1 — Logging Foundation (Complete — February 23, 2026)
 
-1.  **Create Logging Schemas**:
-    *   Add a new SQL file (`infra/db/init/07_logging_tables.sql`) to define the `etl_job_logs` and `source_change_logs` tables.
+1.  **Create Logging Schemas** ✅
+    *   Added `infra/db/init/10_logging_tables.sql` defining:
+        *   `etl_job_logs` — records service, phase, target table, status (`running` / `completed` / `failed`), record counts (processed, created, updated, deleted), error message, start/finish timestamps. Indexed on `service`, `status`, and `started_at DESC`.
+        *   `source_change_logs` — immutable append-only log of every detected change (created / updated / deleted) across all four primary tables. Stores `source_table`, `email`, `change_type`, `field_name`, `old_value`, `new_value`, `detected_at`, and `etl_job_id` FK. Indexed on `email`, `source_table`, `detected_at DESC`, and `change_type`.
+    *   Applied to the running Postgres instance via `docker exec`.
 
-2.  **Enhance ETL Line Services**:
-    *   All four line services (`etl-ad-line`, `etl-netforum-line`, `etl-eu-line`, `etl-dg-line`) already handle both their primary and activity/sync log tables within a single container. Enhance each service's `vectorize.js` to:
-        *   Implement change-detection logic in `runPrimary()` by comparing incoming data against the existing state in Postgres.
-        *   Write start, completion, and failure records to the `etl_job_logs` table at the start and end of each `runPrimary()` and `runLogs()` phase.
-        *   Write all detected data changes to the `source_change_logs` table during `runPrimary()`.
-    *   Apply this enhancement to all four line services, prioritising `etl-ad-line` and `etl-netforum-line` as the highest-value sources.
+2.  **Enhance ETL Line Services** ✅
+    *   All four `vectorize.js` files updated with identical `startJob()` / `completeJob()` / `failJob()` helper functions.
+    *   `runPrimary()` now:
+        *   Pre-loads the existing table into a `Map<email, record>` before processing.
+        *   Detects creates (email absent from DB), field-level updates (per-column comparison via `normaliseValue()`), and deletes (email in DB but absent from incoming data).
+        *   Writes each change to `source_change_logs` within the same transaction as the upsert.
+        *   Deletes removed records from the primary table.
+        *   No longer calls `TRUNCATE` — data is fully managed via upsert + targeted deletes.
+    *   `runLogs()` continues to truncate-and-reload (appropriate for append-only log tables) but now wraps in `etl_job_logs` entries.
+    *   Tracked fields per service: `active_directory` (`first_name`, `last_name`, `type`, `enabled`, `locked`, `passwordlastreset`), `netforum_members` (`first_name`, `last_name`, `type`, `enabled`, `last_login`), `external_users` (`first_name`, `last_name`, `type`, `enabled`, `sponsor`), `distribution_groups` (`name`, `alias`, `contacts` as serialised JSON).
+    *   All four ETL containers rebuilt and redeployed; first run logged 8 completed jobs.
 
-3.  **Integrate Logs into UI**:
-    *   Update the main application's `/api/lookup` endpoint to also retrieve records from `source_change_logs` for a given user.
-    *   Modify the frontend (`index.html`) to display a "Change History" section in the user detail panel.
+3.  **Integrate Logs into UI** ✅
+    *   `GET /api/lookup` now executes `LOOKUP_SQL` and `CHANGE_LOGS_SQL` in parallel (`Promise.all`) and returns `{ records[], changeLogs[] }`.
+    *   New `GET /api/etl-jobs` endpoint returns the 50 most recent `etl_job_logs` entries (most recent first), serialised with camelCase field names.
+    *   Frontend (`index.html`) detail overlay now renders a colour-coded **Change History** section below the activity logs:
+        *   Green badge = `created`, blue = `updated`, red = `deleted`.
+        *   Update entries show a field-level diff (`old_value → new_value`).
+        *   Timestamp and job ID shown per entry.
+        *   Uses the same 5-entry preview + progressive-disclosure "More…" pattern as existing activity logs.
+    *   App container rebuilt and redeployed; `/api/etl-jobs` and updated `/api/lookup` verified responding correctly.
 
-4.  **Deploy Ollama Service**:
-    *   Create a `docker-compose.genai.yml` file to define the `ollama` service.
-    *   Ensure it uses a named volume for model persistence and exposes port `11434`.
-    *   Document the one-time command needed to pull the model: `docker exec <container_name> ollama pull llama3.1:8b`.
+---
 
-5.  **Build GenAI Service**:
-    *   Create a new service directory: `services/genai`.
-    *   Add a `Dockerfile`, `package.json`, and `index.js`.
-    *   Implement the core logic: an Express server with a `/api/chat` endpoint that performs the intent classification and context retrieval workflow described in the Target Architecture.
-    *   Add this new service to the `docker-compose.genai.yml` file, ensuring it can communicate with both `postgres` and `ollama`.
+#### 🔲 Phase 2 — GenAI Service (Next)
 
-6.  **Create Chat Storage Schema**:
-    *   Add a new SQL file (`infra/db/init/08_chat_tables.sql`) to define the `chat_messages` table for storing conversation history.
+4.  **Create Chat Storage Schema**:
+    *   Add `infra/db/init/11_chat_tables.sql` to define the `chat_messages` table:
+        *   `id`, `session_id` (UUID to group a conversation), `role` (`user` | `assistant`), `content` (TEXT), `created_at`.
+        *   Index on `session_id` for fast conversation retrieval.
+    *   Apply to the running Postgres instance via `docker exec` (same pattern as step 1).
+
+5.  **Deploy Ollama Service**:
+    *   Create `docker-compose.genai.yml` defining the `ollama` service:
+        *   Image: `ollama/ollama`.
+        *   Named volume `ollama_models` mounted at `/root/.ollama` for model persistence across restarts.
+        *   Exposes port `11434`.
+        *   Joins the same Docker network as `postgres` and the `genai` service.
+    *   After first `docker compose up`, pull the model once: `docker exec user-search-ollama-1 ollama pull llama3.1:8b`.
+
+6.  **Build GenAI Service**:
+    *   Create `services/genai/` with `Dockerfile`, `package.json`, and `index.js`.
+    *   Express server exposing `POST /api/chat` (accepts `{ sessionId, message }`).
+    *   **Workflow inside `/api/chat`**:
+        1.  Classify user intent from the message text (user lookup / ETL status / change history / general).
+        2.  Retrieve relevant context from Postgres based on intent:
+            *   User lookup → query `active_directory`, `netforum_members`, `external_users`.
+            *   ETL status → query `etl_job_logs` (recent runs, any failures).
+            *   Change history → query `source_change_logs` filtered by email or date range.
+        3.  Load recent conversation history from `chat_messages` for the given `sessionId`.
+        4.  Assemble a system prompt + context + history and POST to `http://ollama:11434/api/chat`.
+        5.  Persist both the user message and the assistant response to `chat_messages`.
+        6.  Return the response to the caller (streaming optional in v1).
+    *   Add the `genai` service to `docker-compose.genai.yml`, with `depends_on: [postgres, ollama]`.
 
 7.  **Implement Chat UI**:
-    *   Add a new chat interface component to the main application's `index.html`.
-    *   This UI will send user messages to the GenAI service's `/api/chat` endpoint and display the streaming response.
+    *   Add a **Chat** panel to `index.html` alongside the existing search interface.
+    *   The panel maintains a `sessionId` (generated client-side with `crypto.randomUUID()`).
+    *   Sends `POST /api/chat` requests through the existing app container, which proxies to the `genai` service (add a `/api/chat` proxy route to `services/app/src/index.js`).
+    *   Renders streamed or full responses in a scrollable conversation thread.
+    *   Example prompts surfaced in the UI: *"What changed for john.smith@example.com last week?"*, *"Show me the last ETL run for Active Directory"*, *"Who are the members of the Executives distribution group?"*.
 
 8.  **Final Integration & Testing**:
-    *   Create a master `docker-compose.yml` that includes all services (app, postgres, etls, ollama, genai) or provide instructions for running them together.
-    *   Perform end-to-end testing with natural language queries that require data from multiple sources and logs (e.g., "What changed for John Smith last week?", "Show me failed ETL runs for Active Directory").
-    *   Refine the system prompt in the GenAI service to improve the accuracy and formatting of responses.
+    *   Add `ollama` and `genai` services to the existing compose invocation (or document a combined command) so all services start together.
+    *   End-to-end test with natural language queries that require data from multiple sources and logs (e.g., *"What changed for John Smith last week?"*, *"Show me failed ETL runs"*, *"Who sponsors Jane Doe's external account?"*).
+    *   Refine the GenAI service system prompt based on response quality observed during testing.

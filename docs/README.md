@@ -25,7 +25,33 @@ docker compose \
   -f docker-compose.etl-netforum-line.yml \
   -f docker-compose.etl-eu-line.yml \
   -f docker-compose.etl-dg-line.yml \
+  -f docker-compose.genai.yml \
   up --build
+```
+
+## GenAI stack (Ollama + GenAI service)
+
+The GenAI service and Ollama LLM are defined in `docker-compose.genai.yml` and are included in `npm run dev:up`. To start only the GenAI stack alongside an already-running Postgres:
+
+```sh
+docker compose -p user-search -f docker-compose.genai.yml up --build
+```
+
+On first run, pull the model once:
+
+```sh
+docker exec user-search-ollama-1 ollama pull llama3.1:8b
+```
+
+The chat UI is available at `http://localhost:3000` (the 💬 button in the bottom-right corner). The GenAI service API is accessible directly at `http://localhost:3001/api/chat`.
+
+### Seeding historical change data
+
+A one-time seed script populates `source_change_logs` and `etl_job_logs` with realistic historical data so the GenAI service has meaningful context:
+
+```sh
+python3 seed_change_logs.py
+docker exec -i user-search-postgres-1 psql -U postgres -d appdb < seed_change_logs.sql
 ```
 
 ## Regenerating synthetic data
@@ -78,6 +104,11 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `generate_synthetic.py` | Python script that generates all synthetic data for all line services |
 | `docs/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, Fargate migration plan |
 | `docs/diagrams/aws-target-architecture.md` | Mermaid diagram — AWS target architecture (VPC, ALB, Lambda, RDS) |
+| `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
+| `services/genai/` | GenAI service: intent classification, context retrieval, Ollama chat |
+| `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
+| `seed_change_logs.py` | Generates seed SQL for `source_change_logs` and `etl_job_logs` historical data |
+| `seed_change_logs.sql` | Generated seed SQL (apply once after first Postgres init) |
 
 ## Code quality
 
@@ -123,5 +154,6 @@ docker compose \
   -f docker-compose.etl-netforum-line.yml \
   -f docker-compose.etl-eu-line.yml \
   -f docker-compose.etl-dg-line.yml \
+  -f docker-compose.genai.yml \
   build
 ```

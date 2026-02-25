@@ -11,11 +11,11 @@ Mermaid diagrams documenting the user-search platform architecture, data flows, 
 | ETL Data Flow | [etl-data-flow.md](etl-data-flow.md) | End-to-end flow from synthetic JSON through transform → vectorize → pgvector |
 | Search Sequence | [search-sequence.md](search-sequence.md) | Step-by-step sequence for `/api/search` requests |
 | Lookup Sequence | [lookup-sequence.md](lookup-sequence.md) | Step-by-step sequence for `/api/lookup` detail panel requests |
-| Entity Relationship | [entity-relationship.md](entity-relationship.md) | All 9 database tables, fields, and relationships |
+| Entity Relationship | [entity-relationship.md](entity-relationship.md) | All 11 database tables, fields, and relationships |
 | Docker Compose Topology | [docker-compose-topology.md](docker-compose-topology.md) | Service dependencies, volumes, and network topology |
 | Deployment Pipeline | [deployment-pipeline.md](deployment-pipeline.md) | `npm run deploy` execution sequence with quality gates |
 | ETL Job State | [state-etl-job.md](state-etl-job.md) | State machine for a single ETL job lifecycle |
-| GenAI Target Architecture | [genai-target-architecture.md](genai-target-architecture.md) | Future-state C4 container diagram per the GenAI expansion plan |
+| GenAI Architecture | [genai-target-architecture.md](genai-target-architecture.md) | C4 container diagram — current GenAI platform architecture |
 
 ## Conventions
 

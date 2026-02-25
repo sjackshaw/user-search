@@ -62,6 +62,12 @@ export default [
         setInterval: 'readonly',
         clearInterval: 'readonly',
         Buffer:   'readonly',
+        // Node.js 18+ built-in globals
+        fetch:           'readonly',
+        URL:             'readonly',
+        URLSearchParams: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal:     'readonly',
       },
     },
     rules: {

@@ -25,7 +25,7 @@ flowchart LR
     end
 
     subgraph Database [" PostgreSQL + pgvector "]
-        DB["9 Tables\nHNSW Indexes\nCosine similarity"]:::store
+        DB["11 tables\n(8 with HNSW indexes)\nCosine similarity"]:::store
     end
 
     P1 & L1 --> C1 --> DB

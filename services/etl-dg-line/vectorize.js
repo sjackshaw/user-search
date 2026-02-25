@@ -39,41 +39,35 @@ const pool = new Pool({
   password: process.env.PGPASSWORD || 'postgres',
 });
 
-// ── Job Logging Helpers ───────────────────────────────────────────────────────
+// ── Job Logging Helpers (via stored procedures) ──────────────────────────────
 
 async function startJob(phase, targetTable) {
   const { rows } = await pool.query(
-    `INSERT INTO etl_job_logs (service, phase, target_table, status, started_at)
-     VALUES ($1, $2, $3, 'running', now()) RETURNING id`,
+    'SELECT * FROM sp_etl_start_job($1, $2, $3)',
     [SERVICE_NAME, phase, targetTable],
   );
-  return rows[0].id;
+  return rows[0].sp_etl_start_job;
 }
 
 async function completeJob(jobId, stats) {
   await pool.query(
-    `UPDATE etl_job_logs
-     SET status = 'completed', records_processed = $2, records_created = $3,
-         records_updated = $4, records_deleted = $5, finished_at = now()
-     WHERE id = $1`,
+    'CALL sp_etl_complete_job($1, $2, $3, $4, $5)',
     [jobId, stats.processed, stats.created, stats.updated, stats.deleted],
   );
 }
 
 async function failJob(jobId, error) {
   await pool.query(
-    `UPDATE etl_job_logs SET status = 'failed', error_message = $2, finished_at = now() WHERE id = $1`,
+    'CALL sp_etl_fail_job($1, $2)',
     [jobId, String(error)],
   );
 }
 
-// ── Change Detection Helpers ──────────────────────────────────────────────────
+// ── Change Detection Helpers (via stored procedures) ──────────────────────────────
 
 async function logChange(client, sourceTable, email, changeType, fieldName, oldValue, newValue, jobId) {
   await client.query(
-    `INSERT INTO source_change_logs
-       (source_table, email, change_type, field_name, old_value, new_value, etl_job_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    'CALL sp_etl_log_change($1, $2, $3, $4, $5, $6, $7)',
     [sourceTable, email, changeType, fieldName, oldValue, newValue, jobId],
   );
 }
@@ -111,13 +105,7 @@ async function upsertPrimaryBatch(records, embeddings, existingByEmail, jobId) {
       const existing = existingByEmail.get(r.email);
 
       await client.query(
-        `INSERT INTO distribution_groups (name, alias, email, contacts, embedding)
-         VALUES ($1, $2, $3, $4::jsonb, $5::vector)
-         ON CONFLICT (email) DO UPDATE SET
-           name      = EXCLUDED.name,
-           alias     = EXCLUDED.alias,
-           contacts  = EXCLUDED.contacts,
-           embedding = EXCLUDED.embedding`,
+        'CALL sp_upsert_distribution_group($1, $2, $3, $4, $5)',
         [r.name, r.alias, r.email, JSON.stringify(r.contacts || []), emb],
       );
 
@@ -160,7 +148,7 @@ async function runPrimary() {
   try {
     // Load existing records for change detection
     const { rows: existingRows } = await pool.query(
-      'SELECT email, name, alias, contacts FROM distribution_groups',
+      'SELECT * FROM sp_get_existing_distribution_groups()',
     );
     const existingByEmail = new Map(existingRows.map(r => [r.email, r]));
 
@@ -171,9 +159,16 @@ async function runPrimary() {
 
     for (let i = 0; i < records.length; i += BATCH_SIZE) {
       const batch = records.slice(i, i + BATCH_SIZE);
-      const texts = batch.map(r =>
-        [r.name, r.alias, r.email, ...(r.contacts || []).map(c => `${c.first_name} ${c.last_name} ${c.email}`)].join(' '),
-      );
+      const texts = batch.map(r => {
+        const memberNames = (r.contacts || []).slice(0, 20).map(c => `${c.first_name} ${c.last_name}`).join(', ');
+        const memberCount = (r.contacts || []).length;
+        return [
+          r.name, `alias=${r.alias}`, r.email,
+          'type=distribution-group',
+          memberCount > 0 ? `members: ${memberNames}` : 'members: none',
+          `totalMembers=${memberCount}`,
+        ].join(' ');
+      });
       const embeddings = await vectorizeBatch(texts);
       const batchStats = await upsertPrimaryBatch(batch, embeddings, existingByEmail, jobId);
       stats.created += batchStats.created;
@@ -189,7 +184,7 @@ async function runPrimary() {
       for (const [email] of existingByEmail) {
         if (!incomingEmails.has(email)) {
           await logChange(client, 'distribution_groups', email, 'deleted', null, null, null, jobId);
-          await client.query('DELETE FROM distribution_groups WHERE email = $1', [email]);
+          await client.query('CALL sp_delete_distribution_group($1)', [email]);
           stats.deleted++;
         }
       }
@@ -219,9 +214,7 @@ async function upsertLogsBatch(records, embeddings) {
       const r   = records[i];
       const emb = `[${embeddings[i].join(',')}]`;
       await client.query(
-        `INSERT INTO distribution_group_sync_logs
-           (sync_timestamp, group_name, accounts_added, accounts_removed, notes, embedding)
-         VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6::vector)`,
+        'CALL sp_insert_dg_sync_log($1, $2, $3, $4, $5, $6)',
         [
           r.sync_timestamp,
           r.group_name,
@@ -249,7 +242,7 @@ async function runLogs() {
     // Truncate logs table (append-only from source file each run)
     const client = await pool.connect();
     try {
-      await client.query('TRUNCATE TABLE distribution_group_sync_logs RESTART IDENTITY');
+      await client.query('CALL sp_truncate_dg_sync_logs()');
       console.log(`[${SERVICE_NAME}] Truncated distribution_group_sync_logs.`);
     } finally {
       client.release();
@@ -261,9 +254,14 @@ async function runLogs() {
     for (let i = 0; i < records.length; i += BATCH_SIZE) {
       const batch = records.slice(i, i + BATCH_SIZE);
       const texts = batch.map(r => {
-        const added   = (r.accounts_added   || []).map(a => `${a.first_name} ${a.last_name}`).join(' ');
-        const removed = (r.accounts_removed || []).map(a => `${a.first_name} ${a.last_name}`).join(' ');
-        return [r.group_name, added, removed, r.notes || ''].join(' ');
+        const added   = (r.accounts_added   || []).map(a => `${a.first_name} ${a.last_name}`).join(', ');
+        const removed = (r.accounts_removed || []).map(a => `${a.first_name} ${a.last_name}`).join(', ');
+        return [
+          r.group_name,
+          added ? `added: ${added}` : '',
+          removed ? `removed: ${removed}` : '',
+          r.notes || '',
+        ].filter(Boolean).join(' ');
       });
       const embeddings = await vectorizeBatch(texts);
       await upsertLogsBatch(batch, embeddings);

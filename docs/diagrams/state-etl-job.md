@@ -17,26 +17,34 @@ stateDiagram-v2
 
     ModelReady --> RunPrimary: runPrimary()
 
-    RunPrimary --> TruncatePrimary: TRUNCATE primary table
-    TruncatePrimary --> ReadPrimary: Read data/primary.json
+    RunPrimary --> StartJob: INSERT etl_job_logs (running)
+    StartJob --> LoadExistingMap: Load current DB rows into Map by email
+    LoadExistingMap --> ReadPrimary: Read data/primary.json
     ReadPrimary --> Failed: File not found
-    ReadPrimary --> EmbedPrimary: Batch SBERT encode
-    EmbedPrimary --> UpsertPrimary: INSERT ON CONFLICT UPDATE
-    UpsertPrimary --> EmbedPrimary: Next batch
-    UpsertPrimary --> PrimaryComplete: All records processed
+    ReadPrimary --> DiffAndEmbed: Detect creates / updates / deletes
+
+    DiffAndEmbed --> WriteChangeLogs: INSERT source_change_logs per change
+    WriteChangeLogs --> UpsertRecords: Batch SBERT encode + INSERT ON CONFLICT UPDATE
+    UpsertRecords --> DeleteRemoved: DELETE rows absent from source
+    DeleteRemoved --> CompleteJob: UPDATE etl_job_logs (completed)
+    CompleteJob --> PrimaryComplete
 
     PrimaryComplete --> RunLogs: runLogs()
 
-    RunLogs --> TruncateLogs: TRUNCATE logs table
+    RunLogs --> StartLogJob: INSERT etl_job_logs (running)
+    StartLogJob --> TruncateLogs: TRUNCATE logs table
     TruncateLogs --> ReadLogs: Read data/logs.json
     ReadLogs --> Failed: File not found
     ReadLogs --> EmbedLogs: Batch SBERT encode
-    EmbedLogs --> UpsertLogs: INSERT ON CONFLICT UPDATE
-    UpsertLogs --> EmbedLogs: Next batch
-    UpsertLogs --> LogsComplete: All records processed
+    EmbedLogs --> InsertLogs: INSERT INTO logs table
+    InsertLogs --> EmbedLogs: Next batch
+    InsertLogs --> CompleteLogJob: All records processed
+    CompleteLogJob --> UpdateLogJob: UPDATE etl_job_logs (completed)
+    UpdateLogJob --> LogsComplete
 
     LogsComplete --> Waiting: Schedule next cron run
     Waiting --> RunPrimary: Cron trigger (hourly)
 
-    Failed --> Startup: Container restart policy
+    Failed --> FailJob: UPDATE etl_job_logs (failed + error_message)
+    FailJob --> Startup: Container restart policy
 ```

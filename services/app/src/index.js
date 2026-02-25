@@ -26,140 +26,20 @@ async function embed(text) {
 // pgvector's HNSW index is used automatically when we ORDER BY <=> (cosine).
 // We UNION results from every source and pick the closest overall.
 
-const SEARCH_SQL = `
-WITH candidates AS (
-  (SELECT 'active_directory'   AS source,
-          first_name, last_name, email, type, NULL::jsonb AS contacts,
-          enabled, locked, passwordlastreset,
-          NULL::timestamptz AS last_login, NULL::text AS sponsor,
-          NULL::text AS group_name, NULL::text AS group_alias,
-          created_at,
-          NULL::timestamptz AS sync_timestamp,
-          NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-          NULL::text AS notes,
-          embedding <=> $1::vector AS distance
-   FROM   active_directory
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
+// ── Stored-procedure SQL calls ────────────────────────────────────────────────
+// All query logic lives in PostgreSQL stored procedures (see 12_stored_procedures.sql).
+// App code calls them with parameterised arguments via pool.query().
 
-  UNION ALL
+const SP_SEARCH_ALL   = 'SELECT * FROM sp_search_all_sources($1, $2)';
+const SP_FILTERED     = 'SELECT * FROM sp_search_filtered($1, $2, $3, $4, $5, $6)';
+const SP_LOOKUP       = 'SELECT * FROM sp_lookup_by_email($1)';
+const SP_CHANGE_LOGS  = 'SELECT * FROM sp_get_change_logs($1, $2)';
+const SP_ETL_JOBS     = 'SELECT * FROM sp_get_etl_jobs($1)';
+const SP_MULTI_LOOKUP = 'SELECT * FROM sp_multi_lookup_emails($1)';
+const SP_ANN_RERANK   = 'SELECT * FROM sp_ann_rerank($1, $2)';
+const SP_INTERSECTION = 'SELECT * FROM sp_intersection_search($1, $2, $3)';
 
-  (SELECT 'netforum_members'   AS source,
-          first_name, last_name, email, type, NULL::jsonb AS contacts,
-          enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-          last_login, NULL::text AS sponsor,
-          NULL::text AS group_name, NULL::text AS group_alias,
-          created_at,
-          NULL::timestamptz AS sync_timestamp,
-          NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-          NULL::text AS notes,
-          embedding <=> $1::vector AS distance
-   FROM   netforum_members
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
 
-  UNION ALL
-
-  (SELECT 'external_users'     AS source,
-          first_name, last_name, email, type, NULL::jsonb AS contacts,
-          enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-          NULL::timestamptz AS last_login, sponsor,
-          NULL::text AS group_name, NULL::text AS group_alias,
-          created_at,
-          NULL::timestamptz AS sync_timestamp,
-          NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-          NULL::text AS notes,
-          embedding <=> $1::vector AS distance
-   FROM   external_users
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
-
-  UNION ALL
-
-  (SELECT 'distribution_groups' AS source,
-          name AS first_name, alias AS last_name, email, 'group' AS type,
-          contacts,
-          NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-          NULL::timestamptz AS last_login, NULL::text AS sponsor,
-          name AS group_name, alias AS group_alias,
-          created_at,
-          NULL::timestamptz AS sync_timestamp,
-          NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-          NULL::text AS notes,
-          embedding <=> $1::vector AS distance
-   FROM   distribution_groups
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
-
-  UNION ALL
-
-  (SELECT 'distribution_group_sync_logs' AS source,
-          group_name AS first_name, NULL AS last_name, NULL AS email, 'sync-log' AS type,
-          NULL::jsonb AS contacts,
-          NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-          NULL::timestamptz AS last_login, NULL::text AS sponsor,
-          group_name AS group_name, NULL AS group_alias,
-          created_at,
-          sync_timestamp,
-          accounts_added, accounts_removed,
-          notes,
-          embedding <=> $1::vector AS distance
-   FROM   distribution_group_sync_logs
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
-
-  UNION ALL
-
-  (SELECT 'active_directory_activity_logs' AS source,
-          first_name, last_name, email, 'activity-log' AS type, NULL::jsonb AS contacts,
-          NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-          NULL::timestamptz AS last_login, changed_by AS sponsor,
-          NULL::text AS group_name, NULL::text AS group_alias,
-          created_at,
-          log_timestamp AS sync_timestamp,
-          NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-          notes,
-          embedding <=> $1::vector AS distance
-   FROM   active_directory_activity_logs
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
-
-  UNION ALL
-
-  (SELECT 'external_user_activity_logs' AS source,
-          first_name, last_name, email, 'activity-log' AS type, NULL::jsonb AS contacts,
-          NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-          NULL::timestamptz AS last_login, changed_by AS sponsor,
-          NULL::text AS group_name, NULL::text AS group_alias,
-          created_at,
-          log_timestamp AS sync_timestamp,
-          NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-          notes,
-          embedding <=> $1::vector AS distance
-   FROM   external_user_activity_logs
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
-
-  UNION ALL
-
-  (SELECT 'netforum_activity_logs' AS source,
-          first_name, last_name, email, 'activity-log' AS type, NULL::jsonb AS contacts,
-          NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-          NULL::timestamptz AS last_login, changed_by AS sponsor,
-          NULL::text AS group_name, NULL::text AS group_alias,
-          created_at,
-          log_timestamp AS sync_timestamp,
-          NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-          notes,
-          embedding <=> $1::vector AS distance
-   FROM   netforum_activity_logs
-   ORDER  BY embedding <=> $1::vector
-   LIMIT  $2)
-)
-SELECT * FROM candidates
-ORDER  BY distance
-LIMIT  $2;
-`;
 
 // ── Natural-language query parser ─────────────────────────────────────────────
 // Detects queries like:
@@ -170,6 +50,79 @@ LIMIT  $2;
 //   "users in netforum but not in active directory" (NOT support)
 //
 // Returns: { sources: string[], exclude: string[], searchTerm: string|null }
+
+// ── Query preprocessing ──────────────────────────────────────────────────────
+// Strips conversational noise words and phrases from the query before embedding
+// so the vector search focuses on meaningful signal (names, concepts, attributes)
+// rather than filler words that dilute cosine similarity.
+
+const NOISE_PREFIX_RE = /^(?:can\s+you\s+|could\s+you\s+|please\s+|i\s+(?:want|need|would\s+like)\s+(?:to\s+)?(?:see|find|know|get|look\s+up)?\s*)?(?:show\s+me\s+|find\s+(?:me\s+)?|search\s+(?:for\s+)?|look\s*up\s+|tell\s+me\s+(?:about\s+)?|get\s+(?:me\s+)?(?:all\s+)?|list\s+(?:all\s+)?|give\s+me\s+(?:all\s+)?)/i;
+const NOISE_WORDS_RE  = /\b(the|a|an|that|those|these|their|some|any|of|for|on|in|about|with|me|my|who|is|are|was|were|has|have|all(?=\s|$))\b/gi;
+
+/**
+ * Strip conversational preamble and common noise words, returning a clean
+ * string safe to pass to the SBERT embedding model.
+ * Short queries (≤3 words) are left unchanged to avoid over-stripping.
+ */
+function preprocessQuery(raw) {
+  let q = raw.trim();
+  // Don't strip very short queries — risk of losing all signal
+  if (q.split(/\s+/).length <= 3) return q;
+
+  q = q.replace(NOISE_PREFIX_RE, '');       // remove leading conversational phrases
+  q = q.replace(NOISE_WORDS_RE, ' ');       // remove standalone noise words
+  q = q.replace(/\s+/g, ' ').trim();
+
+  // If stripping gutted the query (< 2 chars), fall back to the original
+  return q.length >= 2 ? q : raw.trim();
+}
+
+// ── Attribute filter detection ────────────────────────────────────────────────
+// Detects queries like "disabled users", "locked accounts", "external users",
+// "users with type contact", etc. and extracts SQL-level attribute filters so
+// the ANN search is pre-filtered rather than relying on embeddings alone.
+
+const ATTRIBUTE_PATTERNS = [
+  // enabled / disabled
+  { re: /\b(disabled|inactive)\b/i,                filter: { enabled: false } },
+  { re: /\b(enabled|active)\b(?!\s+directory)/i,   filter: { enabled: true } },
+  // locked / unlocked
+  { re: /\b(locked|locked\s+out)\b/i,              filter: { locked: true } },
+  { re: /\b(unlocked|not\s+locked)\b/i,            filter: { locked: false } },
+  // type filters
+  { re: /\btype\s*[=:]\s*(user|contact|member|external[- ]?user)\b/i, filter: (_m) => ({ type: _m[1].toLowerCase().replace(/\s+/, '-') }) },
+  { re: /\b(contacts?)\b(?!\s*@)/i,                filter: { type: 'contact' } },
+  // source type as implicit filter (not the "in <source>" syntax)
+  { re: /\bexternal\s+users?\b/i,                  filter: { sourceType: 'external_users' } },
+];
+
+/**
+ * Extract attribute filters from a query string.
+ * Returns { filters: { enabled?, locked?, type?, sourceType? }, cleanedQuery: string }
+ */
+function extractAttributeFilters(query) {
+  const filters = {};
+  let cleaned = query;
+
+  for (const { re, filter } of ATTRIBUTE_PATTERNS) {
+    const match = cleaned.match(re);
+    if (match) {
+      const resolved = typeof filter === 'function' ? filter(match) : filter;
+      Object.assign(filters, resolved);
+      // Remove the matched keyword from the query so it doesn't confuse the ANN search
+      cleaned = cleaned.replace(match[0], ' ').replace(/\s+/g, ' ').trim();
+    }
+  }
+
+  // Clean up residual noise words after filter extraction
+  cleaned = cleaned
+    .replace(/^(?:show\s+me\s+|find\s+|search\s+(?:for\s+)?|list\s+(?:all\s+)?|get\s+(?:all\s+)?)/i, '')
+    .replace(/\b(?:all|the|users?|people|persons?|accounts?)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return { filters, cleanedQuery: cleaned };
+}
 
 const SOURCE_ALIASES = {
   'active directory': 'active_directory',
@@ -187,35 +140,6 @@ const SOURCE_ALIASES = {
   'dist groups':     'distribution_groups',
   'groups':          'distribution_groups',
   'dg':              'distribution_groups',
-  'sync log':        'distribution_group_sync_logs',
-  'sync logs':       'distribution_group_sync_logs',
-  'sync-logs':       'distribution_group_sync_logs',
-  'dg sync':         'distribution_group_sync_logs',
-  'dg sync logs':    'distribution_group_sync_logs',
-
-  // Activity logs
-  'active directory activity logs': 'active_directory_activity_logs',
-  'active directory activity log':  'active_directory_activity_logs',
-  'active directory activity':      'active_directory_activity_logs',
-  'ad activity logs':               'active_directory_activity_logs',
-  'ad activity log':                'active_directory_activity_logs',
-  'ad activity':                    'active_directory_activity_logs',
-  'ad logs':                        'active_directory_activity_logs',
-
-  'external user activity logs':    'external_user_activity_logs',
-  'external user activity log':     'external_user_activity_logs',
-  'external activity logs':         'external_user_activity_logs',
-  'external activity log':          'external_user_activity_logs',
-  'external activity':              'external_user_activity_logs',
-  'ext logs':                       'external_user_activity_logs',
-
-  'netforum activity logs':         'netforum_activity_logs',
-  'netforum activity log':          'netforum_activity_logs',
-  'netforum activity':              'netforum_activity_logs',
-  'nf activity logs':               'netforum_activity_logs',
-  'nf activity log':                'netforum_activity_logs',
-  'nf activity':                    'netforum_activity_logs',
-  'nf logs':                        'netforum_activity_logs',
 };
 
 // Sorted by length descending so longer aliases match first
@@ -281,247 +205,13 @@ function parseQuery(rawQuery) {
   return { type: 'semantic', searchTerm: q, sources: [], exclude: [] };
 }
 
-// ── Source-intersection SQL builder ───────────────────────────────────────────
-// Finds users whose email appears in ALL of the required sources.
-// For distribution_groups, a user "is in" the source if their email appears
-// in any group's contacts JSONB array.
-
-function buildPersonSource(table) {
-  return `SELECT email, first_name, last_name, type FROM ${table}`;
-}
-
-const DG_MEMBER_SQL = `
-  SELECT c->>'email' AS email,
-         c->>'first_name' AS first_name,
-         c->>'last_name'  AS last_name,
-         'group-member'   AS type
-  FROM   distribution_groups, jsonb_array_elements(contacts) c
-`;
-
-function sourceSubquery(source) {
-  if (source === 'distribution_groups') return DG_MEMBER_SQL;
-  if (source === 'active_directory_activity_logs')
-    return `SELECT email, first_name, last_name, 'activity-log' AS type FROM active_directory_activity_logs`;
-  if (source === 'external_user_activity_logs')
-    return `SELECT email, first_name, last_name, 'activity-log' AS type FROM external_user_activity_logs`;
-  if (source === 'netforum_activity_logs')
-    return `SELECT email, first_name, last_name, 'activity-log' AS type FROM netforum_activity_logs`;
-  return buildPersonSource(source);
-}
-
-function buildIntersectionSQL(sources, exclude, hasSearchTerm) {
-  // Each required source contributes a CTE of distinct emails
-  const ctes = [];
-
-  for (let i = 0; i < sources.length; i++) {
-    ctes.push(`src_${i} AS (${sourceSubquery(sources[i])})`);
-  }
-  for (let i = 0; i < exclude.length; i++) {
-    ctes.push(`exc_${i} AS (${sourceSubquery(exclude[i])})`);
-  }
-
-  // Intersect: start with src_0, INNER JOIN on email for src_1..N
-  const fromClause = `src_0`;
-  let joinClauses = '';
-  for (let i = 1; i < sources.length; i++) {
-    joinClauses += `\n  JOIN src_${i} ON src_${i}.email = src_0.email`;
-  }
-
-  // Exclude: LEFT JOIN + WHERE IS NULL
-  let excludeJoins = '';
-  let excludeWheres = '';
-  for (let i = 0; i < exclude.length; i++) {
-    excludeJoins += `\n  LEFT JOIN exc_${i} ON exc_${i}.email = src_0.email`;
-    excludeWheres += `${excludeWheres ? ' AND ' : ' WHERE '}exc_${i}.email IS NULL`;
-  }
-
-  // hasSearchTerm: ANN re-ranking is applied post-query in the route handler;
-  // the SQL here returns the full intersected set for JS-side ranking.
-  void hasSearchTerm;
-
-  const sql = `
-    WITH ${ctes.join(',\n         ')}
-    SELECT DISTINCT src_0.email, src_0.first_name, src_0.last_name, src_0.type
-    FROM   ${fromClause}${joinClauses}${excludeJoins}${excludeWheres}
-    ORDER  BY src_0.last_name, src_0.first_name
-    LIMIT  200;
-  `;
-
-  return sql;
-}
-
-// Build a lookup for all sources a given set of emails appears in
-const MULTI_LOOKUP_SQL = `
-  SELECT 'active_directory' AS source, email FROM active_directory WHERE email = ANY($1)
-  UNION ALL
-  SELECT 'netforum_members', email FROM netforum_members WHERE email = ANY($1)
-  UNION ALL
-  SELECT 'external_users', email FROM external_users WHERE email = ANY($1)
-  UNION ALL
-  SELECT 'distribution_groups', c->>'email'
-  FROM   distribution_groups, jsonb_array_elements(contacts) c
-  WHERE  c->>'email' = ANY($1)
-  UNION ALL
-  SELECT 'active_directory_activity_logs', email FROM active_directory_activity_logs WHERE email = ANY($1)
-  UNION ALL
-  SELECT 'external_user_activity_logs', email FROM external_user_activity_logs WHERE email = ANY($1)
-  UNION ALL
-  SELECT 'netforum_activity_logs', email FROM netforum_activity_logs WHERE email = ANY($1)
-`;
+// ── Source-intersection ───────────────────────────────────────────────────────
+// Intersection logic now lives in sp_intersection_search() stored procedure.
+// App just passes source/exclude arrays and limit.
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Lookup every row associated with a given email across all sources.
-// For person tables: direct email match.
-// For distribution_groups: email matches OR email appears inside contacts JSONB.
-const LOOKUP_SQL = `
-  SELECT 'active_directory' AS source,
-         id, first_name, last_name, email, type,
-         NULL::jsonb AS contacts, NULL::text AS name, NULL::text AS alias,
-         enabled, locked, passwordlastreset,
-         NULL::timestamptz AS last_login, NULL::text AS sponsor,
-         created_at,
-         NULL::timestamptz AS sync_timestamp,
-         NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-         NULL::text AS notes
-  FROM   active_directory
-  WHERE  email = $1
-
-  UNION ALL
-
-  SELECT 'netforum_members' AS source,
-         id, first_name, last_name, email, type,
-         NULL::jsonb AS contacts, NULL::text AS name, NULL::text AS alias,
-         enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-         last_login, NULL::text AS sponsor,
-         created_at,
-         NULL::timestamptz AS sync_timestamp,
-         NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-         NULL::text AS notes
-  FROM   netforum_members
-  WHERE  email = $1
-
-  UNION ALL
-
-  SELECT 'external_users' AS source,
-         id, first_name, last_name, email, type,
-         NULL::jsonb AS contacts, NULL::text AS name, NULL::text AS alias,
-         enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-         NULL::timestamptz AS last_login, sponsor,
-         created_at,
-         NULL::timestamptz AS sync_timestamp,
-         NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-         NULL::text AS notes
-  FROM   external_users
-  WHERE  email = $1
-
-  UNION ALL
-
-  SELECT 'distribution_groups' AS source,
-         id, NULL AS first_name, NULL AS last_name, email, 'group' AS type,
-         contacts, name, alias,
-         NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-         NULL::timestamptz AS last_login, NULL::text AS sponsor,
-         created_at,
-         NULL::timestamptz AS sync_timestamp,
-         NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-         NULL::text AS notes
-  FROM   distribution_groups
-  WHERE  email = $1
-     OR  EXISTS (
-           SELECT 1 FROM jsonb_array_elements(contacts) c
-           WHERE  c->>'email' = $1
-         )
-
-  UNION ALL
-
-  SELECT 'distribution_group_sync_logs' AS source,
-         id, NULL AS first_name, NULL AS last_name, NULL AS email, 'sync-log' AS type,
-         NULL::jsonb AS contacts, group_name AS name, NULL AS alias,
-         NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-         NULL::timestamptz AS last_login, NULL::text AS sponsor,
-         created_at,
-         sync_timestamp,
-         accounts_added, accounts_removed,
-         notes
-  FROM   distribution_group_sync_logs
-  WHERE  LOWER(group_name) = $1
-     OR  group_name = (SELECT name FROM distribution_groups WHERE email = $1 LIMIT 1)
-     OR  EXISTS (
-           SELECT 1 FROM jsonb_array_elements(accounts_added) a
-           WHERE  LOWER(a->>'email') = $1
-         )
-     OR  EXISTS (
-           SELECT 1 FROM jsonb_array_elements(accounts_removed) a
-           WHERE  LOWER(a->>'email') = $1
-         )
-
-  UNION ALL
-
-  SELECT 'active_directory_activity_logs' AS source,
-         id, first_name, last_name, email, 'activity-log' AS type,
-         NULL::jsonb AS contacts, NULL::text AS name, NULL::text AS alias,
-         NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-         NULL::timestamptz AS last_login, changed_by AS sponsor,
-         created_at,
-         log_timestamp AS sync_timestamp,
-         NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-         notes
-  FROM   active_directory_activity_logs
-  WHERE  email = $1
-
-  UNION ALL
-
-  SELECT 'external_user_activity_logs' AS source,
-         id, first_name, last_name, email, 'activity-log' AS type,
-         NULL::jsonb AS contacts, NULL::text AS name, NULL::text AS alias,
-         NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-         NULL::timestamptz AS last_login, changed_by AS sponsor,
-         created_at,
-         log_timestamp AS sync_timestamp,
-         NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-         notes
-  FROM   external_user_activity_logs
-  WHERE  email = $1
-
-  UNION ALL
-
-  SELECT 'netforum_activity_logs' AS source,
-         id, first_name, last_name, email, 'activity-log' AS type,
-         NULL::jsonb AS contacts, NULL::text AS name, NULL::text AS alias,
-         NULL::boolean AS enabled, NULL::boolean AS locked, NULL::timestamptz AS passwordlastreset,
-         NULL::timestamptz AS last_login, changed_by AS sponsor,
-         created_at,
-         log_timestamp AS sync_timestamp,
-         NULL::jsonb AS accounts_added, NULL::jsonb AS accounts_removed,
-         notes
-  FROM   netforum_activity_logs
-  WHERE  email = $1
-
-  ORDER BY source, created_at;
-`;
-
-// ── Source change logs lookup ─────────────────────────────────────────────────
-const CHANGE_LOGS_SQL = `
-  SELECT id, source_table, email, change_type, field_name,
-         old_value, new_value, detected_at, etl_job_id
-  FROM   source_change_logs
-  WHERE  email = $1
-  ORDER  BY detected_at DESC
-  LIMIT  100;
-`;
-
-// ── ETL job logs ──────────────────────────────────────────────────────────────
-const ETL_JOBS_SQL = `
-  SELECT id, service, phase, target_table, status,
-         records_processed, records_created, records_updated, records_deleted,
-         error_message, started_at, finished_at
-  FROM   etl_job_logs
-  ORDER  BY started_at DESC
-  LIMIT  50;
-`;
 
 app.get('/api/lookup', async (req, res) => {
   const email = (req.query.email || '').trim().toLowerCase();
@@ -529,8 +219,8 @@ app.get('/api/lookup', async (req, res) => {
 
   try {
     const [lookupResult, changeResult] = await Promise.all([
-      pool.query(LOOKUP_SQL, [email]),
-      pool.query(CHANGE_LOGS_SQL, [email]),
+      pool.query(SP_LOOKUP, [email]),
+      pool.query(SP_CHANGE_LOGS, [email, 100]),
     ]);
 
     const records = lookupResult.rows.map(r => ({
@@ -576,7 +266,7 @@ app.get('/api/lookup', async (req, res) => {
 
 app.get('/api/etl-jobs', async (req, res) => {
   try {
-    const { rows } = await pool.query(ETL_JOBS_SQL);
+    const { rows } = await pool.query(SP_ETL_JOBS, [50]);
     const jobs = rows.map(r => ({
       id:               r.id,
       service:          r.service,
@@ -607,8 +297,10 @@ app.get('/api/search', async (req, res) => {
 
     // ── Intersection / source-filter query ──────────────────────────────
     if (parsed.type === 'intersection') {
-      const sql = buildIntersectionSQL(parsed.sources, parsed.exclude, !!parsed.searchTerm);
-      const { rows: intersectedRows } = await pool.query(sql);
+      const { rows: intersectedRows } = await pool.query(
+        SP_INTERSECTION,
+        [parsed.sources, parsed.exclude.length > 0 ? parsed.exclude : null, 200],
+      );
 
       if (intersectedRows.length === 0) {
         return res.json({ results: [], parsed });
@@ -617,7 +309,7 @@ app.get('/api/search', async (req, res) => {
       const emails = intersectedRows.map(r => r.email);
 
       // Gather which sources each email appears in
-      const { rows: sourceLookup } = await pool.query(MULTI_LOOKUP_SQL, [emails]);
+      const { rows: sourceLookup } = await pool.query(SP_MULTI_LOOKUP, [emails]);
       const emailSources = {};
       for (const r of sourceLookup) {
         if (!emailSources[r.email]) emailSources[r.email] = new Set();
@@ -627,16 +319,10 @@ app.get('/api/search', async (req, res) => {
       // If there's also a search term, rank by ANN distance
       let ranked;
       if (parsed.searchTerm) {
-        const vector = await embed(parsed.searchTerm);
+        const vector = await embed(preprocessQuery(parsed.searchTerm));
         const vectorLiteral = `[${vector.join(',')}]`;
-        // ANN search against active_directory (largest table) filtered to our email set
-        const annSQL = `
-          SELECT email, embedding <=> $1::vector AS distance
-          FROM   active_directory
-          WHERE  email = ANY($2)
-          ORDER  BY embedding <=> $1::vector
-        `;
-        const { rows: annRows } = await pool.query(annSQL, [vectorLiteral, emails]);
+        // ANN search against active_directory filtered to our email set
+        const { rows: annRows } = await pool.query(SP_ANN_RERANK, [vectorLiteral, emails]);
         const distMap = {};
         for (const r of annRows) distMap[r.email] = parseFloat(r.distance);
 
@@ -663,10 +349,33 @@ app.get('/api/search', async (req, res) => {
       return res.json({ results, parsed });
     }
 
-    // ── Standard ANN semantic search ────────────────────────────────────
-    const vector       = await embed(q);
+    // ── Standard ANN semantic search (with optional attribute filters) ────
+    const preprocessed = preprocessQuery(q);
+    const { filters, cleanedQuery } = extractAttributeFilters(preprocessed);
+    const hasFilters = Object.keys(filters).length > 0;
+
+    // Embed the cleaned query (preprocessed + filter-stripped, or fallback to preprocessed)
+    const embeddingInput = cleanedQuery || preprocessed || q;
+    const vector       = await embed(embeddingInput);
     const vectorLiteral = `[${vector.join(',')}]`;
-    const { rows }     = await pool.query(SEARCH_SQL, [vectorLiteral, TOP_K]);
+
+    let rows;
+    if (hasFilters) {
+      // Use attribute-filtered ANN search
+      const result = await pool.query(SP_FILTERED, [
+        vectorLiteral,
+        TOP_K,
+        filters.enabled  !== undefined ? filters.enabled  : null,
+        filters.locked   !== undefined ? filters.locked   : null,
+        filters.type     || null,
+        filters.sourceType || null,
+      ]);
+      rows = result.rows;
+    } else {
+      // No filters — standard unfiltered ANN search
+      const result = await pool.query(SP_SEARCH_ALL, [vectorLiteral, TOP_K]);
+      rows = result.rows;
+    }
 
     const results = rows.map(r => ({
       source:            r.source,
@@ -683,17 +392,32 @@ app.get('/api/search', async (req, res) => {
       groupName:         r.group_name,
       groupAlias:        r.group_alias,
       createdAt:         r.created_at,
-      syncTimestamp:     r.sync_timestamp,
-      accountsAdded:     r.accounts_added,
-      accountsRemoved:   r.accounts_removed,
-      notes:             r.notes,
       distance:          parseFloat(r.distance),
     }));
 
-    res.json({ results, parsed });
+    res.json({ results, parsed: { ...parsed, filters: hasFilters ? filters : undefined } });
   } catch (err) {
     console.error('Search error:', err);
     res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// ── GenAI chat proxy ──────────────────────────────────────────────────────────
+// Forwards POST /api/chat → genai service so the browser never cross-origins.
+const GENAI_URL = process.env.GENAI_URL || 'http://genai:3001';
+
+app.post('/api/chat', express.json(), async (req, res) => {
+  try {
+    const upstream = await fetch(`${GENAI_URL}/api/chat`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(req.body),
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('GenAI proxy error:', err);
+    res.status(502).json({ error: 'GenAI service unavailable.' });
   }
 });
 
