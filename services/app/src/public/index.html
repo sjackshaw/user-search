@@ -180,7 +180,7 @@
       spinner.style.display = 'block';
       parsedBanner.classList.remove('active');
       try {
-        const res  = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const res  = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { headers: apiHeaders() });
         const data = await res.json();
 
         // Show parsed-query banner when an intersection query was detected
@@ -301,7 +301,7 @@
       overlay.classList.add('open');
 
       try {
-        const res  = await fetch(`/api/lookup?email=${encodeURIComponent(identifier)}`);
+        const res  = await fetch(`/api/lookup?email=${encodeURIComponent(identifier)}`, { headers: apiHeaders() });
         const data = await res.json();
 
         if (!data.records || data.records.length === 0) {
@@ -555,6 +555,13 @@
   </div>
 
   <script>
+    // ── API auth helper ───────────────────────────────────────────────────────
+    function apiHeaders(extra) {
+      const h = Object.assign({}, extra);
+      if (window.APP_API_KEY) h['x-api-key'] = window.APP_API_KEY;
+      return h;
+    }
+
     // ── Chat ──────────────────────────────────────────────────────────────────
     const SESSION_KEY = 'genai_session_id';
 
@@ -692,15 +699,71 @@
       try {
         const res = await fetch('/api/chat', {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: apiHeaders({ 'Content-Type': 'application/json', 'Accept': 'text/event-stream' }),
           body:    JSON.stringify({ sessionId: getSessionId(), message: text }),
         });
-        const data = await res.json();
+
+        if (!res.ok || !res.headers.get('content-type')?.includes('text/event-stream')) {
+          // Fallback: non-streaming JSON response
+          const data = await res.json();
+          thinking.remove();
+          if (data.error) {
+            appendMessage('assistant', `⚠️ ${data.error}`);
+          } else {
+            appendMessage('assistant', data.reply, data.intent);
+          }
+          return;
+        }
+
         thinking.remove();
-        if (data.error) {
-          appendMessage('assistant', `⚠️ ${data.error}`);
-        } else {
-          appendMessage('assistant', data.reply, data.intent);
+        let msgDiv  = null;
+        let fullText = '';
+        let intent   = null;
+
+        const reader  = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // keep incomplete line
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const payload = line.slice(6).trim();
+            if (!payload) continue;
+            try {
+              const chunk = JSON.parse(payload);
+              if (chunk.type === 'meta') {
+                intent = chunk.intent;
+                msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-msg assistant';
+                chatMessages.appendChild(msgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                if (chatEmpty) chatEmpty.style.display = 'none';
+              } else if (chunk.type === 'token') {
+                fullText += chunk.content;
+                if (msgDiv) {
+                  let inner = '';
+                  if (intent) inner += `<div class="chat-intent-badge">${intent.replace(/_/g, ' ')}</div>`;
+                  inner += renderMarkdown(fullText) + '<span style="opacity:.6">▋</span>';
+                  msgDiv.innerHTML = inner;
+                  chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+              } else if (chunk.type === 'done') {
+                if (msgDiv) {
+                  let inner = '';
+                  if (intent) inner += `<div class="chat-intent-badge">${intent.replace(/_/g, ' ')}</div>`;
+                  inner += renderMarkdown(fullText);
+                  msgDiv.innerHTML = inner;
+                }
+              }
+            } catch { /* skip malformed lines */ }
+          }
         }
       } catch (err) {
         thinking.remove();

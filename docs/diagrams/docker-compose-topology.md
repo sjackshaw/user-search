@@ -15,7 +15,7 @@ flowchart TB
 
         APP["📦 app\nNode.js 22\nExpress + SBERT\nPort 3000:3000"]:::app
 
-        OLLAMA["🧠 ollama\nollama/ollama\nLlama 3.1 8B\nPort 11434:11434"]:::genai
+        OLLAMA["🧠 ollama\nollama/ollama\nqwen2.5:3b\nPort 11434:11434"]:::genai
 
         GENAI["🤖 genai\nNode.js 22\nIntent + RAG\nPort 3001:3001"]:::genai
 

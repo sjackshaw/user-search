@@ -3,10 +3,18 @@
 const express = require('express');
 const { Pool }  = require('pg');
 
-const app  = express();
-const PORT = parseInt(process.env.PORT || '3001', 10);
+const app     = express();
+const PORT    = parseInt(process.env.PORT || '3001', 10);
+const API_KEY = process.env.API_KEY || '';
 
 app.use(express.json());
+
+// ── Auth guard ────────────────────────────────────────────────────────────────
+app.use('/api', (req, res, next) => {
+  if (!API_KEY) return next();
+  if (req.headers['x-api-key'] === API_KEY) return next();
+  return res.status(401).json({ error: 'Unauthorised' });
+});
 
 // ── Postgres ──────────────────────────────────────────────────────────────────
 const pool = new Pool({
@@ -175,7 +183,9 @@ async function getGroupContext(message) {
 async function getVectorContext(query, maxResults = 10) {
   try {
     const url = `${APP_URL}/api/search?q=${encodeURIComponent(query)}`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: API_KEY ? { 'x-api-key': API_KEY } : {},
+    });
     if (!res.ok) {
       console.warn(`[vectorSearch] app returned ${res.status}`);
       return null;
@@ -416,9 +426,8 @@ app.post('/api/chat', async (req, res) => {
       : message;
     ollamaMessages.push({ role: 'user', content: userContent });
 
-    // 5. Check if client wants streaming (Accept: text/event-stream or ?stream=true)
-    const wantsStream = req.headers.accept === 'text/event-stream'
-      || req.query.stream === 'true';
+    // 5. Check if client wants streaming (Accept: text/event-stream header required)
+    const wantsStream = req.headers.accept === 'text/event-stream';
 
     if (wantsStream) {
       // SSE streaming response

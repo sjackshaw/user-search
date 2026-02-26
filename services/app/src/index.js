@@ -1,12 +1,14 @@
 'use strict';
 
 const express = require('express');
+const fs      = require('fs');
 const path    = require('path');
 const { Pool } = require('pg');
 
 const app  = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
-const TOP_K = parseInt(process.env.TOP_K || '20', 10);
+const PORT    = parseInt(process.env.PORT || '3000', 10);
+const TOP_K   = parseInt(process.env.TOP_K || '20', 10);
+const API_KEY = process.env.API_KEY || '';
 
 // ── Postgres ──────────────────────────────────────────────────────────────────
 const pool = new Pool({
@@ -211,7 +213,25 @@ function parseQuery(rawQuery) {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use(express.json());
+
+// Serve index.html with the API key injected so the browser client can authenticate
+app.get('/', (_req, res) => {
+  const html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+  const injected = html.replace(
+    '</head>',
+    `<script>window.APP_API_KEY=${JSON.stringify(API_KEY)};</script>\n</head>`,
+  );
+  res.type('html').send(injected);
+});
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Auth guard for all /api routes ───────────────────────────────────────────
+// Skipped if API_KEY is not configured (local dev without the env var set).
+app.use('/api', (req, res, next) => {
+  if (!API_KEY) return next();
+  if (req.headers['x-api-key'] === API_KEY) return next();
+  return res.status(401).json({ error: 'Unauthorised' });
+});
 
 app.get('/api/lookup', async (req, res) => {
   const email = (req.query.email || '').trim().toLowerCase();
@@ -408,13 +428,40 @@ const GENAI_URL = process.env.GENAI_URL || 'http://genai:3001';
 
 app.post('/api/chat', express.json(), async (req, res) => {
   try {
+    const wantsStream = req.headers.accept === 'text/event-stream';
+
+    const ac = new AbortController();
+    const streamTimeout = setTimeout(() => ac.abort(), 120_000);
+
     const upstream = await fetch(`${GENAI_URL}/api/chat`, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(req.body),
+      signal:  ac.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+        ...(wantsStream ? { 'Accept': 'text/event-stream' } : {}),
+      },
+      body: JSON.stringify(req.body),
     });
-    const data = await upstream.json();
-    res.status(upstream.status).json(data);
+    clearTimeout(streamTimeout);
+
+    if (wantsStream && upstream.headers.get('content-type')?.includes('text/event-stream')) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      const reader = upstream.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(decoder.decode(value, { stream: true }));
+      }
+      res.end();
+    } else {
+      const data = await upstream.json();
+      res.status(upstream.status).json(data);
+    }
   } catch (err) {
     console.error('GenAI proxy error:', err);
     res.status(502).json({ error: 'GenAI service unavailable.' });

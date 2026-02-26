@@ -16,7 +16,7 @@ flowchart TB
     end
 
     subgraph GenAIStack["GenAI Stack"]
-        Ollama["Ollama\nLlama 3.1 8B\nPort 11434"]:::genai
+        Ollama["Ollama\nqwen2.5:3b\nPort 11434"]:::genai
         GenAI["GenAI Service\nNode.js\nIntent + RAG\nPort 3001"]:::genai
     end
 
@@ -27,7 +27,7 @@ flowchart TB
 
     User -->|"search / lookup / chat"| App
     App -->|"SQL cosine similarity"| Postgres
-    App -->|"POST /api/chat (proxy)"| GenAI
+    App -->|"SSE streaming proxy\nPOST /api/chat"| GenAI
     GenAI -->|"RAG context retrieval"| Postgres
     GenAI -->|"Vector search"| App
     GenAI -->|"LLM inference"| Ollama

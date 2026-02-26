@@ -28,9 +28,10 @@ The `|| 'postgres'` fallback means any deployment that omits `PGPASSWORD` silent
 
 ---
 
-### F1-P7 — Containers run as root · Severity: **MEDIUM**
+### F1-P7 — Containers run as root · Severity: **MEDIUM** ✅ REMEDIATED 2026-02-25
 **Finding ID from previous review:** Finding 7  
-**Still present in:** All 4 `Dockerfile`s
+**Still present in:** ~~All 4 `Dockerfile`s~~  
+All 6 Dockerfiles (`app`, `genai`, and 4 ETL line services) now include `COPY --chown=node:node . .` and `USER node` before `CMD`. The `app` compose volume mount was updated from `/root/.cache` to `/home/node/.cache` to preserve the SBERT model cache path.
 
 ```dockerfile
 FROM node:18

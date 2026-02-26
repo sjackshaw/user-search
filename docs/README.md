@@ -40,7 +40,7 @@ docker compose -p user-search -f docker-compose.genai.yml up --build
 On first run, pull the model once:
 
 ```sh
-docker exec user-search-ollama-1 ollama pull llama3.1:8b
+docker exec user-search-ollama-1 ollama pull qwen2.5:3b
 ```
 
 The chat UI is available at `http://localhost:3000` (the 💬 button in the bottom-right corner). The GenAI service API is accessible directly at `http://localhost:3001/api/chat`.

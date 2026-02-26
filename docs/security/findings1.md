@@ -45,16 +45,10 @@
 ## Finding 3 — No Authentication on Any API Endpoint
 
 **Category:** Authentication / Missing Access Control  
-**Severity:** High
+**Severity:** High  
+**Status:** ✅ REMEDIATED 2026-02-25
 
-**Location:** `services/app/src/index.js` — `/api/search` and `/api/lookup` route definitions
-
-**Description:** Both API endpoints are completely unauthenticated. Any client that can reach port 3000 can query the full contents of the database, which contains PII (names, email addresses, account state, sponsor information, activity history) across Active Directory, netForum, External Users, Distribution Groups, and activity logs. There is no API key, session token, JWT, or IP allowlist protecting this data.
-
-**Remediation:**
-- Introduce an authentication middleware (e.g., `express-jwt`, `passport`, or a custom API-key check) before all `/api/*` routes.
-- For an internal tool, a shared API key passed via a header (`Authorization: Bearer <key>`) is a practical minimum.
-- Consider network-level controls (VPN, internal DNS) as a secondary layer, not a replacement for application-level auth.
+API key authentication implemented via `x-api-key` header. All `/api/*` routes on both the `app` and `genai` services reject requests missing a valid key with `401 Unauthorised`. The browser client receives the key via a server-injected `<script>` tag on page load. The `API_KEY` env var is set in each Docker Compose service definition — replace `dev-key-please-change` with a strong secret before any non-local deployment.
 
 ---
 
@@ -116,7 +110,8 @@ If any of these fields in the database contain a payload such as `<img src=x one
 ## Finding 7 — Containers Running as Root
 
 **Category:** Privilege Escalation / Container Security  
-**Severity:** Medium
+**Severity:** Medium  
+**Status:** ✅ REMEDIATED 2026-02-25
 
 **Location:** `services/app/Dockerfile`, `services/active-directory/Dockerfile` (all ETL Dockerfiles share the same pattern — no `USER` directive)
 

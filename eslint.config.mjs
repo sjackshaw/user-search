@@ -68,6 +68,9 @@ export default [
         URLSearchParams: 'readonly',
         AbortController: 'readonly',
         AbortSignal:     'readonly',
+        TextDecoder:     'readonly',
+        TextEncoder:     'readonly',
+        ReadableStream:  'readonly',
       },
     },
     rules: {

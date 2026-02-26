@@ -25,6 +25,7 @@ services:
       - OLLAMA_MODEL=qwen2.5:3b
       - APP_URL=http://app:3000
       - PORT=3001
+      - API_KEY=dev-key-please-change
     depends_on:
       ollama:
         condition: service_healthy

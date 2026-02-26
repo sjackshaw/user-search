@@ -1,6 +1,6 @@
 # GenAI Architecture (C4 Container — Current State)
 
-> Implemented as of February 23, 2026. See `docs/genai_expansion_plan.md` for the full implementation history.
+> Implemented as of February 25, 2026 (streaming enabled). See `docs/genai_expansion_plan.md` for the full implementation history.
 
 ```mermaid
 graph TB
@@ -15,11 +15,11 @@ graph TB
     subgraph DockerPlatform [" Docker Platform — user-search "]
         direction TB
 
-        App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + Chat UI + SBERT<br/>Port 3000"]:::existing
+        App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + Chat UI + SBERT<br/>SSE streaming proxy<br/>Port 3000"]:::existing
 
-        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>Intent classification<br/>RAG orchestration<br/>Vector search proxy<br/>Port 3001"]:::genai
+        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>Intent classification<br/>RAG orchestration<br/>Vector search proxy<br/>SSE token streaming<br/>Port 3001"]:::genai
 
-        Ollama["🧠 Ollama Container<br/><br/>Llama 3.1 8B<br/>Local LLM inference<br/>Port 11434"]:::genai
+        Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>Port 11434"]:::genai
 
         Postgres["🗄️ PostgreSQL + pgvector<br/><br/>11 tables (8 with HNSW indexes)<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages"]:::database
 
@@ -36,7 +36,7 @@ graph TB
     User -->|"Search queries"| App
     User -->|"Natural language questions<br/>'What changed for jsmith last week?'"| App
     App -->|"Search API + SBERT embeddings"| Postgres
-    App -->|"Chat proxy POST /api/chat"| GenAI
+    App -->|"Chat proxy SSE stream<br/>POST /api/chat"| GenAI
     GenAI -->|"RAG context retrieval"| Postgres
     GenAI -->|"Vector search /api/search"| App
     GenAI -->|"LLM inference"| Ollama
