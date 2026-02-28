@@ -1,315 +1,264 @@
-# Next Steps: Agentic AI for Distribution Group Management
+# Agentic AI — User Card Agent
 
-**Date:** February 25, 2026
+**Date:** February 26, 2026
+**Status:** ✅ Implemented (Phases 1–5 complete)
 
 ---
 
 ## 1. Objective
 
-Extend the existing GenAI conversational assistant into an **agentic AI** capable of executing basic administrative actions — starting with adding and removing users from distribution groups. Today the assistant is read-only: it retrieves context from Postgres and answers questions. The agentic layer will allow it to **take actions** on behalf of authenticated users via natural-language instructions.
+Embed an **agentic AI assistant directly into the user-card detail panel**. When a user opens a record (e.g. a person who exists in Active Directory but not in NetForum), they can issue natural-language requests — such as provisioning an account, updating attributes, or adding to groups — without leaving the card. The agent executes **real actions** against the database via LLM tool-calling. Each action creates a service ticket, executes the operation, and auto-closes the ticket on success. Open tickets for the displayed user are listed below the prompt in real time.
 
 ---
 
-## 2. Current State
+## 2. Current State — Implemented
 
 | Component | Status |
 |---|---|
-| GenAI chat service (`services/genai`) | Operational — intent classification, context retrieval, Ollama LLM |
-| Distribution groups table | `distribution_groups` with `contacts` JSONB column (array of `{first_name, last_name, email}`) |
-| Sync logs table | `distribution_group_sync_logs` tracking `accounts_added` / `accounts_removed` per sync event |
-| ETL pipeline (`etl-dg-line`) | Reads `data/primary.json`, upserts groups, logs changes to `source_change_logs` |
-| Change detection | Field-level diffs recorded for `name`, `alias`, and `contacts` (serialised JSON) |
-
-The GenAI service already has intents for `group_lookup` and `user_lookup`, and can query group membership and user records. It cannot, however, modify any data.
+| User card detail panel | `index.html` overlay — reads from `/api/lookup`, renders per-source sections (AD, NetForum, External Users, DG, M365, activity logs, SP permissions) |
+| GenAI agent service (`services/genai`) | Operational — LLM tool-calling via Ollama, 9 tools, 6 action executors, cross-system provisioning, M365 group support |
+| Database | Postgres with tables for `active_directory`, `netforum_members`, `external_users`, `distribution_groups`, `m365_group_memberships`, `agent_tickets`, and associated log tables |
+| Agent UI | Embedded in user-card panel with prompt input, message thread, spinner, tickets list, close button, auto-refresh |
+| Card auto-refresh | User card data refreshes automatically after agent actions to show updated state |
 
 ---
 
-## 3. Target Capabilities
+## 3. Implemented Experience
 
-### 3.1 Phase 1 — Single-Action Agent
+### 3.1 User Card with Embedded Agent
 
-The assistant can execute **one action per turn** when the user issues a clear instruction:
+```
+┌──────────────────────────────────────────────────────┐
+│  All records for jane.doe@corp.com            ✕      │
+│                                                      │
+│  ┌─ ACTIVE DIRECTORY ─────────────────────────────┐  │
+│  │  First Name: Jane    Last Name: Doe            │  │
+│  │  Email: jane.doe@corp.com   Enabled: Yes       │  │
+│  └────────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌─ NETFORUM ─────────────────────────────────────┐  │
+│  │  No record found                               │  │
+│  └────────────────────────────────────────────────┘  │
+│                                                      │
+│  ╔═══════════════════════════════════════════════════╗│
+│  ║  🤖 User Card Agent                              ║│
+│  ║                                                   ║│
+│  ║  > "Provision a NetForum account for this user"   ║│
+│  ║                                                   ║│
+│  ║  Agent: Done — provisioned jane.doe@corp.com in   ║│
+│  ║  NetForum. Ticket #12 auto-closed.                ║│
+│  ╚═══════════════════════════════════════════════════╝│
+│                                                      │
+│  ── Open Tickets ────────────────────────────────────│
+│  (none — auto-closed on success)                     │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+```
 
-| Action | Example Prompt | Effect |
+### 3.2 Supported Actions
+
+| Prompt | Agent Action | Tool |
 |---|---|---|
-| Add user to group | *"Add jane.doe@corp.com to the Marketing group"* | Appends contact to `distribution_groups.contacts` JSONB |
-| Remove user from group | *"Remove john.smith@corp.com from Executives"* | Removes contact from `distribution_groups.contacts` JSONB |
-| List group members | *"Who is in the Finance distribution group?"* | Read-only (already supported) |
-
-### 3.2 Phase 2 — Multi-Step Agent
-
-The assistant can chain actions and resolve ambiguity:
-
-- *"Move jane.doe from Marketing to Sales"* → remove from one group, add to another
-- *"Add all members of the Finance group to the Quarterly-Review group"* → query members, then batch-add
-- *"Remove everyone whose account is disabled from all distribution groups"* → cross-reference `active_directory.enabled = false` against group membership
+| *"Provision a NetForum account for this user"* | Creates account in target system, auto-closes ticket | `provision_account` |
+| *"Disable this account — the user has left"* | Disables across all systems, auto-closes ticket | `disable_account` |
+| *"Reset this user's password"* | Resets AD password, auto-closes ticket | `reset_password` |
+| *"Change this user's sponsor to M. Chen"* | Updates field in target system, auto-closes ticket | `update_attribute` |
+| *"Add this user to the Marketing distribution group"* | Adds to DG with duplicate check, auto-closes ticket | `add_to_group` |
+| *"Add to the Engineering M365 group as owner"* | Adds to M365 group with role, auto-closes ticket | `add_to_m365_group` |
+| *"Provision this NetForum user into AD"* | Cross-system provisioning, auto-closes ticket | `provision_account` |
+| *"Open a ticket to investigate login issues"* | Creates general ticket (stays open for manual follow-up) | `create_ticket` |
+| *"What actions can I take?"* | Lists capabilities | `describe_capabilities` |
 
 ---
 
 ## 4. Architecture
 
-### 4.1 Tool Registry
-
-Introduce a **tool registry** in the GenAI service — a set of named functions the LLM can invoke. Each tool has:
-
-- **Name** — unique identifier (e.g. `add_user_to_group`)
-- **Description** — natural-language description for the LLM system prompt
-- **Parameters** — JSON schema defining required inputs
-- **Handler** — async function that executes the action and returns a result
+### 4.1 Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   GenAI Service                      │
-│                                                      │
-│  ┌──────────────┐    ┌─────────────────────────┐    │
-│  │ Intent        │───▶│ Tool Selector            │    │
-│  │ Classifier    │    │ (LLM function-calling)   │    │
-│  └──────────────┘    └──────────┬──────────────┘    │
-│                                  │                    │
-│         ┌────────────────────────┼──────────────┐    │
-│         ▼                        ▼              ▼    │
-│  ┌─────────────┐  ┌───────────────┐  ┌───────────┐  │
-│  │ add_user_to │  │ remove_user_  │  │ list_group │  │
-│  │ _group      │  │ from_group    │  │ _members   │  │
-│  └──────┬──────┘  └──────┬────────┘  └─────┬─────┘  │
-│         │                │                  │        │
-│         ▼                ▼                  ▼        │
-│  ┌──────────────────────────────────────────────┐    │
-│  │              Postgres (pg.Pool)               │    │
-│  │  distribution_groups · source_change_logs     │    │
-│  │  distribution_group_sync_logs                 │    │
-│  └──────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                      User Card (UI)                          │
+│                                                              │
+│  ┌─────────────────────┐  ┌──────────────────────────────┐  │
+│  │ Record Sections      │  │ Agent Prompt + Messages       │  │
+│  │ (AD, NF, EU, DG,    │  │  ┌──────────────────────┐    │  │
+│  │  M365, Logs)         │  │  │ Text input + Send     │    │  │
+│  │                      │  │  └──────────┬───────────┘    │  │
+│  └─────────────────────┘  └─────────────┼────────────────┘  │
+│                                          │                    │
+│  ┌───────────────────────────────────────┼───────────────┐   │
+│  │ Open Tickets List (auto-refreshed)    │  [Close ✕]    │   │
+│  └───────────────────────────────────────┼───────────────┘   │
+└──────────────────────────────────────────┼───────────────────┘
+                                           │
+                    POST /api/agent        │   GET /api/tickets?email=…
+                    PATCH /api/tickets/:id │
+                                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                     GenAI Service (port 3001)                │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  LLM Tool Selector (Ollama tool-calling)              │   │
+│  └──────────┬───────────────────────────────────────────┘   │
+│             │                                                │
+│   ┌─────────┼──────────────────────────────────────────┐    │
+│   ▼         ▼         ▼          ▼         ▼           ▼    │
+│ provision disable  reset_pw  update_attr add_to_group  ...  │
+│ _account  _account           _ibute                          │
+│   │         │         │          │         │           │    │
+│   ▼         ▼         ▼          ▼         ▼           ▼    │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │  createAndCloseTicket() → execute → auto-close   │        │
+│  └──────────────────────────────────────────────────┘        │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │              Postgres (pg.Pool)                   │        │
+│  │  agent_tickets · chat_messages · user tables      │        │
+│  └──────────────────────────────────────────────────┘        │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Tool Definitions
+### 4.2 API Endpoints
 
-```js
-const TOOLS = [
-  {
-    name: 'add_user_to_group',
-    description: 'Add a user (by email) to a distribution group (by name or alias).',
-    parameters: {
-      type: 'object',
-      properties: {
-        user_email:  { type: 'string', description: 'Email address of the user to add' },
-        group_name:  { type: 'string', description: 'Name or alias of the distribution group' },
-      },
-      required: ['user_email', 'group_name'],
-    },
-  },
-  {
-    name: 'remove_user_from_group',
-    description: 'Remove a user (by email) from a distribution group (by name or alias).',
-    parameters: {
-      type: 'object',
-      properties: {
-        user_email:  { type: 'string', description: 'Email address of the user to remove' },
-        group_name:  { type: 'string', description: 'Name or alias of the distribution group' },
-      },
-      required: ['user_email', 'group_name'],
-    },
-  },
-];
-```
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/agent` | Send a natural-language prompt with user-card context; LLM selects a tool, executes the action, returns reply + ticket |
+| `GET` | `/api/tickets?email=<email>` | Retrieve open tickets for a given user |
+| `PATCH` | `/api/tickets/:id` | Close (or reopen) a ticket — requires email for ownership verification |
 
-### 4.3 Execution Flow
+### 4.3 Tool Definitions (9 tools)
 
-1. User sends a message via `POST /api/chat`
-2. Intent classifier detects an **action intent** (new intents: `group_add`, `group_remove`)
-3. The LLM receives the tool definitions in the system prompt and the user message
-4. The LLM responds with a **tool call** (structured JSON specifying tool name + arguments)
-5. The GenAI service validates the tool call, extracts parameters, and invokes the handler
-6. The handler:
-   - Validates the user exists (query `active_directory`, `netforum_members`, or `external_users`)
-   - Validates the group exists (query `distribution_groups`)
-   - Executes the JSONB mutation (see SQL below)
-   - Logs the change to `source_change_logs` and `distribution_group_sync_logs`
-   - Returns a success/failure result
-7. The result is fed back to the LLM as a tool response
-8. The LLM generates a human-readable confirmation message
-9. Both messages are persisted to `chat_messages`
+| Tool | Type | Description |
+|---|---|---|
+| `provision_account` | Action | Create account in AD, NetForum, or External Users (supports cross-system) |
+| `disable_account` | Action | Disable user across all systems (offboarding) |
+| `reset_password` | Action | Reset Active Directory password |
+| `update_attribute` | Action | Update a whitelisted field in a specific system |
+| `add_to_group` | Action | Add user to a distribution group (mailing list) |
+| `add_to_m365_group` | Action | Add user to an M365/Security/Teams group with role |
+| `create_ticket` | Fallback | Create a general ticket for manual follow-up |
+| `list_open_tickets` | Query | List open tickets for the current user |
+| `describe_capabilities` | Query | Describe available actions |
 
-### 4.4 Confirmation Step
+### 4.4 Execution Flow
 
-All write actions require a **confirmation loop** before execution:
-
-1. LLM proposes the action: *"I'll add Jane Doe (jane.doe@corp.com) to the Marketing group. Confirm?"*
-2. User responds *"yes"* / *"no"*
-3. Only on confirmation does the tool handler execute
-
-This is implemented by storing a `pending_action` object in the conversation state (a new `pending_actions` column on `chat_messages` or a transient in-memory map keyed by `sessionId`).
+1. User opens a user card and types a request into the agent prompt
+2. The UI sends `POST /api/agent` with the prompt, full user-card context (all source records), and persistent session ID
+3. The GenAI service builds a system prompt that includes the user-card context, tool definitions, cross-system awareness rules, and group type guidance
+4. The LLM responds with a **tool call** (e.g. `provision_account` with arguments)
+5. The handler calls `createAndCloseTicket()` which: creates a ticket → executes the action → auto-closes the ticket on success
+6. The tool result is fed back to the LLM for a human-readable confirmation
+7. The UI displays the reply, refreshes the tickets list, and re-fetches the user card data (card glows blue on refresh)
 
 ---
 
-## 5. Database Changes
+## 5. Database
 
-### 5.1 New Stored Procedures
+### 5.1 Agent Tickets Table
 
 ```sql
--- Add a contact to a distribution group's JSONB contacts array
-CREATE OR REPLACE FUNCTION sp_group_add_member(
-  p_group_alias   TEXT,
-  p_first_name    TEXT,
-  p_last_name     TEXT,
-  p_member_email  TEXT
-) RETURNS BOOLEAN AS $$
-DECLARE
-  v_group_id INTEGER;
-BEGIN
-  SELECT id INTO v_group_id
-  FROM distribution_groups
-  WHERE alias = p_group_alias
-    AND NOT contacts @> jsonb_build_array(
-          jsonb_build_object('email', p_member_email));
-
-  IF NOT FOUND THEN
-    RETURN FALSE;  -- group not found or user already a member
-  END IF;
-
-  UPDATE distribution_groups
-  SET contacts = contacts || jsonb_build_array(
-        jsonb_build_object(
-          'first_name', p_first_name,
-          'last_name',  p_last_name,
-          'email',      p_member_email
-        ))
-  WHERE id = v_group_id;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
-
--- Remove a contact from a distribution group's JSONB contacts array
-CREATE OR REPLACE FUNCTION sp_group_remove_member(
-  p_group_alias  TEXT,
-  p_member_email TEXT
-) RETURNS BOOLEAN AS $$
-DECLARE
-  v_group_id INTEGER;
-  v_idx      INTEGER;
-BEGIN
-  SELECT id INTO v_group_id FROM distribution_groups WHERE alias = p_group_alias;
-  IF NOT FOUND THEN RETURN FALSE; END IF;
-
-  -- Find the index of the member in the JSONB array
-  SELECT ordinality - 1 INTO v_idx
-  FROM distribution_groups,
-       jsonb_array_elements(contacts) WITH ORDINALITY AS elem
-  WHERE id = v_group_id AND elem.value ->> 'email' = p_member_email;
-
-  IF v_idx IS NULL THEN RETURN FALSE; END IF;
-
-  UPDATE distribution_groups
-  SET contacts = contacts - v_idx
-  WHERE id = v_group_id;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
+CREATE TABLE IF NOT EXISTS agent_tickets (
+  id           SERIAL       PRIMARY KEY,
+  email        TEXT         NOT NULL,
+  title        TEXT         NOT NULL,
+  description  TEXT         NOT NULL,
+  status       TEXT         NOT NULL DEFAULT 'open',
+  session_id   UUID,
+  created_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
 ```
 
-### 5.2 Audit Logging
-
-Every tool execution writes to **both** logging tables:
-
-| Table | What is logged |
-|---|---|
-| `source_change_logs` | `change_type = 'updated'`, `field_name = 'contacts'`, old/new serialised JSONB |
-| `distribution_group_sync_logs` | `accounts_added` or `accounts_removed` array, timestamped |
-
-This ensures the existing change-history queries and UI continue to surface agent-made changes alongside ETL-detected changes.
+Init script: `infra/db/init/15_agent_tickets.sql`
 
 ---
 
-## 6. New Intent Classification Rules
+## 6. Implementation Status
 
-Extend the regex-based classifier in `classifyIntent()`:
+### Phase 1 — Database & API ✅ Complete
 
-```js
-// Group modification — add
-if (/\b(add|include|put|assign)\b.+\b(to|into)\b.+\b(group|distribution|list)\b/i.test(m)) {
-  const emailMatch = message.match(EMAIL_RE);
-  return { intent: 'group_add', email: emailMatch?.[0]?.toLowerCase() || null };
-}
+| Step | Task | Status |
+|---|---|---|
+| 1 | Create `infra/db/init/15_agent_tickets.sql` | ✅ |
+| 2 | Add `POST /api/agent` route with tool-calling logic | ✅ |
+| 3 | Add `GET /api/tickets?email=` route | ✅ |
+| 4 | Define `AGENT_TOOLS` and `AGENT_SYSTEM_PROMPT` | ✅ |
 
-// Group modification — remove
-if (/\b(remove|delete|drop|take\s+out)\b.+\b(from)\b.+\b(group|distribution|list)\b/i.test(m)) {
-  const emailMatch = message.match(EMAIL_RE);
-  return { intent: 'group_remove', email: emailMatch?.[0]?.toLowerCase() || null };
-}
-```
+### Phase 2 — UI Integration ✅ Complete
+
+| Step | Task | Status |
+|---|---|---|
+| 5 | Add agent prompt + tickets section to detail panel | ✅ |
+| 6 | Implement `sendAgentPrompt()` and `refreshTickets()` | ✅ |
+| 7 | Style agent section (purple accent, message bubbles) | ✅ |
+| 8 | Auto-load tickets on card open | ✅ |
+
+### Phase 3 — Polish & Hardening ✅ Complete
+
+| Step | Task | Status |
+|---|---|---|
+| 9 | Loading spinner and error handling | ✅ |
+| 10 | Close tickets from UI (`PATCH /api/tickets/:id`) | ✅ |
+| 11 | Persistent agent chat sessions per user | ✅ |
+| 12 | Tested across AD-only, NetForum-only, multi-source users | ✅ |
+
+### Phase 4 — Action-Capable Agent ✅ Complete
+
+| Step | Task | Status |
+|---|---|---|
+| 13 | Replace generic `create_ticket` with 6 action tools | ✅ |
+| 14 | `createAndCloseTicket()` helper (create → execute → auto-close) | ✅ |
+| 15 | Duplicate-entry guards in all executors | ✅ |
+| 16 | Error cases leave tickets open for manual follow-up | ✅ |
+
+### Phase 5 — Cross-System & M365 ✅ Complete
+
+| Step | Task | Status |
+|---|---|---|
+| 17 | Cross-system provisioning (e.g. NF → AD) | ✅ |
+| 18 | `add_to_m365_group` tool with role support | ✅ |
+| 19 | System prompt: CROSS-SYSTEM AWARENESS + GROUP TYPES sections | ✅ |
+| 20 | Card auto-refresh after agent actions (blue flash animation) | ✅ |
+| 21 | `renderMarkdown()` for agent message formatting | ✅ |
+
+### Phase 6 — Production Path (Future)
+
+| Step | Description |
+|---|---|
+| Replace `agent_tickets` with ServiceNow / Jira API integration | Swap the Postgres insert for an API call; keep the same tool interface |
+| Add SAML-gated permissions | Only authorised roles can create certain ticket types (see SAML access management plan) |
+| Multi-step agent | Chain lookups and actions (e.g. "Provision this user in all missing systems") |
+| Rate limiting | Add per-session rate limiter on `POST /api/agent` |
 
 ---
 
-## 7. System Prompt Additions
-
-Append to the existing `SYSTEM_PROMPT`:
-
-```
-You can also perform actions when the user asks:
-- **Add a user to a distribution group**: Use the add_user_to_group tool.
-- **Remove a user from a distribution group**: Use the remove_user_from_group tool.
-
-Before executing any write action, ALWAYS confirm with the user first. State exactly what you will do (user email, group name, action) and wait for explicit confirmation.
-
-If the user or group cannot be found, say so and ask for clarification.
-```
-
----
-
-## 8. Implementation Plan
-
-### Phase 1 — Foundation (Estimated: 2–3 days)
-
-| Step | Task |
-|---|---|
-| 1 | Create `sp_group_add_member` and `sp_group_remove_member` stored procedures |
-| 2 | Add `group_add` and `group_remove` intents to the classifier |
-| 3 | Implement tool registry pattern in `services/genai/index.js` |
-| 4 | Implement `add_user_to_group` and `remove_user_from_group` tool handlers |
-| 5 | Add confirmation loop logic (pending action state per session) |
-| 6 | Update system prompt with tool descriptions |
-| 7 | Add audit logging (source_change_logs + distribution_group_sync_logs) |
-
-### Phase 2 — Multi-Step & Hardening (Estimated: 2–3 days)
-
-| Step | Task |
-|---|---|
-| 8 | Support chained actions (move user between groups) |
-| 9 | Support batch operations (add multiple users) |
-| 10 | Add rate limiting per session (max N write actions per minute) |
-| 11 | Add rollback capability (undo last action within a time window) |
-| 12 | Integration tests covering add, remove, confirm, deny, and error paths |
-
-### Phase 3 — Expanded Actions (Future)
-
-| Action | Description |
-|---|---|
-| Create distribution group | Create a new group with an initial set of members |
-| Enable/disable user account | Toggle `enabled` flag on `active_directory` records |
-| Reassign sponsor | Update the `sponsor` field on `external_users` |
-
----
-
-## 9. Security Considerations
+## 7. Security Considerations
 
 | Concern | Mitigation |
 |---|---|
-| Unauthorised modifications | All write actions gated behind confirmation loop; future SAML integration will enforce role-based access (see SAML access management plan) |
-| Prompt injection | Tool calls are validated against the tool schema before execution; the LLM cannot invoke arbitrary SQL |
-| Audit trail | Every mutation is logged to `source_change_logs` and `distribution_group_sync_logs` with timestamps and the originating `session_id` |
-| Rate limiting | Per-session write limits prevent runaway agent loops |
-| Data integrity | JSONB mutations are wrapped in transactions; duplicate-add prevention built into `sp_group_add_member` |
+| SQL injection via LLM tool arguments | `target_system` validated against server-side allowlist (`VALID_SYSTEMS`); `field` validated against `ALLOWED_FIELDS`; all user values parameterised |
+| Unauthorised ticket creation | API key guard on all `/api` routes; future SAML integration will enforce role-based access |
+| Prompt injection | Tool calls are validated against the tool schema; system prompt does not accept override instructions |
+| Data leakage | Agent only sees data already visible on the user card; no additional access granted |
+| Audit trail | Every ticket records `session_id` and timestamps; tickets are append-only (no deletes) |
+| Ticket ownership | `PATCH /api/tickets/:id` requires email for ownership verification |
+| LIKE wildcards | Group name search escapes `%` and `_` metacharacters |
+| XSS in agent messages | `renderMarkdown()` runs `esc()` first (HTML entity encoding), then applies restricted regex for markdown formatting |
+
+See [findings4.md](../security/findings4.md) for the full agent security review.
 
 ---
 
-## 10. Success Criteria
+## 8. Success Criteria
 
-- [ ] User can add a member to a distribution group via natural-language chat
-- [ ] User can remove a member from a distribution group via natural-language chat
-- [ ] All mutations require explicit user confirmation before execution
-- [ ] All mutations are recorded in `source_change_logs` and `distribution_group_sync_logs`
-- [ ] Existing read-only queries (`group_lookup`, `change_history`) continue to function
-- [ ] Changes made by the agent are visible in the UI change history panel
-- [ ] Next ETL run does not revert agent-made changes (ETL upsert respects current state)
+- [x] User card detail panel shows an embedded agent prompt at the bottom
+- [x] User can type a natural-language request and receive an agent response
+- [x] Agent executes real actions (provision, disable, reset, update, add to group) with auto-closing tickets
+- [x] Open tickets for the displayed user are listed below the prompt and refresh automatically
+- [x] Agent correctly identifies data gaps and cross-system opportunities
+- [x] Existing user card functionality (record display, activity logs, change history) is unaffected
+- [x] Tickets persist across page reloads and are visible when the same user card is reopened
+- [x] Card data refreshes automatically after agent actions to show updated state
+- [x] M365 group support with role assignment (member/owner)
+- [x] Cross-system provisioning (e.g. NetForum user → Active Directory)

@@ -416,3 +416,262 @@ print(f"etl-netforum-line/data/logs.json written ({len(nf_activity_logs)} record
 with open("services/etl-dg-line/data/logs.json", "w") as f:
     json.dump(dg_sync_logs, f, indent=2, ensure_ascii=True)
 print(f"etl-dg-line/data/logs.json written ({len(dg_sync_logs)} records)")
+
+# =============================================================================
+# SHAREPOINT ON-PREM PERMISSIONS  (etl-sp-line)
+# =============================================================================
+
+sp_site_names = [
+    "HR Portal", "Finance", "Engineering", "Marketing", "Legal", "Operations",
+    "IT Helpdesk", "Sales East", "Sales West", "Executive Team", "Product",
+    "Security", "Compliance", "Research", "DevOps", "Analytics", "Support",
+    "Infrastructure", "Risk", "Audit", "Architecture", "Data Platform",
+    "Cloud Platform", "Network Ops", "Database Admin", "Application Security",
+    "Identity Management", "API Platform", "Integration Services", "Automation",
+    "Machine Learning", "Business Intelligence", "Reporting", "Growth",
+    "Partnerships", "Vendor Management", "Procurement", "Facilities",
+    "Events Management", "Communications", "Public Relations", "Content",
+    "Social Media", "Community", "Developer Relations", "Documentation",
+    "Training Portal", "Onboarding", "Offboarding", "Alumni Relations",
+    "Contractors Hub", "Interns Portal", "Fellows Program", "Governance",
+    "Privacy", "Sustainability", "Diversity Equity Inclusion", "Total Rewards",
+    "Workplace Experience", "Corporate IT", "Endpoint Management",
+    "Enterprise Apps", "Observability", "Chaos Engineering",
+    "Performance Engineering", "Capacity Planning", "Cost Optimization",
+    "Zero Trust", "Threat Intelligence", "Red Team", "Blue Team",
+    "GRC Portal", "SOC", "CISO Office", "Product Strategy",
+    "Competitive Intelligence", "Market Research", "User Research",
+    "UX Writing", "Design Systems", "Prototyping", "Brand Design",
+    "Sales Enablement", "Partner Success", "Alliance Management",
+    "Federal Sales", "Enterprise Accounts", "Mid Market", "Commercial",
+    "Public Sector", "Financial Services", "Healthcare Portal",
+    "Retail Solutions", "Manufacturing", "Education", "Media Relations",
+    "Telecom", "Energy", "Government Affairs", "Legal Matters",
+    "Contract Management", "Intellectual Property", "Ethics Board",
+    "Program Management", "Project Portfolio", "Change Management",
+]
+
+sp_site_domain = "sharepoint.corporate.com"
+
+def sp_site_slug(name):
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+sp_sites = [
+    {
+        "name": n,
+        "url": f"http://{sp_site_domain}/sites/{sp_site_slug(n)}",
+    }
+    for n in sp_site_names
+]
+
+sp_roles     = ["Read", "Edit", "FullControl"]
+sp_role_weights = [50, 35, 15]
+sp_perm_types = ["Direct", "Inherited"]
+sp_perm_weights = [65, 35]
+
+sp_permissions = []
+for user in ad_data:
+    n_perms = random.choices([3, 4, 5, 6], weights=[40, 30, 20, 10])[0]
+    assigned_sites = random.sample(sp_sites, n_perms)
+    for site in assigned_sites:
+        grantor = random.choice(ad_users)
+        sp_permissions.append({
+            "user": user["email"],
+            "site": site["name"],
+            "site_url": site["url"],
+            "role": random.choices(sp_roles, weights=sp_role_weights)[0],
+            "permission_type": random.choices(sp_perm_types, weights=sp_perm_weights)[0],
+            "granted_by": grantor["email"],
+            "granted_at": random_datetime(),
+        })
+
+random.shuffle(sp_permissions)
+with open("services/etl-sp-line/data/primary.json", "w") as f:
+    json.dump(sp_permissions, f, indent=2, ensure_ascii=True)
+print(f"etl-sp-line/data/primary.json written ({len(sp_permissions)} records)")
+
+sp_change_templates = [
+    lambda u, s, ob, nb, actor: f"Permission upgrade for {u} on {s}: {ob} elevated to {nb} following project requirement. Approved by {actor}.",
+    lambda u, s, ob, nb, actor: f"Quarterly access review: role adjusted for {u} on {s}. Change from {ob} to {nb} authorised by {actor}.",
+    lambda u, s, ob, nb, actor: f"Offboarding task: permissions reduced for {u} on {s} site from {ob} to {nb}. Processed by {actor}.",
+    lambda u, s, ob, nb, actor: f"Security hardening: over-privileged access corrected. {u} changed from {ob} to {nb} on {s}. Actioned by {actor}.",
+    lambda u, s, ob, nb, actor: f"Manager request: {u} needs {nb} access on {s} for reporting duties. Downgraded from {ob} by {actor}.",
+    lambda u, s, ob, nb, actor: f"Peer review flag: permissions on {s} for {u} shifted from {ob} to {nb} per compliance mandate. Signed off by {actor}.",
+    lambda u, s, ob, nb, actor: f"Post-merger integration: {u} role on {s} changed from {ob} to {nb}. Coordinated by {actor}.",
+    lambda u, s, ob, nb, actor: f"Temp access extension reverted: {u} on {s} reset from {ob} to {nb}. Confirmed by {actor}.",
+]
+
+sp_grant_templates = [
+    lambda u, s, nb, actor: f"New permission granted: {u} given {nb} access to {s}. Requested and approved by {actor}.",
+    lambda u, s, nb, actor: f"Onboarding task complete: {u} provisioned with {nb} on {s}. Managed by {actor}.",
+    lambda u, s, nb, actor: f"Project kickoff: {u} requires {nb} access to {s}. Authorised by {actor}.",
+    lambda u, s, nb, actor: f"Contractor onboarding: {nb} access to {s} site granted to {u}. Oversight: {actor}.",
+]
+
+sp_revoke_templates = [
+    lambda u, s, ob, actor: f"Access revoked: {u} no longer requires {ob} permissions on {s}. Processed by {actor}.",
+    lambda u, s, ob, actor: f"Offboarding: {ob} permission for {u} on {s} removed. Action taken by {actor}.",
+    lambda u, s, ob, actor: f"Compliance cleanup: stale {ob} access for {u} on {s} removed during audit. Signed by {actor}.",
+    lambda u, s, ob, actor: f"Contract ended: {ob} site access to {s} revoked for {u}. Handled by {actor}.",
+]
+
+sp_change_logs = []
+for _ in range(1500):
+    perm = random.choice(sp_permissions)
+    actor = random.choice(ad_users)
+    actor_email = actor["email"]
+    change_type = random.choices(["modified", "granted", "revoked"], weights=[60, 25, 15])[0]
+    old_role = new_role = None
+
+    if change_type == "modified":
+        old_role = random.choice(sp_roles)
+        remaining = [r for r in sp_roles if r != old_role]
+        new_role = random.choice(remaining)
+        notes = random.choice(sp_change_templates)(perm["user"], perm["site"], old_role, new_role, actor_email)
+    elif change_type == "granted":
+        new_role = perm["role"]
+        notes = random.choice(sp_grant_templates)(perm["user"], perm["site"], new_role, actor_email)
+    else:
+        old_role = perm["role"]
+        notes = random.choice(sp_revoke_templates)(perm["user"], perm["site"], old_role, actor_email)
+
+    sp_change_logs.append({
+        "timestamp": random_datetime(),
+        "user_email": perm["user"],
+        "site": perm["site"],
+        "change_type": change_type,
+        "old_role": old_role,
+        "new_role": new_role,
+        "changed_by": actor_email,
+        "notes": notes,
+    })
+
+with open("services/etl-sp-line/data/logs.json", "w") as f:
+    json.dump(sp_change_logs, f, indent=2, ensure_ascii=True)
+print(f"etl-sp-line/data/logs.json written ({len(sp_change_logs)} records)")
+
+# =============================================================================
+# M365 GROUP MEMBERSHIPS  (etl-m365-line)
+# =============================================================================
+
+# Build email pools for the 85% AD / 15% external split
+m365_ad_emails    = [u["email"] for u in ad_data]
+ext_data_m365     = json.load(open("services/etl-eu-line/data/primary.json"))
+m365_ext_emails   = [u["email"] for u in ext_data_m365]
+
+m365_group_types = ["Microsoft365", "Security", "Distribution"]
+m365_type_weights = [60, 30, 10]
+m365_roles        = ["member", "owner"]
+m365_role_weights = [85, 15]
+
+# Build unique group names pool (reuse group_names + generated extras to reach 1000)
+m365_name_pool = list(group_names)  # 140 names already
+for n in range(1, 1000):
+    m365_name_pool.append(f"Group {n}")
+random.shuffle(m365_name_pool)
+
+m365_used_emails = set()
+m365_groups = []
+for i in range(1000):
+    name = m365_name_pool[i]
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    grp_email = f"{slug}@org365.com"
+    # Make group_email unique
+    base = grp_email
+    n_dup = 1
+    while grp_email in m365_used_emails:
+        grp_email = f"{slug}-{n_dup}@org365.com"
+        n_dup += 1
+    m365_used_emails.add(grp_email)
+
+    grp_type = random.choices(m365_group_types, weights=m365_type_weights)[0]
+    size = random.choices(
+        [5, 10, 15, 20, 25, 30, 40, 50],
+        weights=[20, 25, 20, 15, 8, 6, 4, 2],
+    )[0]
+
+    n_ad  = max(1, round(size * 0.85))
+    n_ext = size - n_ad
+
+    chosen_ad  = random.sample(m365_ad_emails,  min(n_ad,  len(m365_ad_emails)))
+    chosen_ext = random.sample(m365_ext_emails, min(n_ext, len(m365_ext_emails)))
+
+    users = []
+    for email in chosen_ad:
+        users.append({
+            "email":     email,
+            "role":      random.choices(m365_roles, weights=m365_role_weights)[0],
+            "source":    "active_directory",
+            "joined_at": random_datetime(),
+        })
+    for email in chosen_ext:
+        users.append({
+            "email":     email,
+            "role":      random.choices(m365_roles, weights=m365_role_weights)[0],
+            "source":    "external_users",
+            "joined_at": random_datetime(),
+        })
+    random.shuffle(users)
+
+    m365_groups.append({
+        "group":       name,
+        "group_email": grp_email,
+        "group_type":  grp_type,
+        "users":       users,
+    })
+
+with open("services/etl-m365-line/data/primary.json", "w") as f:
+    json.dump(m365_groups, f, indent=2, ensure_ascii=True)
+print(f"etl-m365-line/data/primary.json written ({len(m365_groups)} groups)")
+
+m365_added_templates = [
+    lambda g, u, r, actor: f"New member onboarded: {u} added as {r} to {g}. Action taken by {actor}.",
+    lambda g, u, r, actor: f"Project kickoff: {u} joined {g} with role {r}. Approved by {actor}.",
+    lambda g, u, r, actor: f"Department reorganisation: {u} added to {g} as {r}. Coordinated by {actor}.",
+    lambda g, u, r, actor: f"Ownership transfer: {u} assigned {r} role in {g}. Authorised by {actor}.",
+    lambda g, u, r, actor: f"Bulk provisioning: {u} added to {g} ({r}). Managed by {actor}.",
+    lambda g, u, r, actor: f"Access committee approved {u} for membership in {g} as {r}. Logged by {actor}.",
+    lambda g, u, r, actor: f"New starter setup: {u} added to distribution group {g} ({r}). Processed by {actor}.",
+    lambda g, u, r, actor: f"Handover complete: {u} elevated to {r} in {g} following predecessor departure. Approved by {actor}.",
+]
+
+m365_removed_templates = [
+    lambda g, u, r, actor: f"Offboarding: {u} removed from {g} ({r}) following employment end. Actioned by {actor}.",
+    lambda g, u, r, actor: f"Permission cleanup: {u} removed from {g} as part of access review. Signed by {actor}.",
+    lambda g, u, r, actor: f"Role change: {u} no longer requires {r} membership in {g}. Removed by {actor}.",
+    lambda g, u, r, actor: f"Compliance audit: stale member {u} removed from {g}. Processed by {actor}.",
+    lambda g, u, r, actor: f"Team restructure: {u} removed from {g}. Coordinated by {actor}.",
+    lambda g, u, r, actor: f"Contract end: external access revoked for {u} in {g}. Confirmed by {actor}.",
+    lambda g, u, r, actor: f"Security incident response: {u} temporarily removed from {g} pending investigation. By {actor}.",
+    lambda g, u, r, actor: f"Voluntary departure: {u} left {g} ({r}) group at own request. Logged by {actor}.",
+]
+
+m365_change_logs = []
+for _ in range(1500):
+    grp = random.choice(m365_groups)
+    if not grp["users"]:
+        continue
+    user_entry = random.choice(grp["users"])
+    actor = random.choice(ad_users)
+    actor_email = actor["email"]
+    action = random.choices(["added", "removed"], weights=[60, 40])[0]
+    role = user_entry["role"]
+
+    if action == "added":
+        notes = random.choice(m365_added_templates)(grp["group"], user_entry["email"], role, actor_email)
+    else:
+        notes = random.choice(m365_removed_templates)(grp["group"], user_entry["email"], role, actor_email)
+
+    m365_change_logs.append({
+        "timestamp":     random_datetime(),
+        "group_name":    grp["group"],
+        "user_email":    user_entry["email"],
+        "change_action": action,
+        "role":          role,
+        "changed_by":    actor_email,
+        "notes":         notes,
+    })
+
+with open("services/etl-m365-line/data/logs.json", "w") as f:
+    json.dump(m365_change_logs, f, indent=2, ensure_ascii=True)
+print(f"etl-m365-line/data/logs.json written ({len(m365_change_logs)} records)")

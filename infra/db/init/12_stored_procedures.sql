@@ -527,6 +527,42 @@ RETURNS TABLE(
   FROM   netforum_activity_logs nal
   WHERE  nal.email = p_email
 
+  UNION ALL
+
+  -- SharePoint On-Prem permissions for this user.
+  -- Column mapping: name=site, alias=site_url, type=role,
+  --                 sponsor=granted_by, sync_timestamp=granted_at, notes=permission_type
+  SELECT 'sharepoint_permissions'::text,
+         sp.id, NULL::text, NULL::text, sp.user_email, sp.role,
+         NULL::jsonb, sp.site, sp.site_url,
+         NULL::boolean, NULL::boolean, NULL::timestamptz,
+         NULL::timestamptz, sp.granted_by,
+         sp.created_at,
+         sp.granted_at,
+         NULL::jsonb, NULL::jsonb,
+         sp.permission_type
+  FROM   sharepoint_permissions sp
+  WHERE  sp.user_email = p_email
+
+  UNION ALL
+
+  -- M365 group memberships for this user (one row per group they belong to).
+  -- Column mapping: name=group_name, alias=group_email, type=role (member|owner),
+  --                 contacts=full users array, sponsor=group_type, sync_timestamp=joined_at,
+  --                 notes=user source (active_directory|external_users)
+  SELECT 'm365_group_memberships'::text,
+         mg.id, NULL::text, NULL::text, u->>'email', u->>'role',
+         mg.users, mg.group_name, mg.group_email,
+         NULL::boolean, NULL::boolean, NULL::timestamptz,
+         NULL::timestamptz, mg.group_type,
+         mg.created_at,
+         (u->>'joined_at')::timestamptz,
+         NULL::jsonb, NULL::jsonb,
+         u->>'source'
+  FROM   m365_group_memberships mg,
+         jsonb_array_elements(mg.users) u
+  WHERE  u->>'email' = p_email
+
   ORDER BY source, created_at;
 $$ LANGUAGE sql STABLE;
 
@@ -628,7 +664,14 @@ RETURNS TABLE(source TEXT, email TEXT) AS $$
   FROM   external_user_activity_logs eul WHERE eul.email = ANY(p_emails)
   UNION ALL
   SELECT 'netforum_activity_logs'::text, nal.email
-  FROM   netforum_activity_logs nal WHERE nal.email = ANY(p_emails);
+  FROM   netforum_activity_logs nal WHERE nal.email = ANY(p_emails)
+  UNION ALL
+  SELECT 'sharepoint_permissions'::text, sp.user_email
+  FROM   sharepoint_permissions sp WHERE sp.user_email = ANY(p_emails)
+  UNION ALL
+  SELECT 'm365_group_memberships'::text, u->>'email'
+  FROM   m365_group_memberships mg, jsonb_array_elements(mg.users) u
+  WHERE  u->>'email' = ANY(p_emails);
 $$ LANGUAGE sql STABLE;
 
 -- ────────────────────────────────────────────────────────────────────────────
@@ -675,6 +718,10 @@ BEGIN
     CASE v_source
       WHEN 'distribution_groups' THEN
         v_subq := 'SELECT c->>''email'' AS email, c->>''first_name'' AS first_name, c->>''last_name'' AS last_name, ''group-member''::text AS type FROM distribution_groups, jsonb_array_elements(contacts) c';
+      WHEN 'sharepoint_permissions' THEN
+        v_subq := 'SELECT user_email AS email, NULL::text AS first_name, NULL::text AS last_name, role AS type FROM sharepoint_permissions';
+      WHEN 'm365_group_memberships' THEN
+        v_subq := 'SELECT u->>''email'' AS email, NULL::text AS first_name, NULL::text AS last_name, u->>''role'' AS type FROM m365_group_memberships, jsonb_array_elements(users) u';
       ELSE
         v_subq := format('SELECT email, first_name, last_name, type FROM %I', v_source);
     END CASE;
@@ -691,6 +738,10 @@ BEGIN
       CASE v_source
         WHEN 'distribution_groups' THEN
           v_subq := 'SELECT c->>''email'' AS email, c->>''first_name'' AS first_name, c->>''last_name'' AS last_name, ''group-member''::text AS type FROM distribution_groups, jsonb_array_elements(contacts) c';
+        WHEN 'sharepoint_permissions' THEN
+          v_subq := 'SELECT user_email AS email, NULL::text AS first_name, NULL::text AS last_name, role AS type FROM sharepoint_permissions';
+        WHEN 'm365_group_memberships' THEN
+          v_subq := 'SELECT u->>''email'' AS email, NULL::text AS first_name, NULL::text AS last_name, u->>''role'' AS type FROM m365_group_memberships, jsonb_array_elements(users) u';
         ELSE
           v_subq := format('SELECT email, first_name, last_name, type FROM %I', v_source);
       END CASE;
@@ -951,3 +1002,142 @@ CREATE OR REPLACE FUNCTION sp_search_filtered(
   ORDER  BY distance
   LIMIT  p_top_k;
 $$ LANGUAGE sql STABLE SET hnsw.ef_search = 100;
+-- ============================================================================
+-- SHAREPOINT ON-PREM PERMISSIONS ETL PROCEDURES  (etl-sp-line)
+-- ============================================================================
+
+-- ── Upsert a single permission record ────────────────────────────────────────
+CREATE OR REPLACE PROCEDURE sp_upsert_sharepoint_permission(
+  p_user_email      TEXT,
+  p_site            TEXT,
+  p_site_url        TEXT,
+  p_role            TEXT,
+  p_permission_type TEXT,
+  p_granted_by      TEXT,
+  p_granted_at      TIMESTAMPTZ,
+  p_embedding       TEXT
+) AS $$
+  INSERT INTO sharepoint_permissions
+    (user_email, site, site_url, role, permission_type, granted_by, granted_at, embedding)
+  VALUES
+    (p_user_email, p_site, p_site_url, p_role, p_permission_type,
+     p_granted_by, p_granted_at, p_embedding::vector)
+  ON CONFLICT (user_email, site) DO UPDATE SET
+    site_url        = EXCLUDED.site_url,
+    role            = EXCLUDED.role,
+    permission_type = EXCLUDED.permission_type,
+    granted_by      = EXCLUDED.granted_by,
+    granted_at      = EXCLUDED.granted_at,
+    embedding       = EXCLUDED.embedding;
+$$ LANGUAGE sql;
+
+-- ── Fetch all current records for change detection ───────────────────────────
+CREATE OR REPLACE FUNCTION sp_get_existing_sharepoint_permissions()
+RETURNS TABLE(
+  user_email      TEXT,
+  site            TEXT,
+  role            TEXT,
+  permission_type TEXT,
+  granted_by      TEXT,
+  granted_at      TIMESTAMPTZ
+) AS $$
+  SELECT user_email, site, role, permission_type, granted_by, granted_at
+  FROM   sharepoint_permissions;
+$$ LANGUAGE sql STABLE;
+
+-- ── Delete a single permission record ────────────────────────────────────────
+CREATE OR REPLACE PROCEDURE sp_delete_sharepoint_permission(
+  p_user_email TEXT,
+  p_site       TEXT
+) AS $$
+  DELETE FROM sharepoint_permissions
+  WHERE  user_email = p_user_email
+    AND  site       = p_site;
+$$ LANGUAGE sql;
+
+-- ── Insert a permission change log entry ─────────────────────────────────────
+CREATE OR REPLACE PROCEDURE sp_insert_sp_permission_change_log(
+  p_log_timestamp TIMESTAMPTZ,
+  p_user_email    TEXT,
+  p_site          TEXT,
+  p_change_type   TEXT,
+  p_old_role      TEXT,
+  p_new_role      TEXT,
+  p_changed_by    TEXT,
+  p_notes         TEXT,
+  p_embedding     TEXT
+) AS $$
+  INSERT INTO sharepoint_permission_change_logs
+    (log_timestamp, user_email, site, change_type, old_role, new_role,
+     changed_by, notes, embedding)
+  VALUES
+    (p_log_timestamp, p_user_email, p_site, p_change_type, p_old_role, p_new_role,
+     p_changed_by, p_notes, p_embedding::vector);
+$$ LANGUAGE sql;
+
+-- ── Truncate logs table (re-loaded on each ETL run) ──────────────────────────
+CREATE OR REPLACE PROCEDURE sp_truncate_sp_permission_change_logs()
+AS $$ TRUNCATE TABLE sharepoint_permission_change_logs; $$ LANGUAGE sql;
+
+-- ============================================================================
+-- M365 GROUP MEMBERSHIPS ETL PROCEDURES  (etl-m365-line)
+-- ============================================================================
+
+-- ── Upsert a single M365 group record ────────────────────────────────────────
+CREATE OR REPLACE PROCEDURE sp_upsert_m365_group(
+  p_group_name  TEXT,
+  p_group_email TEXT,
+  p_group_type  TEXT,
+  p_users       TEXT,   -- JSON string
+  p_embedding   TEXT
+) AS $$
+  INSERT INTO m365_group_memberships
+    (group_name, group_email, group_type, users, embedding)
+  VALUES
+    (p_group_name, p_group_email, p_group_type, p_users::jsonb, p_embedding::vector)
+  ON CONFLICT (group_email) DO UPDATE SET
+    group_name  = EXCLUDED.group_name,
+    group_type  = EXCLUDED.group_type,
+    users       = EXCLUDED.users,
+    embedding   = EXCLUDED.embedding;
+$$ LANGUAGE sql;
+
+-- ── Fetch all current records for change detection ───────────────────────────
+CREATE OR REPLACE FUNCTION sp_get_existing_m365_groups()
+RETURNS TABLE(
+  group_email TEXT,
+  group_name  TEXT,
+  group_type  TEXT,
+  users       JSONB
+) AS $$
+  SELECT group_email, group_name, group_type, users
+  FROM   m365_group_memberships;
+$$ LANGUAGE sql STABLE;
+
+-- ── Delete a single M365 group record ────────────────────────────────────────
+CREATE OR REPLACE PROCEDURE sp_delete_m365_group(p_group_email TEXT) AS $$
+  DELETE FROM m365_group_memberships WHERE group_email = p_group_email;
+$$ LANGUAGE sql;
+
+-- ── Insert an M365 membership change log entry ───────────────────────────────
+CREATE OR REPLACE PROCEDURE sp_insert_m365_membership_change_log(
+  p_log_timestamp TIMESTAMPTZ,
+  p_group_name    TEXT,
+  p_user_email    TEXT,
+  p_change_action TEXT,
+  p_role          TEXT,
+  p_changed_by    TEXT,
+  p_notes         TEXT,
+  p_embedding     TEXT
+) AS $$
+  INSERT INTO m365_membership_change_logs
+    (log_timestamp, group_name, user_email, change_action, role,
+     changed_by, notes, embedding)
+  VALUES
+    (p_log_timestamp, p_group_name, p_user_email, p_change_action, p_role,
+     p_changed_by, p_notes, p_embedding::vector);
+$$ LANGUAGE sql;
+
+-- ── Truncate logs table (re-loaded on each ETL run) ──────────────────────────
+CREATE OR REPLACE PROCEDURE sp_truncate_m365_membership_change_logs()
+AS $$ TRUNCATE TABLE m365_membership_change_logs; $$ LANGUAGE sql;

@@ -142,6 +142,14 @@ const SOURCE_ALIASES = {
   'dist groups':     'distribution_groups',
   'groups':          'distribution_groups',
   'dg':              'distribution_groups',
+  'sharepoint':          'sharepoint_permissions',
+  'sharepoint on-prem':  'sharepoint_permissions',
+  'sp':                  'sharepoint_permissions',
+  'sp permissions':      'sharepoint_permissions',
+  'm365':                'm365_group_memberships',
+  'microsoft 365':       'm365_group_memberships',
+  '365':                 'm365_group_memberships',
+  'm365 groups':         'm365_group_memberships',
 };
 
 // Sorted by length descending so longer aliases match first
@@ -422,49 +430,65 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-// ── GenAI chat proxy ──────────────────────────────────────────────────────────
-// Forwards POST /api/chat → genai service so the browser never cross-origins.
+// ── Agent proxy ───────────────────────────────────────────────────────────────
+// Forwards POST /api/agent → genai service.
 const GENAI_URL = process.env.GENAI_URL || 'http://genai:3001';
 
-app.post('/api/chat', express.json(), async (req, res) => {
+app.post('/api/agent', express.json(), async (req, res) => {
   try {
-    const wantsStream = req.headers.accept === 'text/event-stream';
-
-    const ac = new AbortController();
-    const streamTimeout = setTimeout(() => ac.abort(), 120_000);
-
-    const upstream = await fetch(`${GENAI_URL}/api/chat`, {
+    const upstream = await fetch(`${GENAI_URL}/api/agent`, {
       method:  'POST',
-      signal:  ac.signal,
       headers: {
         'Content-Type': 'application/json',
         ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
-        ...(wantsStream ? { 'Accept': 'text/event-stream' } : {}),
       },
       body: JSON.stringify(req.body),
     });
-    clearTimeout(streamTimeout);
-
-    if (wantsStream && upstream.headers.get('content-type')?.includes('text/event-stream')) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
-      const reader = upstream.body.getReader();
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(decoder.decode(value, { stream: true }));
-      }
-      res.end();
-    } else {
-      const data = await upstream.json();
-      res.status(upstream.status).json(data);
-    }
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
   } catch (err) {
-    console.error('GenAI proxy error:', err);
-    res.status(502).json({ error: 'GenAI service unavailable.' });
+    console.error('Agent proxy error:', err);
+    res.status(502).json({ error: 'Agent service unavailable.' });
+  }
+});
+
+// ── Tickets proxy ─────────────────────────────────────────────────────────────
+// Forwards GET /api/tickets → genai service.
+
+app.get('/api/tickets', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/tickets?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Tickets proxy error:', err);
+    res.status(502).json({ error: 'Tickets service unavailable.' });
+  }
+});
+
+// ── Ticket close proxy ────────────────────────────────────────────────────────
+// Forwards PATCH /api/tickets/:id → genai service.
+
+app.patch('/api/tickets/:id', express.json(), async (req, res) => {
+  try {
+    const upstream = await fetch(`${GENAI_URL}/api/tickets/${req.params.id}`, {
+      method:  'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+      body: JSON.stringify(req.body),
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Ticket close proxy error:', err);
+    res.status(502).json({ error: 'Ticket service unavailable.' });
   }
 });
 

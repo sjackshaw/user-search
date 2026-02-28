@@ -43,7 +43,7 @@ On first run, pull the model once:
 docker exec user-search-ollama-1 ollama pull qwen2.5:3b
 ```
 
-The chat UI is available at `http://localhost:3000` (the 💬 button in the bottom-right corner). The GenAI service API is accessible directly at `http://localhost:3001/api/chat`.
+The chat UI is available at `http://localhost:3000`. The GenAI service powers the user-card agent (LLM tool-calling) at `http://localhost:3001/api/agent`.
 
 ### Seeding historical change data
 
@@ -105,8 +105,11 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `docs/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, Fargate migration plan |
 | `docs/diagrams/aws-target-architecture.md` | Mermaid diagram — AWS target architecture (VPC, ALB, Lambda, RDS) |
 | `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
-| `services/genai/` | GenAI service: intent classification, context retrieval, Ollama chat |
+| `services/genai/` | GenAI service: LLM tool-calling agent, action executors, ticket management |
 | `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
+| `infra/db/init/15_agent_tickets.sql` | `agent_tickets` table schema |
+| `docs/next-steps/agentic-ai-expansion.md` | Agentic AI implementation status and architecture |
+| `docs/security/findings4.md` | Security review: agentic AI findings |
 | `seed_change_logs.py` | Generates seed SQL for `source_change_logs` and `etl_job_logs` historical data |
 | `seed_change_logs.sql` | Generated seed SQL (apply once after first Postgres init) |
 
