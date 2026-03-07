@@ -232,18 +232,14 @@ async function createAndCloseTicket(pool, email, title, description, sessionId, 
 }
 
 // ── Shared constants for executor validation ──────────────────────────────────
-const VALID_SYSTEMS = ['active_directory', 'netforum_members', 'external_users'];
-const SYSTEM_LABELS = { active_directory: 'Active Directory', netforum_members: 'NetForum', external_users: 'External Users' };
-
-function validateTargetSystem(target_system) {
-  if (!VALID_SYSTEMS.includes(target_system)) {
-    throw new Error(`Invalid target system: ${target_system}`);
-  }
-}
-
-function escapeLike(value) {
-  return value.replace(/[%_]/g, '\\$&');
-}
+const {
+  VALID_SYSTEMS,
+  SYSTEM_LABELS,
+  SAFE_TABLES,
+  SAFE_COLUMNS,
+  validateTargetSystem,
+  escapeLike,
+} = require('./validation');
 
 async function executeProvisionAccount(pool, email, fnArgs, sessionId) {
   const { target_system, first_name, last_name, type: acctType } = fnArgs;
@@ -255,8 +251,9 @@ async function executeProvisionAccount(pool, email, fnArgs, sessionId) {
 
   return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
     // Check if account already exists
+    const safeTable = SAFE_TABLES[target_system];
     const { rows: existing } = await pool.query(
-      `SELECT id FROM ${target_system} WHERE email = $1`,
+      `SELECT id FROM ${safeTable} WHERE email = $1`,
       [email]
     );
     if (existing.length > 0) {
@@ -301,8 +298,9 @@ async function executeDisableAccount(pool, email, fnArgs, sessionId, records) {
     const results = {};
 
     for (const table of DISABLE_TABLES) {
+      const safeTable = SAFE_TABLES[table];
       const { rowCount } = await pool.query(
-        `UPDATE ${table} SET enabled = false WHERE email = $1 AND enabled = true`,
+        `UPDATE ${safeTable} SET enabled = false WHERE email = $1 AND enabled = true`,
         [email]
       );
       if (rowCount > 0) results[table] = 'disabled';
@@ -337,18 +335,19 @@ async function executeUpdateAttribute(pool, email, fnArgs, sessionId) {
   validateTargetSystem(target_system);
   const label = SYSTEM_LABELS[target_system] || target_system;
 
-  // Whitelist allowed fields to prevent injection
-  const ALLOWED_FIELDS = ['email', 'first_name', 'last_name', 'type', 'sponsor'];
-  if (!ALLOWED_FIELDS.includes(field)) {
+  // Validate field against safe quoted-identifier map
+  const safeCol = SAFE_COLUMNS[field];
+  if (!safeCol) {
     throw new Error(`Field "${field}" is not an updatable attribute.`);
   }
+  const safeTable = SAFE_TABLES[target_system];
 
   const title = `Update ${field} in ${label}`;
   const description = `Update ${field} to "${new_value}" for ${email} in ${label}.`;
 
   return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
     const { rowCount } = await pool.query(
-      `UPDATE ${target_system} SET ${field} = $1 WHERE email = $2`,
+      `UPDATE ${safeTable} SET ${safeCol} = $1 WHERE email = $2`,
       [new_value, email]
     );
     if (rowCount === 0) {

@@ -1,6 +1,6 @@
 # GenAI Architecture (C4 Container — Current State)
 
-> Implemented as of February 25, 2026 (streaming enabled). See `docs/genai_expansion_plan.md` for the full implementation history.
+> Implemented as of February 28, 2026. 6 ETL lines, 9 agent tools, 6 action executors, streaming enabled. See `docs/next-steps/agentic-ai-expansion.md` for the full implementation history.
 
 ```mermaid
 graph TB
@@ -17,17 +17,19 @@ graph TB
 
         App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + Chat UI + SBERT<br/>SSE streaming proxy<br/>Port 3000"]:::existing
 
-        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>Intent classification<br/>RAG orchestration<br/>Vector search proxy<br/>SSE token streaming<br/>Port 3001"]:::genai
+        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>9 tools · 6 action executors<br/>Intent classification + RAG<br/>SSE token streaming<br/>Port 3001"]:::genai
 
         Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>Port 11434"]:::genai
 
-        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>11 tables (8 with HNSW indexes)<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages"]:::database
+        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>15 tables (12 with HNSW indexes)<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages<br/>+ agent_tickets"]:::database
 
-        subgraph ETLServices [" 4 ETL Line Services "]
+        subgraph ETLServices [" 6 ETL Line Services "]
             ETL_AD["etl-ad-line<br/>active_directory + activity_logs"]:::existing
             ETL_NF["etl-netforum-line<br/>netforum_members + activity_logs"]:::existing
             ETL_EU["etl-eu-line<br/>external_users + activity_logs"]:::existing
             ETL_DG["etl-dg-line<br/>distribution_groups + sync_logs"]:::existing
+            ETL_M365["etl-m365-line<br/>m365_group_memberships + change_logs"]:::existing
+            ETL_SP["etl-sp-line<br/>sharepoint_permissions + change_logs"]:::existing
         end
     end
 
@@ -45,5 +47,7 @@ graph TB
     ETL_NF -->|"Vectors + change logs"| Postgres
     ETL_EU -->|"Vectors + change logs"| Postgres
     ETL_DG -->|"Vectors + change logs"| Postgres
+    ETL_M365 -->|"Vectors + change logs"| Postgres
+    ETL_SP -->|"Vectors + change logs"| Postgres
     App -.->|"SBERT model weights"| HF
 ```

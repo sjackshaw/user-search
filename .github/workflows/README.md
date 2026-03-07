@@ -1,5 +1,7 @@
 # GitHub Actions workflows
 
+> **Note:** This project is a proof of concept. The `ci/` directory (which previously contained AWS IAM role and policy templates) has been removed. If this project moves to production, CI/CD configuration will be rebuilt as part of integration with the corporate CI/CD pipeline.
+
 This directory contains CI workflows used by the repository.
 
 Workflows
@@ -11,7 +13,7 @@ Workflows
   - Build and push service images to ECR in the `build-and-push` job (requires the IAM role to have ECR permissions).
 
 Required repository secrets
-- `AWS_ROLE_TO_ASSUME` — ARN of the IAM role created from `ci/aws/iam-role-oidc.yml`.
+- `AWS_ROLE_TO_ASSUME` — ARN of the IAM role to assume (must be created separately as part of the corporate CI/CD pipeline setup).
 - `DB_SECRET_ARN` — ARN of the Secrets Manager secret that contains DB credentials.
 
 Notes

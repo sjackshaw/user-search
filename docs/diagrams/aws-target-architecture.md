@@ -37,7 +37,7 @@ flowchart TB
             end
 
             RDSProxy["RDS Proxy\nConnection pooling\nIAM auth"]:::aws
-            RDS[("RDS PostgreSQL 15\npgvector — 12+ tables\nMulti-AZ, encrypted")]:::rds
+            RDS[("RDS PostgreSQL 15\npgvector — 15 tables\nMulti-AZ, encrypted")]:::rds
         end
     end
 

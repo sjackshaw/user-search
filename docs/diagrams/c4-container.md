@@ -13,16 +13,18 @@ flowchart TB
         ETL_NF["etl-netforum-line\nnetForum primary + NF activity logs"]:::etl
         ETL_EU["etl-eu-line\nExternal Users primary + EU activity logs"]:::etl
         ETL_DG["etl-dg-line\nDistribution Groups primary + DG sync logs"]:::etl
+        ETL_M365["etl-m365-line\nM365 Groups primary + membership change logs"]:::etl
+        ETL_SP["etl-sp-line\nSharePoint permissions + permission change logs"]:::etl
     end
 
     subgraph GenAIStack["GenAI Stack"]
         Ollama["Ollama\nqwen2.5:3b\nPort 11434"]:::genai
-        GenAI["GenAI Service\nNode.js\nIntent + RAG\nPort 3001"]:::genai
+        GenAI["GenAI Service\nNode.js — 9 tools\nIntent + RAG + tool-calling\nPort 3001"]:::genai
     end
 
     subgraph Platform["Docker Platform - user-search"]
         App["App Container\nNode.js Express\nSearch UI + Chat UI\nPort 3000"]:::container
-        Postgres["PostgreSQL + pgvector\n11 tables\n(8 with HNSW indexes)\nETL logs + chat history"]:::database
+        Postgres["PostgreSQL + pgvector\n15 tables\n(12 with HNSW indexes)\nETL logs + chat history + tickets"]:::database
     end
 
     User -->|"search / lookup / chat"| App
@@ -31,10 +33,12 @@ flowchart TB
     GenAI -->|"RAG context retrieval"| Postgres
     GenAI -->|"Vector search"| App
     GenAI -->|"LLM inference"| Ollama
-    GenAI -->|"persist chat_messages"| Postgres
+    GenAI -->|"persist chat_messages\n+ agent_tickets"| Postgres
 
     ETL_AD -->|"embed and upsert"| Postgres
     ETL_NF -->|"embed and upsert"| Postgres
     ETL_EU -->|"embed and upsert"| Postgres
     ETL_DG -->|"embed and upsert"| Postgres
+    ETL_M365 -->|"embed and upsert"| Postgres
+    ETL_SP -->|"embed and upsert"| Postgres
 ```

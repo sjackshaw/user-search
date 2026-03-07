@@ -15,16 +15,16 @@ sequenceDiagram
     Note over A: Returns 384-dim float32 vector
 
     alt Source-Filtered Query
-        A->>+P: SELECT *, embedding <=> $vector AS dist<br/>FROM active_directory<br/>ORDER BY dist LIMIT 20
+        A->>+P: sp_search_filtered(vector, filters, top_k)<br/>SELECT *, embedding <=> $vector AS dist<br/>FROM active_directory<br/>WHERE enabled/locked/type matches<br/>ORDER BY dist LIMIT 20
         P-->>-A: Ranked results (≤20 rows)
     else Unfiltered Query
-        A->>+P: 8× UNION ALL<br/>SELECT *, embedding <=> $vector AS dist<br/>FROM each_table<br/>ORDER BY dist LIMIT 20
-        P-->>-A: Ranked results (≤160 rows)
+        A->>+P: sp_search_all_sources(vector, top_k)<br/>4× UNION ALL across primary tables<br/>(AD, netForum, external_users, distribution_groups)<br/>ORDER BY dist LIMIT 20
+        P-->>-A: Ranked results (≤80 rows)
     end
 
     Note over A: Sort combined results by distance<br/>Slice to TOP_K (20)
 
-    A->>+P: Multi-lookup: SELECT source, email<br/>FROM all_tables WHERE email IN (...)
+    A->>+P: sp_multi_lookup_emails(emails[])<br/>9× UNION ALL across all source tables<br/>(includes SP permissions + M365 memberships)
     P-->>-A: Cross-source presence map
 
     Note over A: Merge presence flags into results

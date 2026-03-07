@@ -17,7 +17,7 @@ flowchart TB
 
         OLLAMA["🧠 ollama\nollama/ollama\nqwen2.5:3b\nPort 11434:11434"]:::genai
 
-        GENAI["🤖 genai\nNode.js 22\nIntent + RAG\nPort 3001:3001"]:::genai
+        GENAI["🤖 genai\nNode.js 22\n9 tools · 6 action executors\nPort 3001:3001"]:::genai
 
         subgraph etl_lines ["Line ETL containers (shared model + pool)"]
             direction LR
@@ -25,14 +25,16 @@ flowchart TB
             C2["etl-netforum-line\nprimary.json → netforum_members\nlogs.json → nf_activity_logs"]:::etlLine
             C3["etl-eu-line\nprimary.json → external_users\nlogs.json → eu_activity_logs"]:::etlLine
             C4["etl-dg-line\nprimary.json → distribution_groups\nlogs.json → dg_sync_logs"]:::etlLine
+            C5["etl-m365-line\nprimary.json → m365_group_memberships\nlogs.json → m365_membership_change_logs"]:::etlLine
+            C6["etl-sp-line\nprimary.json → sharepoint_permissions\nlogs.json → sp_permission_change_logs"]:::etlLine
         end
     end
 
     MC["📁 model-cache\nDocker Volume"]:::volume
     OM["📁 ollama_models\nDocker Volume"]:::volume
 
-    C1 & C2 & C3 & C4 -->|"SBERT model"| MC
-    C1 & C2 & C3 & C4 -->|"INSERT + embedding"| PG
+    C1 & C2 & C3 & C4 & C5 & C6 -->|"SBERT model"| MC
+    C1 & C2 & C3 & C4 & C5 & C6 -->|"INSERT + embedding"| PG
     APP -->|"SQL queries"| PG
     APP -->|"SBERT model"| MC
     GENAI -->|"RAG SQL queries"| PG
@@ -40,7 +42,7 @@ flowchart TB
     GENAI -->|"LLM inference"| OLLAMA
     OLLAMA -->|"model weights"| OM
 
-    C1 & C2 & C3 & C4 -.->|"depends_on: healthy"| PG
+    C1 & C2 & C3 & C4 & C5 & C6 -.->|"depends_on: healthy"| PG
     APP -.->|"depends_on: healthy"| PG
     GENAI -.->|"depends_on: healthy"| OLLAMA
 ```

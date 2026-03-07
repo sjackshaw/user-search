@@ -73,7 +73,7 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: postgresql://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@localhost:5432/${{ env.DB_NAME }}
+          DATABASE_URL: postgresql://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@localhost:5433/${{ env.DB_NAME }}
         run: npm test
 
       - name: Tear down Postgres
@@ -107,6 +107,15 @@ jobs:
           - name: etl-dg-line
             path: services/etl-dg-line
             repo: etl-dg-line
+          - name: etl-m365-line
+            path: services/etl-m365-line
+            repo: etl-m365-line
+          - name: etl-sp-line
+            path: services/etl-sp-line
+            repo: etl-sp-line
+          - name: genai
+            path: services/genai
+            repo: genai
     steps:
       - name: Checkout
         uses: actions/checkout@v4
