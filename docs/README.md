@@ -2,14 +2,56 @@
 
 ## Overview
 
-User Search is a semantic search application that indexes data from multiple sources — Active Directory, netForum, External Users, Distribution Groups, and activity logs for each — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries.
+User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) can perform actions on user accounts via tool calling.
 
-See [etl-architecture.md](etl-architecture.md) for the full ETL pipeline and database schema reference.  
-See [aws-migration-plan.md](aws-migration-plan.md) for the planned AWS production architecture (RDS, Lambda, Fargate).
+See [technology-stack.md](technology-stack.md) for a full inventory of every technology in the solution.  
+See [etl-architecture.md](etl-architecture.md) for the ETL pipeline and database schema reference.  
+See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the planned AWS production architecture (RDS, Lambda, EKS).  
+See [code-quality-review.md](code-quality-review.md) for the comprehensive code quality audit.
+
+### Documentation Index
+
+| Document | Description |
+|---|---|
+| [technology-stack.md](technology-stack.md) | Full inventory of runtimes, libraries, models, Docker images, and tooling |
+| [etl-architecture.md](etl-architecture.md) | ETL pipeline design, database schema, and vectorisation approach |
+| [code-quality-review.md](code-quality-review.md) | Severity-ranked code quality findings with recommended tests |
+| [diagrams/](diagrams/README.md) | 9 Mermaid diagrams (C4, ER, sequence, state, AWS target architecture) |
+| [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) | AWS production architecture — RDS, Lambda, EKS, Bedrock |
+| [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Agentic AI status, multi-step agent design, and Member Benefits Bot (App A) plan |
+| [next-steps/genai-production-update.md](next-steps/genai-production-update.md) | How to turn PoC agent actions into real authenticated API calls |
+| [next-steps/saml-access-management.md](next-steps/saml-access-management.md) | SAML-based access management integration plan |
+| [security/](security/) | Security review findings (4 reports) |
 
 ## Quickstart — full dev stack
 
-Bring up all ETL services (including vectorization), the application, and Postgres:
+The fastest way to get everything running is the bootstrap script in the `startup/` directory. It builds all images, starts Postgres, verifies the schema, launches every service, and pulls the Ollama model:
+
+```sh
+./startup/setup.sh
+```
+
+The script will:
+1. Verify Docker is installed and running
+2. Create a `.env` file with sensible defaults (if one doesn't exist)
+3. Build all Docker images in parallel
+4. Start Postgres and wait until it is healthy
+5. Verify the database schema (apply init scripts manually if needed)
+6. Start all ETL, app, and GenAI services
+7. Pull the Ollama LLM model on first run
+
+Once complete the app is available at **http://localhost:3000**.
+
+To tear down:
+
+```sh
+./startup/teardown.sh            # stop containers, keep data
+./startup/teardown.sh --destroy   # stop containers, remove all data & images
+```
+
+### Manual alternative
+
+If you prefer to start services individually:
 
 ```sh
 npm run dev:up
@@ -25,7 +67,35 @@ docker compose \
   -f docker-compose.etl-netforum-line.yml \
   -f docker-compose.etl-eu-line.yml \
   -f docker-compose.etl-dg-line.yml \
+  -f docker-compose.etl-m365-line.yml \
+  -f docker-compose.etl-sp-line.yml \
+  -f docker-compose.genai.yml \
   up --build
+```
+
+## GenAI stack (Ollama + GenAI service)
+
+The GenAI service and Ollama LLM are defined in `docker-compose.genai.yml` and are included in `npm run dev:up`. To start only the GenAI stack alongside an already-running Postgres:
+
+```sh
+docker compose -p user-search -f docker-compose.genai.yml up --build
+```
+
+On first run, pull the model once:
+
+```sh
+docker exec user-search-ollama-1 ollama pull qwen2.5:3b
+```
+
+The chat UI is available at `http://localhost:3000`. The GenAI service powers the user-card agent (LLM tool-calling) at `http://localhost:3001/api/agent`.
+
+### Seeding historical change data
+
+A one-time seed script populates `source_change_logs` and `etl_job_logs` with realistic historical data so the GenAI service has meaningful context:
+
+```sh
+python3 seed_change_logs.py
+docker exec -i user-search-postgres-1 psql -U postgres -d appdb < seed_change_logs.sql
 ```
 
 ## Regenerating synthetic data
@@ -64,13 +134,17 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 
 | File / directory | Purpose |
 |---|---|
+| `startup/setup.sh` | One-command bootstrap — builds, migrates, and starts the full stack |
+| `startup/teardown.sh` | Stops all containers; use `--destroy` to also remove data and images |
 | `docker-compose.app.yml` | App service fragment |
 | `docker-compose.postgres.yml` | Postgres service with pgvector, init scripts, and data volume |
 | `docker-compose.etl-ad-line.yml` | AD primary + activity logs ETL (shared SBERT model) |
 | `docker-compose.etl-netforum-line.yml` | netForum primary + activity logs ETL |
 | `docker-compose.etl-eu-line.yml` | External users primary + activity logs ETL |
 | `docker-compose.etl-dg-line.yml` | Distribution groups primary + sync logs ETL |
-| `infra/db/init/` | Numbered SQL scripts executed once by Postgres on first initialisation |
+| `docker-compose.etl-m365-line.yml` | M365 group memberships primary + change logs ETL |
+| `docker-compose.etl-sp-line.yml` | SharePoint permissions primary + change logs ETL |
+| `infra/db/init/` | Numbered SQL scripts (01–15) executed once by Postgres on first initialisation |
 | `services/etl-*-line/data/primary.json` | Primary source data consumed by each line ETL |
 | `services/etl-*-line/data/logs.json` | Activity/sync log data consumed by each line ETL |
 | `data-output/` | Host-mounted output directories for debugging and DB persistence |
@@ -78,6 +152,17 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `generate_synthetic.py` | Python script that generates all synthetic data for all line services |
 | `docs/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, Fargate migration plan |
 | `docs/diagrams/aws-target-architecture.md` | Mermaid diagram — AWS target architecture (VPC, ALB, Lambda, RDS) |
+| `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
+| `services/genai/` | GenAI service: LLM tool-calling agent, action executors, ticket management |
+| `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
+| `infra/db/init/15_agent_tickets.sql` | `agent_tickets` table schema |
+| `docs/technology-stack.md` | Complete inventory of every technology, library, model, and tool |
+| `docs/code-quality-review.md` | Comprehensive code quality audit with severity-ranked findings |
+| `docs/next-steps/agentic-ai-expansion.md` | Agentic AI implementation status and architecture |
+| `docs/next-steps/genai-production-update.md` | How to turn PoC agent actions into real API calls |
+| `docs/security/findings4.md` | Security review: agentic AI findings |
+| `seed_change_logs.py` | Generates seed SQL for `source_change_logs` and `etl_job_logs` historical data |
+| `seed_change_logs.sql` | Generated seed SQL (apply once after first Postgres init) |
 
 ## Code quality
 
@@ -123,5 +208,8 @@ docker compose \
   -f docker-compose.etl-netforum-line.yml \
   -f docker-compose.etl-eu-line.yml \
   -f docker-compose.etl-dg-line.yml \
+  -f docker-compose.etl-m365-line.yml \
+  -f docker-compose.etl-sp-line.yml \
+  -f docker-compose.genai.yml \
   build
 ```

@@ -31,6 +31,8 @@
     .badge.active_directory_activity_logs{background:#dde8ff;color:#1e3a8a}
     .badge.external_user_activity_logs{background:#fef3c7;color:#92400e}
     .badge.netforum_activity_logs{background:#ccfbf1;color:#134e4a}
+    .badge.sharepoint_permissions{background:#ffedd5;color:#9a3412}
+    .badge.m365_group_memberships{background:#dbeafe;color:#1e3a8a}
     .spinner{display:none;margin:12px auto;width:28px;height:28px;border:3px solid #e0e0e0;border-top-color:#3b82f6;border-radius:50%;animation:spin .6s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
     .empty{text-align:center;color:#aaa;font-size:.9rem;margin-top:12px}
@@ -56,6 +58,10 @@
     .detail-section .source-label.active_directory_activity_logs{color:#1e3a8a}
     .detail-section .source-label.external_user_activity_logs{color:#92400e}
     .detail-section .source-label.netforum_activity_logs{color:#134e4a}
+    .detail-section .source-label.sharepoint_permissions{color:#9a3412}
+    .detail-section .source-label.m365_group_memberships{color:#1e3a8a}
+    .sp-permissions-header{font-weight:700;font-size:.95rem;color:#9a3412;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid #ffedd5}
+    .m365-memberships-header{font-weight:700;font-size:.95rem;color:#1e3a8a;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid #dbeafe}
     .detail-row{display:flex;gap:8px;font-size:.88rem;line-height:1.6;flex-wrap:wrap}
     .detail-row .field{color:#888;min-width:90px;flex-shrink:0}
     .detail-row .value{color:#333;word-break:break-all}
@@ -68,16 +74,64 @@
     .notes-preview{font-style:italic;color:#777;margin-top:3px}
     .more-link{background:none;border:none;color:#3b82f6;font-size:.83rem;cursor:pointer;padding:2px 0 10px 2px;text-decoration:underline;display:block}
     .more-link:hover{color:#1d4ed8}
+    /* ── Change History section ──────────────────────────────────── */
+    .change-history-header{font-weight:700;font-size:.95rem;color:#0369a1;margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid #bae6fd}
+    .change-entry{border:1px solid #e0e0e0;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:.84rem}
+    .change-entry .change-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;text-transform:uppercase;margin-right:6px}
+    .change-badge.created{background:#dcfce7;color:#166534}
+    .change-badge.updated{background:#dbeafe;color:#1e40af}
+    .change-badge.deleted{background:#fee2e2;color:#991b1b}
+    .change-entry .change-meta{color:#888;font-size:.78rem;margin-top:4px}
+    .change-entry .change-diff{margin-top:4px;font-size:.82rem}
+    .change-entry .change-diff .old-val{color:#991b1b;text-decoration:line-through}
+    .change-entry .change-diff .new-val{color:#166534}
+
+    /* ── Card data refresh flash ───────────────────────────── */
+    @keyframes cardFlash{0%{background:#e0f2fe}100%{background:transparent}}
+    .detail-refreshed{animation:cardFlash .8s ease-out}
+
+    /* ── Agent section inside detail panel ────────────────────── */
+    .agent-section{margin-top:18px;border:2px solid #a78bfa;border-radius:10px;padding:16px;background:#faf5ff}
+    .agent-header{font-size:.95rem;font-weight:700;color:#6b21a8;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .agent-messages{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+    .agent-msg{max-width:92%;padding:8px 12px;border-radius:10px;font-size:.84rem;line-height:1.5;word-break:break-word}
+    .agent-msg.user{align-self:flex-end;background:#7c3aed;color:#fff;border-bottom-right-radius:3px}
+    .agent-msg.assistant{align-self:flex-start;background:#ede9fe;color:#1a1a1a;border-bottom-left-radius:3px}
+    .agent-msg.assistant strong{font-weight:700}
+    .agent-msg.assistant p{margin-bottom:4px}
+    .agent-msg.assistant p:last-child{margin-bottom:0}
+    .agent-input-row{display:flex;gap:8px}
+    .agent-input-row input{flex:1;padding:9px 12px;border:1px solid #c4b5fd;border-radius:20px;font-size:.88rem;outline:none;transition:border .15s;font-family:inherit}
+    .agent-input-row input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+    .agent-input-row button{padding:9px 16px;background:#7c3aed;color:#fff;border:none;border-radius:20px;font-size:.88rem;cursor:pointer;font-weight:600;transition:background .15s;flex-shrink:0}
+    .agent-input-row button:hover:not(:disabled){background:#6d28d9}
+    .agent-input-row button:disabled{opacity:.55;cursor:default}
+    .agent-thinking{padding:8px 12px;border-radius:10px;background:#ede9fe;font-size:.84rem;color:#888;font-style:italic;align-self:flex-start}
+    .agent-tickets-section{margin-top:14px}
+    .tickets-header{font-size:.9rem;font-weight:700;color:#6b21a8;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #ede9fe}
+    .ticket-card{border:1px solid #e0e0e0;border-radius:8px;padding:10px 14px;margin-bottom:8px;background:#fff;font-size:.84rem;display:flex;flex-direction:column;gap:3px}
+    .ticket-card .ticket-top{display:flex;align-items:center;gap:8px}
+    .ticket-card .ticket-id{background:#ede9fe;color:#6b21a8;font-weight:700;padding:1px 7px;border-radius:8px;font-size:.75rem}
+    .ticket-card .ticket-title{font-weight:600;color:#333}
+    .ticket-card .ticket-desc{color:#666;font-size:.8rem}
+    .ticket-card .ticket-time{color:#aaa;font-size:.75rem}
+    .ticket-card .ticket-close{background:none;border:1px solid #e0e0e0;border-radius:6px;padding:2px 8px;font-size:.72rem;color:#991b1b;cursor:pointer;transition:background .15s,border-color .15s;align-self:flex-end;margin-top:2px}
+    .ticket-card .ticket-close:hover{background:#fee2e2;border-color:#fca5a5}
+    .ticket-card .ticket-close:disabled{opacity:.5;cursor:default}
+    .tickets-empty{color:#aaa;font-size:.84rem;font-style:italic}
+    .agent-spinner{display:inline-block;width:16px;height:16px;border:2px solid #c4b5fd;border-top-color:#7c3aed;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+    .agent-input-row input:disabled{opacity:.6;cursor:default}
+    .agent-error{color:#991b1b;background:#fee2e2;border-radius:8px;padding:6px 10px;font-size:.82rem;margin-top:4px}
   </style>
 </head>
 <body>
   <h1>Total User Search</h1>
 
   <div class="search-box">
-    <label for="query">Total User Search</label>
+    <label for="query">Semantic Search</label>
     <input type="text" id="query" placeholder="Search by name, email, or try: users in active directory and netforum" autocomplete="off" />
-    <span class="hint">Semantic search across Active Directory, netForum, External Users, Distribution Groups, Sync Logs &amp; Activity Logs
-      <br/>Try: <em>"users in active directory and netforum"</em> · <em>"in ad and not in external users"</em> · <em>"in ad activity logs"</em> · <em>"john in netforum activity"</em></span>
+    <span class="hint">Semantic search across Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, M365 Groups, Sync Logs &amp; Activity Logs
+      <br/>Try: <em>"users in active directory and netforum"</em> · <em>"in ad and not in external users"</em> · <em>"in sharepoint and m365"</em> · <em>"john in netforum activity"</em></span>
   </div>
 
   <div class="spinner" id="spinner"></div>
@@ -112,13 +166,22 @@
       active_directory_activity_logs:    'AD Activity Log',
       external_user_activity_logs:       'Ext User Activity Log',
       netforum_activity_logs:            'netForum Activity Log',
-      intersection:        'Multi-Source',
+      intersection:                   'Multi-Source',
+      sharepoint_permissions:          'SharePoint Perms',
+      m365_group_memberships:          'M365 Membership',
     };
 
     // Close detail overlay
     document.getElementById('detail-close').addEventListener('click', () => overlay.classList.remove('open'));
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.classList.remove('open'); });
+
+    // ── API auth helper ───────────────────────────────────────────────────────
+    function apiHeaders(extra) {
+      const h = Object.assign({}, extra);
+      if (window.APP_API_KEY) h['x-api-key'] = window.APP_API_KEY;
+      return h;
+    }
 
     input.addEventListener('input', () => {
       clearTimeout(debounce);
@@ -132,7 +195,7 @@
       spinner.style.display = 'block';
       parsedBanner.classList.remove('active');
       try {
-        const res  = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const res  = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { headers: apiHeaders() });
         const data = await res.json();
 
         // Show parsed-query banner when an intersection query was detected
@@ -206,6 +269,12 @@
             extraMeta += ` · Enabled: ${r.enabled === false ? 'No' : 'Yes'}`;
             if (r.lastLogin) extraMeta += ` · Last Login: ${new Date(r.lastLogin).toLocaleDateString()}`;
             if (r.createdAt) extraMeta += ` · Created: ${new Date(r.createdAt).toLocaleDateString()}`;
+          } else if (r.source === 'sharepoint_permissions') {
+            if (r.groupName) extraMeta += ` · Site: ${r.groupName}`;
+            if (r.sponsor) extraMeta += ` · Granted by: ${r.sponsor}`;
+          } else if (r.source === 'm365_group_memberships') {
+            if (r.groupName) extraMeta += ` · Group: ${r.groupName}`;
+            if (r.contacts && r.contacts.length) extraMeta += ` · ${r.contacts.length} users`;
           } else if (isActivityLog) {
             if (r.sponsor) extraMeta += ` · Changed by: ${r.sponsor}`;
             if (r.notes) contactsHtml = `<div class="contacts notes-preview">${esc(r.notes)}</div>`;
@@ -247,13 +316,17 @@
     }
 
     // ── Detail lookup ───────────────────────────────────────────────────────
+    // Store current detail identifier for refresh
+    let _detailIdentifier = null;
+
     async function openDetail(identifier) {
+      _detailIdentifier = identifier;
       detailTitle.textContent = identifier;
       detailBody.innerHTML = '<p class="empty">Loading…</p>';
       overlay.classList.add('open');
 
       try {
-        const res  = await fetch(`/api/lookup?email=${encodeURIComponent(identifier)}`);
+        const res  = await fetch(`/api/lookup?email=${encodeURIComponent(identifier)}`, { headers: apiHeaders() });
         const data = await res.json();
 
         if (!data.records || data.records.length === 0) {
@@ -261,11 +334,59 @@
           return;
         }
 
+        const dataHtml = renderDetailData(data, identifier);
+
+        // Build agent + tickets section (separate from data so it survives refresh)
+        const agentHtml = `
+          <div class="agent-section">
+            <div class="agent-header">🤖 User Card Agent</div>
+            <div class="agent-messages" id="agent-messages"></div>
+            <div class="agent-input-row">
+              <input type="text" id="agent-input" placeholder="Ask the agent to take an action…" autocomplete="off" />
+              <button id="agent-send">Send</button>
+            </div>
+            <div id="agent-error" class="agent-error" style="display:none"></div>
+          </div>
+          <div class="agent-tickets-section">
+            <div class="tickets-header">Open Tickets</div>
+            <div id="tickets-list"><p class="tickets-empty">No open tickets.</p></div>
+          </div>
+        `;
+
+        detailBody.innerHTML = `<div id="detail-data">${dataHtml}</div>${agentHtml}`;
+
+        // Wire up agent prompt
+        const mainRecords = data.records.filter(r =>
+          r.source !== 'distribution_group_sync_logs' &&
+          !['active_directory_activity_logs', 'external_user_activity_logs', 'netforum_activity_logs'].includes(r.source) &&
+          !['sharepoint_permissions', 'm365_group_memberships'].includes(r.source)
+        );
+        const firstMain = mainRecords[0];
+        const currentEmail = firstMain?.email || identifier;
+        const currentRecords = data.records || [];
+        wireAgentPrompt(currentEmail, currentRecords);
+        refreshTickets(currentEmail);
+      } catch (err) {
+        detailBody.innerHTML = '<p class="empty">Lookup failed.</p>';
+        console.error(err);
+      }
+    }
+
+    // Render just the data portion of the detail card (no agent/tickets)
+    function renderDetailData(data, identifier) {
+
         // Separate person/group records from sync-log and activity-log records
-        const ACTIVITY_LOG_SOURCES = ['active_directory_activity_logs', 'external_user_activity_logs', 'netforum_activity_logs'];
-        const mainRecords = data.records.filter(r => r.source !== 'distribution_group_sync_logs' && !ACTIVITY_LOG_SOURCES.includes(r.source));
-        const syncRecords = data.records.filter(r => r.source === 'distribution_group_sync_logs');
-        const activityLogs = data.records.filter(r => ACTIVITY_LOG_SOURCES.includes(r.source));
+        const ACTIVITY_LOG_SOURCES  = ['active_directory_activity_logs', 'external_user_activity_logs', 'netforum_activity_logs'];
+        const PERMISSION_SOURCES     = ['sharepoint_permissions', 'm365_group_memberships'];
+        const mainRecords   = data.records.filter(r =>
+          r.source !== 'distribution_group_sync_logs' &&
+          !ACTIVITY_LOG_SOURCES.includes(r.source) &&
+          !PERMISSION_SOURCES.includes(r.source)
+        );
+        const syncRecords       = data.records.filter(r => r.source === 'distribution_group_sync_logs');
+        const activityLogs      = data.records.filter(r => ACTIVITY_LOG_SOURCES.includes(r.source));
+        const spPermissions     = data.records.filter(r => r.source === 'sharepoint_permissions');
+        const m365Memberships   = data.records.filter(r => r.source === 'm365_group_memberships');
 
         // Determine title
         const firstMain = mainRecords[0];
@@ -363,6 +484,43 @@
           }).join('');
         }
 
+        // Render SharePoint On-Prem permissions (data card only, not in search results)
+        if (spPermissions.length) {
+          html += `<div class="sp-permissions-header">SharePoint Permissions (${spPermissions.length} site${spPermissions.length !== 1 ? 's' : ''})</div>`;
+          html += spPermissions.map(r => {
+            let rows = '';
+            rows += field('Site', r.name);
+            rows += field('URL', r.alias);
+            rows += field('Role', r.type);
+            rows += field('Permission Type', r.notes);
+            rows += field('Granted By', r.sponsor);
+            rows += field('Granted At', fmtDate(r.syncTimestamp));
+            rows += field('Recorded', fmtDate(r.createdAt));
+            return `<div class="detail-section">
+              <span class="source-label sharepoint_permissions">SharePoint Perms</span>
+              ${rows}
+            </div>`;
+          }).join('');
+        }
+
+        // Render M365 group memberships (data card only, not in search results)
+        if (m365Memberships.length) {
+          html += `<div class="m365-memberships-header">M365 Group Memberships (${m365Memberships.length} group${m365Memberships.length !== 1 ? 's' : ''})</div>`;
+          html += m365Memberships.map(r => {
+            let rows = '';
+            rows += field('Group', r.name);
+            rows += field('Group Email', r.alias);
+            rows += field('Group Type', r.sponsor);
+            rows += field('Role', r.type);
+            rows += field('User Source', r.notes);
+            rows += field('Joined', fmtDate(r.syncTimestamp));
+            return `<div class="detail-section">
+              <span class="source-label m365_group_memberships">M365 Membership</span>
+              ${rows}
+            </div>`;
+          }).join('');
+        }
+
         // Render activity log history – grouped by source, 3-entry preview + More… toggle
         if (activityLogs.length) {
           // Group by source
@@ -400,11 +558,103 @@
           }
         }
 
-        detailBody.innerHTML = html;
+        // ── Render source change history ──────────────────────────────
+        const changeLogs = data.changeLogs || [];
+        if (changeLogs.length) {
+          html += `<div class="change-history-header">Change History (${changeLogs.length} entr${changeLogs.length === 1 ? 'y' : 'ies'})</div>`;
+          const preview = changeLogs.slice(0, 5);
+          const rest    = changeLogs.slice(5);
+          const changeMoreId = `change-more-${Date.now()}`;
+
+          html += preview.map(renderChangeEntry).join('');
+
+          if (rest.length) {
+            html += `<div id="${changeMoreId}" style="display:none">${rest.map(renderChangeEntry).join('')}</div>`;
+            html += `<button class="more-link" onclick="(function(btn){
+              var el=document.getElementById('${changeMoreId}');
+              if(el.style.display==='none'){el.style.display='';btn.textContent='Show less';}
+              else{el.style.display='none';btn.textContent='More\u2026 (${rest.length} more)';}
+            })(this)">More&hellip; (${rest.length} more)</button>`;
+          }
+        }
+
+        // ── Render Agent section ──────────────────────────────────────
+        // (Agent section is rendered separately by openDetail, not here)
+
+        return html;
+    }
+
+    // Refresh just the data portion of the detail card after an agent action,
+    // preserving the agent conversation and tickets.
+    async function refreshDetailData() {
+      const identifier = _detailIdentifier;
+      if (!identifier) return;
+      const dataEl = document.getElementById('detail-data');
+      if (!dataEl) return;
+
+      try {
+        const res  = await fetch(`/api/lookup?email=${encodeURIComponent(identifier)}`, { headers: apiHeaders() });
+        const data = await res.json();
+
+        if (!data.records || data.records.length === 0) return;
+
+        dataEl.innerHTML = renderDetailData(data, identifier);
+
+        // Visual flash to indicate data was refreshed
+        dataEl.classList.remove('detail-refreshed');
+        void dataEl.offsetWidth; // force reflow to restart animation
+        dataEl.classList.add('detail-refreshed');
+
+        // Update the agent's user context so subsequent prompts use fresh data
+        const ACTIVITY_LOG_SOURCES = ['active_directory_activity_logs', 'external_user_activity_logs', 'netforum_activity_logs'];
+        const PERMISSION_SOURCES   = ['sharepoint_permissions', 'm365_group_memberships'];
+        const mainRecords = data.records.filter(r =>
+          r.source !== 'distribution_group_sync_logs' &&
+          !ACTIVITY_LOG_SOURCES.includes(r.source) &&
+          !PERMISSION_SOURCES.includes(r.source)
+        );
+        const firstMain = mainRecords[0];
+        const currentEmail = firstMain?.email || identifier;
+        _agentRecords = data.records.map(r => ({
+          source: r.source,
+          firstName: r.firstName || r.name,
+          lastName: r.lastName,
+          email: r.email,
+          type: r.type,
+          enabled: r.enabled,
+          locked: r.locked,
+          sponsor: r.sponsor,
+          found: true,
+        }));
+
+        // Update title
+        if (firstMain) {
+          const isGrp = firstMain.source === 'distribution_groups';
+          detailTitle.textContent = isGrp
+            ? `Details for ${firstMain.name || identifier}`
+            : `All records for ${firstMain.email || identifier}`;
+        }
       } catch (err) {
-        detailBody.innerHTML = '<p class="empty">Lookup failed.</p>';
-        console.error(err);
+        console.error('Detail refresh error:', err);
       }
+    }
+
+    function renderChangeEntry(c) {
+      const SOURCE_NICE = {
+        active_directory: 'Active Directory',
+        netforum_members: 'netForum',
+        external_users: 'External Users',
+        distribution_groups: 'Distribution Groups',
+        sharepoint_permissions: 'SharePoint Perms',
+        m365_group_memberships: 'M365 Membership',
+      };
+      let body = `<span class="change-badge ${c.changeType}">${esc(c.changeType)}</span>`;
+      body += `<strong>${esc(SOURCE_NICE[c.sourceTable] || c.sourceTable)}</strong>`;
+      if (c.changeType === 'updated' && c.fieldName) {
+        body += `<div class="change-diff">${esc(c.fieldName)}: <span class="old-val">${esc(c.oldValue || '(empty)')}</span> → <span class="new-val">${esc(c.newValue || '(empty)')}</span></div>`;
+      }
+      body += `<div class="change-meta">${fmtDate(c.detectedAt)}${c.etlJobId ? ' · Job #' + c.etlJobId : ''}</div>`;
+      return `<div class="change-entry">${body}</div>`;
     }
 
     function renderActivityEntry(r, src, label) {
@@ -438,6 +688,242 @@
       const d = document.createElement('div');
       d.textContent = String(s);
       return d.innerHTML;
+    }
+
+    // ── Agent functions ─────────────────────────────────────────────────────
+    let _agentEmail = null;
+    let _agentRecords = [];
+    let _agentSending = false;
+
+    // Persistent agent session per user email (survives card re-opens within same page load)
+    const _agentSessions = {};
+    function getAgentSessionId(email) {
+      if (!_agentSessions[email]) {
+        _agentSessions[email] = crypto.randomUUID();
+      }
+      return _agentSessions[email];
+    }
+
+    function showAgentError(msg) {
+      const el = document.getElementById('agent-error');
+      if (!el) return;
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 8000);
+    }
+
+    function hideAgentError() {
+      const el = document.getElementById('agent-error');
+      if (el) el.style.display = 'none';
+    }
+
+    function wireAgentPrompt(email, records) {
+      _agentEmail = email;
+      // Normalise records for the agent context payload
+      _agentRecords = records.map(r => ({
+        source: r.source,
+        firstName: r.firstName || r.name,
+        lastName: r.lastName,
+        email: r.email,
+        type: r.type,
+        enabled: r.enabled,
+        locked: r.locked,
+        sponsor: r.sponsor,
+        found: true,
+      }));
+
+      const agentInput = document.getElementById('agent-input');
+      const agentSend  = document.getElementById('agent-send');
+      if (!agentInput || !agentSend) return;
+
+      agentSend.addEventListener('click', () => sendAgentPrompt());
+      agentInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); sendAgentPrompt(); }
+      });
+    }
+
+    // Simple markdown-to-HTML renderer for agent messages
+    function renderMarkdown(text) {
+      if (!text) return '';
+      let html = esc(text);
+      // Bold: **text**
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Italic: *text*
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      // Inline code: `code`
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Unordered list items: - item  or * item  (at line start)
+      html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+      // Line breaks
+      html = html.replace(/\n/g, '<br>');
+      // Clean up <br> inside <ul>
+      html = html.replace(/<br><ul>/g, '<ul>').replace(/<\/ul><br>/g, '</ul>');
+      html = html.replace(/<\/li><br><li>/g, '</li><li>');
+      return html;
+    }
+
+    function appendAgentMessage(role, content) {
+      const container = document.getElementById('agent-messages');
+      if (!container) return;
+      const div = document.createElement('div');
+      div.className = `agent-msg ${role}`;
+      if (role === 'assistant') {
+        div.innerHTML = renderMarkdown(content);
+      } else {
+        div.textContent = content;
+      }
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+      return div;
+    }
+
+    async function sendAgentPrompt() {
+      const agentInput = document.getElementById('agent-input');
+      const agentSend  = document.getElementById('agent-send');
+      if (!agentInput || _agentSending) return;
+
+      const prompt = agentInput.value.trim();
+      if (!prompt) return;
+
+      hideAgentError();
+      agentInput.value = '';
+      agentInput.disabled = true;
+      agentSend.disabled = true;
+      _agentSending = true;
+
+      appendAgentMessage('user', prompt);
+
+      // Show animated spinner
+      const container = document.getElementById('agent-messages');
+      const thinking = document.createElement('div');
+      thinking.className = 'agent-thinking';
+      thinking.innerHTML = '<span class="agent-spinner"></span> Thinking…';
+      container.appendChild(thinking);
+      container.scrollTop = container.scrollHeight;
+
+      try {
+        const res = await fetch('/api/agent', {
+          method: 'POST',
+          headers: apiHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            prompt,
+            userContext: { email: _agentEmail, records: _agentRecords },
+            sessionId: getAgentSessionId(_agentEmail),
+          }),
+        });
+
+        thinking.remove();
+
+        let agentData = null;
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error || `Server returned ${res.status}`;
+          showAgentError(errMsg);
+          appendAgentMessage('assistant', `⚠️ ${errMsg}`);
+        } else {
+          agentData = await res.json();
+          if (agentData.error) {
+            showAgentError(agentData.error);
+            appendAgentMessage('assistant', `⚠️ ${agentData.error}`);
+          } else {
+            appendAgentMessage('assistant', agentData.reply || 'Done.');
+          }
+        }
+
+        // Refresh tickets and data card after any agent interaction
+        await refreshTickets(_agentEmail);
+
+        // If the agent performed one or more actions, refresh the data card
+        // so the user sees the updated state immediately
+        if (agentData && agentData.tickets && agentData.tickets.length > 0) {
+          try {
+            await refreshDetailData();
+            appendAgentMessage('assistant', '🔄 User card data refreshed.');
+          } catch (refreshErr) {
+            console.error('Card refresh failed:', refreshErr);
+            appendAgentMessage('assistant', '⚠️ Card refresh failed — please reopen the card to see changes.');
+          }
+        }
+      } catch (err) {
+        thinking.remove();
+        showAgentError('Could not reach the agent service. Please try again.');
+        appendAgentMessage('assistant', '⚠️ Could not reach the agent service. Please try again.');
+        console.error('Agent error:', err);
+      } finally {
+        agentInput.disabled = false;
+        agentSend.disabled = false;
+        _agentSending = false;
+        agentInput.focus();
+      }
+    }
+
+    function timeAgo(dateStr) {
+      const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+      if (seconds < 60) return 'Just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+      const days = Math.floor(hours / 24);
+      return `${days} day${days !== 1 ? 's' : ''} ago`;
+    }
+
+    async function closeTicket(ticketId) {
+      const btn = document.querySelector(`[data-close-ticket="${ticketId}"]`);
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch(`/api/tickets/${ticketId}`, {
+          method: 'PATCH',
+          headers: apiHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ status: 'closed', email: _agentEmail }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          showAgentError(errData.error || 'Failed to close ticket.');
+          if (btn) btn.disabled = false;
+          return;
+        }
+        // Refresh the tickets list
+        await refreshTickets(_agentEmail);
+      } catch (err) {
+        showAgentError('Could not close ticket. Please try again.');
+        console.error('Close ticket error:', err);
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function refreshTickets(email) {
+      const list = document.getElementById('tickets-list');
+      if (!list) return;
+
+      try {
+        const res = await fetch(`/api/tickets?email=${encodeURIComponent(email)}`, {
+          headers: apiHeaders(),
+        });
+        const data = await res.json();
+        const tickets = data.tickets || [];
+
+        if (tickets.length === 0) {
+          list.innerHTML = '<p class="tickets-empty">No open tickets.</p>';
+          return;
+        }
+
+        list.innerHTML = tickets.map(t => `
+          <div class="ticket-card">
+            <div class="ticket-top">
+              <span class="ticket-id">#${t.id}</span>
+              <span class="ticket-title">${esc(t.title)}</span>
+            </div>
+            <span class="ticket-desc">${esc(t.description)}</span>
+            <span class="ticket-time">${timeAgo(t.created_at)}</span>
+            <button class="ticket-close" data-close-ticket="${t.id}" onclick="closeTicket(${t.id})">Close</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        list.innerHTML = '<p class="tickets-empty">Could not load tickets.</p>';
+        console.error('Tickets error:', err);
+      }
     }
   </script>
 </body>

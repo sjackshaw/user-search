@@ -10,16 +10,15 @@ sequenceDiagram
 
     U->>+A: GET /api/lookup?email=jsmith@example.com
 
-    A->>+P: Query 1: Identity records<br/>SELECT * FROM active_directory WHERE email=$1<br/>UNION ALL SELECT * FROM netforum_members ...<br/>UNION ALL SELECT * FROM external_users ...
-    P-->>-A: Identity records (0-3 rows)
+    par Promise.all in parallel
+        A->>+P: sp_lookup_by_email(email)<br/>UNION ALL across 10 sources:<br/>AD, netForum, external_users,<br/>distribution_groups, DG sync logs,<br/>AD/EU/NF activity logs,<br/>sharepoint_permissions, m365_group_memberships
+        P-->>-A: All records (0-N rows)
+    and
+        A->>+P: sp_get_change_logs(email)<br/>SELECT * FROM source_change_logs<br/>WHERE email=$1<br/>ORDER BY detected_at DESC LIMIT 100
+        P-->>-A: Change log entries (0-N rows)
+    end
 
-    A->>+P: Query 2: Distribution groups<br/>SELECT * FROM distribution_groups<br/>WHERE members @> $1::jsonb
-    P-->>-A: Group memberships (0-N rows)
+    A-->>-U: 200 JSON { records: [...], changeLogs: [...] }
 
-    A->>+P: Query 3: Activity logs<br/>SELECT * FROM distribution_group_sync_logs WHERE email=$1<br/>UNION ALL SELECT * FROM active_directory_activity_logs ...<br/>UNION ALL SELECT * FROM external_user_activity_logs ...<br/>UNION ALL SELECT * FROM netforum_activity_logs ...
-    P-->>-A: Activity log entries (0-N rows)
-
-    A-->>-U: 200 JSON { results: [...] }
-
-    Note over U: Render detail panel:<br/>• Identity info per source<br/>• Group memberships<br/>• Activity logs (3 most recent per source)<br/>• "More..." toggle if >3
+    Note over U: Render detail panel:<br/>- Identity info per source<br/>- Group memberships (DG + M365)<br/>- SharePoint permissions<br/>- Activity logs (preview + More toggle)<br/>- Change history (green=created, blue=updated, red=deleted)<br/>- Field-level diffs for updated entries
 ```

@@ -10,6 +10,10 @@
  * The SBERT model and pg.Pool are shared across both pipelines,
  * reducing memory footprint vs. running two separate containers.
  *
+ * Includes:
+ *   - ETL job logging (etl_job_logs)
+ *   - Change detection + source_change_logs for runPrimary()
+ *
  * Environment variables (all optional):
  *   PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD
  *   BATCH_SIZE      – records per SBERT call (default 64)
@@ -21,6 +25,7 @@ const path = require('path');
 const { Pool } = require('pg');
 const cron     = require('node-cron');
 
+const SERVICE_NAME  = 'etl-ad-line';
 const CRON_SCHEDULE = process.env.CRON_SCHEDULE || '0 * * * *';
 const BATCH_SIZE    = parseInt(process.env.BATCH_SIZE || '64', 10);
 const HIDDEN_SIZE   = 384;
@@ -34,17 +39,48 @@ const pool = new Pool({
   password: process.env.PGPASSWORD || 'postgres',
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Job Logging Helpers (via stored procedures) ──────────────────────────────
 
-async function truncate(table) {
-  const client = await pool.connect();
-  try {
-    await client.query(`TRUNCATE TABLE ${table} RESTART IDENTITY`);
-    console.log(`[etl-ad-line] Truncated ${table}.`);
-  } finally {
-    client.release();
-  }
+async function startJob(phase, targetTable) {
+  const { rows } = await pool.query(
+    'SELECT * FROM sp_etl_start_job($1, $2, $3)',
+    [SERVICE_NAME, phase, targetTable],
+  );
+  return rows[0].sp_etl_start_job;
 }
+
+async function completeJob(jobId, stats) {
+  await pool.query(
+    'CALL sp_etl_complete_job($1, $2, $3, $4, $5)',
+    [jobId, stats.processed, stats.created, stats.updated, stats.deleted],
+  );
+}
+
+async function failJob(jobId, error) {
+  await pool.query(
+    'CALL sp_etl_fail_job($1, $2)',
+    [jobId, String(error)],
+  );
+}
+
+// ── Change Detection Helpers (via stored procedures) ──────────────────────────────
+
+async function logChange(client, sourceTable, email, changeType, fieldName, oldValue, newValue, jobId) {
+  await client.query(
+    'CALL sp_etl_log_change($1, $2, $3, $4, $5, $6, $7)',
+    [sourceTable, email, changeType, fieldName, oldValue, newValue, jobId],
+  );
+}
+
+const PRIMARY_COMPARE_FIELDS = ['first_name', 'last_name', 'type', 'enabled', 'locked', 'passwordlastreset'];
+
+function normaliseValue(v) {
+  if (v === null || v === undefined) return null;
+  if (v instanceof Date) return v.toISOString();
+  return String(v);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function vectorizeBatch(texts) {
   const output = await extractor(texts, { pooling: 'mean', normalize: true });
@@ -56,27 +92,20 @@ async function vectorizeBatch(texts) {
   return embeddings;
 }
 
-// ── Pipeline 1: active_directory ─────────────────────────────────────────────
+// ── Pipeline 1: active_directory (with change detection) ─────────────────────
 
-async function upsertPrimaryBatch(records, embeddings) {
+async function upsertPrimaryBatch(records, embeddings, existingByEmail, jobId) {
   const client = await pool.connect();
+  const stats = { created: 0, updated: 0 };
   try {
     await client.query('BEGIN');
     for (let i = 0; i < records.length; i++) {
       const r   = records[i];
       const emb = `[${embeddings[i].join(',')}]`;
+      const existing = existingByEmail.get(r.email);
+
       await client.query(
-        `INSERT INTO active_directory
-           (first_name, last_name, email, type, enabled, locked, passwordlastreset, embedding)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector)
-         ON CONFLICT (email) DO UPDATE SET
-           first_name        = EXCLUDED.first_name,
-           last_name         = EXCLUDED.last_name,
-           type              = EXCLUDED.type,
-           enabled           = EXCLUDED.enabled,
-           locked            = EXCLUDED.locked,
-           passwordlastreset = EXCLUDED.passwordlastreset,
-           embedding         = EXCLUDED.embedding`,
+        'CALL sp_upsert_active_directory($1, $2, $3, $4, $5, $6, $7, $8)',
         [
           r.first_name, r.last_name, r.email, r.type || 'user',
           r.enabled !== undefined ? r.enabled : true,
@@ -85,6 +114,31 @@ async function upsertPrimaryBatch(records, embeddings) {
           emb,
         ],
       );
+
+      // Change detection
+      if (!existing) {
+        await logChange(client, 'active_directory', r.email, 'created', null, null, null, jobId);
+        stats.created++;
+      } else {
+        const incomingMap = {
+          first_name: r.first_name,
+          last_name: r.last_name,
+          type: r.type || 'user',
+          enabled: String(r.enabled !== undefined ? r.enabled : true),
+          locked: String(r.locked !== undefined ? r.locked : false),
+          passwordlastreset: r.passwordlastreset || null,
+        };
+        let changed = false;
+        for (const field of PRIMARY_COMPARE_FIELDS) {
+          const oldVal = normaliseValue(existing[field]);
+          const newVal = normaliseValue(incomingMap[field]);
+          if (oldVal !== newVal) {
+            await logChange(client, 'active_directory', r.email, 'updated', field, oldVal, newVal, jobId);
+            changed = true;
+          }
+        }
+        if (changed) stats.updated++;
+      }
     }
     await client.query('COMMIT');
   } catch (err) {
@@ -93,23 +147,67 @@ async function upsertPrimaryBatch(records, embeddings) {
   } finally {
     client.release();
   }
+  return stats;
 }
 
 async function runPrimary() {
-  await truncate('active_directory');
-  const records = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'primary.json'), 'utf8'));
-  console.log(`[etl-ad-line] active_directory: ${records.length} records`);
+  const jobId = await startJob('primary', 'active_directory');
+  const stats = { processed: 0, created: 0, updated: 0, deleted: 0 };
 
-  let processed = 0;
-  for (let i = 0; i < records.length; i += BATCH_SIZE) {
-    const batch = records.slice(i, i + BATCH_SIZE);
-    const texts = batch.map(r => `${r.first_name} ${r.last_name} ${r.email}`);
-    const embeddings = await vectorizeBatch(texts);
-    await upsertPrimaryBatch(batch, embeddings);
-    processed += batch.length;
-    console.log(`[etl-ad-line] active_directory ${processed}/${records.length}`);
+  try {
+    // Load existing records for change detection
+    const { rows: existingRows } = await pool.query(
+      'SELECT * FROM sp_get_existing_active_directory()',
+    );
+    const existingByEmail = new Map(existingRows.map(r => [r.email, r]));
+
+    const records = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'primary.json'), 'utf8'));
+    console.log(`[${SERVICE_NAME}] active_directory: ${records.length} records`);
+
+    const incomingEmails = new Set(records.map(r => r.email));
+
+    for (let i = 0; i < records.length; i += BATCH_SIZE) {
+      const batch = records.slice(i, i + BATCH_SIZE);
+      const texts = batch.map(r => [
+        r.first_name, r.last_name, r.email,
+        `type=${r.type || 'user'}`,
+        `enabled=${r.enabled !== undefined ? r.enabled : true}`,
+        `locked=${r.locked !== undefined ? r.locked : false}`,
+        r.passwordlastreset ? `passwordLastReset=${r.passwordlastreset}` : '',
+      ].filter(Boolean).join(' '));
+      const embeddings = await vectorizeBatch(texts);
+      const batchStats = await upsertPrimaryBatch(batch, embeddings, existingByEmail, jobId);
+      stats.created += batchStats.created;
+      stats.updated += batchStats.updated;
+      stats.processed += batch.length;
+      console.log(`[${SERVICE_NAME}] active_directory ${stats.processed}/${records.length}`);
+    }
+
+    // Detect deletions: existing emails not in incoming set
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const [email] of existingByEmail) {
+        if (!incomingEmails.has(email)) {
+          await logChange(client, 'active_directory', email, 'deleted', null, null, null, jobId);
+          await client.query('CALL sp_delete_active_directory($1)', [email]);
+          stats.deleted++;
+        }
+      }
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    console.log(`[${SERVICE_NAME}] active_directory complete. created=${stats.created} updated=${stats.updated} deleted=${stats.deleted}`);
+    await completeJob(jobId, stats);
+  } catch (err) {
+    await failJob(jobId, err);
+    throw err;
   }
-  console.log('[etl-ad-line] active_directory complete.');
 }
 
 // ── Pipeline 2: active_directory_activity_logs ────────────────────────────────
@@ -122,9 +220,7 @@ async function upsertLogsBatch(records, embeddings) {
       const r   = records[i];
       const emb = `[${embeddings[i].join(',')}]`;
       await client.query(
-        `INSERT INTO active_directory_activity_logs
-           (log_timestamp, first_name, last_name, email, changed_by, notes, embedding)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::vector)`,
+        'CALL sp_insert_ad_activity_log($1, $2, $3, $4, $5, $6, $7)',
         [r.timestamp, r.first_name, r.last_name, r.email, r.changed_by || null, r.notes || null, emb],
       );
     }
@@ -138,22 +234,40 @@ async function upsertLogsBatch(records, embeddings) {
 }
 
 async function runLogs() {
-  await truncate('active_directory_activity_logs');
-  const records = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'logs.json'), 'utf8'));
-  console.log(`[etl-ad-line] active_directory_activity_logs: ${records.length} records`);
+  const jobId = await startJob('logs', 'active_directory_activity_logs');
+  const stats = { processed: 0, created: 0, updated: 0, deleted: 0 };
 
-  let processed = 0;
-  for (let i = 0; i < records.length; i += BATCH_SIZE) {
-    const batch = records.slice(i, i + BATCH_SIZE);
-    const texts = batch.map(r =>
-      [`${r.first_name} ${r.last_name}`, r.email, r.changed_by || '', r.notes || ''].join(' '),
-    );
-    const embeddings = await vectorizeBatch(texts);
-    await upsertLogsBatch(batch, embeddings);
-    processed += batch.length;
-    console.log(`[etl-ad-line] activity_logs ${processed}/${records.length}`);
+  try {
+    // Truncate logs table (append-only from source file each run)
+    const client = await pool.connect();
+    try {
+      await client.query('CALL sp_truncate_ad_activity_logs()');
+      console.log(`[${SERVICE_NAME}] Truncated active_directory_activity_logs.`);
+    } finally {
+      client.release();
+    }
+
+    const records = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'logs.json'), 'utf8'));
+    console.log(`[${SERVICE_NAME}] active_directory_activity_logs: ${records.length} records`);
+
+    for (let i = 0; i < records.length; i += BATCH_SIZE) {
+      const batch = records.slice(i, i + BATCH_SIZE);
+      const texts = batch.map(r =>
+        [`${r.first_name} ${r.last_name}`, r.email, r.changed_by ? `changed_by=${r.changed_by}` : '', r.notes || ''].filter(Boolean).join(' '),
+      );
+      const embeddings = await vectorizeBatch(texts);
+      await upsertLogsBatch(batch, embeddings);
+      stats.processed += batch.length;
+      console.log(`[${SERVICE_NAME}] activity_logs ${stats.processed}/${records.length}`);
+    }
+    stats.created = stats.processed;
+
+    console.log(`[${SERVICE_NAME}] activity_logs complete.`);
+    await completeJob(jobId, stats);
+  } catch (err) {
+    await failJob(jobId, err);
+    throw err;
   }
-  console.log('[etl-ad-line] activity_logs complete.');
 }
 
 // ── Orchestration ─────────────────────────────────────────────────────────────
@@ -164,20 +278,20 @@ async function run() {
 }
 
 async function main() {
-  console.log('[etl-ad-line] Loading SBERT model (Xenova/all-MiniLM-L6-v2)...');
+  console.log(`[${SERVICE_NAME}] Loading SBERT model (Xenova/all-MiniLM-L6-v2)...`);
   const { pipeline } = await import('@xenova/transformers');
   extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
   await run();
 
-  console.log(`[etl-ad-line] Scheduled: "${CRON_SCHEDULE}"`);
+  console.log(`[${SERVICE_NAME}] Scheduled: "${CRON_SCHEDULE}"`);
   cron.schedule(CRON_SCHEDULE, () => {
-    console.log(`[etl-ad-line] [cron] Triggered at ${new Date().toISOString()}`);
-    run().catch(err => console.error('[etl-ad-line] [cron] Run failed:', err));
+    console.log(`[${SERVICE_NAME}] [cron] Triggered at ${new Date().toISOString()}`);
+    run().catch(err => console.error(`[${SERVICE_NAME}] [cron] Run failed:`, err));
   });
 }
 
 main().catch(err => {
-  console.error('[etl-ad-line] Fatal error:', err);
+  console.error(`[${SERVICE_NAME}] Fatal error:`, err);
   process.exit(1);
 });

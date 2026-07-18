@@ -5,7 +5,7 @@
   "scripts": {
     "build-images": "docker compose build",
     "up": "docker compose up --build",
-    "dev:up": "docker compose -f docker-compose.postgres.yml -f docker-compose.app.yml -f docker-compose.etl-ad-line.yml -f docker-compose.etl-netforum-line.yml -f docker-compose.etl-eu-line.yml -f docker-compose.etl-dg-line.yml up --build",
+    "dev:up": "docker compose -f docker-compose.postgres.yml -f docker-compose.app.yml -f docker-compose.etl-ad-line.yml -f docker-compose.etl-netforum-line.yml -f docker-compose.etl-eu-line.yml -f docker-compose.etl-dg-line.yml -f docker-compose.etl-m365-line.yml -f docker-compose.etl-sp-line.yml -f docker-compose.genai.yml up --build",
     "down": "docker compose down",
     "test": "jest --runInBand",
     "lint": "eslint services/",
