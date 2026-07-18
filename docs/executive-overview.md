@@ -30,7 +30,7 @@ For the technology leaders in the room, a brief look under the hood:
 |---|---|---|
 | **Data Ingestion (ETL)** | Six automated pipelines pull user data from each source system on a scheduled basis, detect changes, and load records into a central database. Each record is converted into a numerical vector (embedding) that captures its semantic meaning. | Node.js services, PostgreSQL with pgvector, SBERT embeddings (all-MiniLM-L6-v2) |
 | **Search** | When an analyst searches, the query is converted into the same vector space and matched against all records using cosine similarity. This enables fuzzy, context-aware matching — not just exact keyword hits. Cross-source intersection queries show which systems a user exists in and where gaps are. | pgvector HNSW indexes, stored procedures, Express API |
-| **AI Agent** | A large language model receives the analyst's request along with the user's data context. It determines the correct action, calls the appropriate tool (provision, disable, reset, update, add to group), executes it, and responds in plain English. Every action generates a service ticket for audit. | Ollama (qwen2.5:3b), LLM tool-calling, nine integrated tools |
+| **AI Agent** | A large language model receives the analyst's request along with the user's data context. It determines the correct action, calls the appropriate tool (provision, disable, reset, update, add to group), executes it, and responds in plain English. Every action generates a service ticket for audit. | Ollama `qwen2.5:3b` (local dev only); Amazon Bedrock (production), LLM tool-calling, nine integrated tools |
 | **Application** | A web interface where analysts search for users, view consolidated records, and interact with the AI agent — all in one screen. | Express, server-rendered UI |
 
 All components run as Docker containers and can be started with a single command.
@@ -43,7 +43,7 @@ This is not a slide deck. The proof of concept is fully functional with syntheti
 
 - **Real Data Integration** — The ETL pipelines are designed to swap synthetic JSON files for live API connections (Microsoft Graph for Entra ID/M365, netForum REST API, Exchange, SharePoint). A production implementation guide covers credential management, authenticated API calls, and error handling for every source system.
 
-- **AWS Cloud Deployment** — A phased migration plan moves each component to managed AWS services: PostgreSQL moves to Amazon RDS, the six ETL pipelines become AWS Lambda functions triggered by EventBridge, the application runs on AWS Fargate behind a load balancer, and the AI model either runs on Fargate with GPU support or migrates to Amazon Bedrock. The plan covers networking, security, secrets management, and cost estimates.
+- **AWS Cloud Deployment** — A phased migration plan moves each component to managed AWS services: PostgreSQL moves to Amazon RDS, the six ETL pipelines become AWS Lambda functions triggered by EventBridge, the application runs on Amazon EKS behind a load balancer, and the AI model calls Amazon Bedrock for managed LLM inference. The plan covers networking, security, secrets management, and cost estimates.
 
 Both plans are included in the repository documentation and are ready for engineering estimation and scheduling.
 

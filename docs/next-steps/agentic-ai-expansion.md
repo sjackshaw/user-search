@@ -194,3 +194,130 @@ For the initial presentation, the four highest-impact capabilities are:
 - [ ] `list_app_consents` and `revoke_app_consent` read and modify OAuth2 permission grants for a specified user
 - [ ] `list_stale_guests` and `revoke_guest_access` identify and remove guest accounts inactive for a configurable number of days
 - [ ] All governance tools (`dismiss_risky_user`, `get_bitlocker_key`, `revoke_app_consent`) are restricted to `admin` role and generate a ServiceNow audit ticket regardless of outcome
+
+---
+
+## 7. Member Benefits Bot (App A)
+
+### 7.1 Overview
+
+A separate member-facing application that allows authenticated members to ask a GenAI bot about their own benefits, claims, and plan details — and to request generation of key benefit documents on demand.
+
+**Scope boundary:** Benefits and claims data is **only** accessible through this app. The existing user search app (`services/app`) has no visibility into benefits or claims tables — no schema changes, no new routes, no cross-contamination.
+
+| Attribute | Detail |
+|---|---|
+| Service | `services/member-benefits-app` — new Express app |
+| Auth | SAML — member identity enforced server-side; all queries scoped to `req.user.memberId` |
+| LLM | Amazon Bedrock (same pattern as GenAI service) |
+| Data source | Claims data ingested via `etl-claims-line` (see 7.2) |
+| Read/write | Read-only queries + document generation (no account mutations) |
+| Deployment | New EKS deployment + ALB listener on separate subdomain/path |
+
+---
+
+### 7.2 ETL — Claims Data Ingestion
+
+A 7th ETL line (`etl-claims-line`) ingests member benefits and claims from the disconnected netForum-adjacent source, following the identical pattern as the existing 6 ETL lines.
+
+| Step | Task |
+|---|---|
+| 1 | Add `services/etl-claims-line/` — copy structure from any existing ETL line |
+| 2 | Define `primary.json` schema: `memberId`, `claimId`, `claimType`, `serviceDate`, `provider`, `amountBilled`, `amountPaid`, `planYear`, `status` |
+| 3 | Add DB schema files: `infra/db/init/16_claims.sql`, `17_claims_logs.sql` |
+| 4 | Vectorise claim records (SBERT on a composite of `claimType + provider + status`) — enables semantic search ("any dental claims last year") |
+| 5 | On AWS: add Lambda function + EventBridge rule + S3 prefix `etl-claims-line/` |
+
+**Claims table key columns:**
+```sql
+CREATE TABLE claims (
+    id            SERIAL PRIMARY KEY,
+    member_id     TEXT NOT NULL,         -- foreign key to netForum member
+    claim_id      TEXT UNIQUE NOT NULL,
+    claim_type    TEXT NOT NULL,         -- medical / dental / vision / rx / mental_health
+    service_date  DATE NOT NULL,
+    provider      TEXT,
+    amount_billed NUMERIC(10,2),
+    amount_paid   NUMERIC(10,2),
+    plan_year     INT NOT NULL,
+    status        TEXT NOT NULL,         -- processed / pending / denied / appealed
+    embedding     vector(384)
+);
+```
+
+---
+
+### 7.3 Synthetic Data
+
+Synthetic claims data must be generated using **existing netForum members** as the source of member IDs so the SAML-scoped queries resolve correctly against real identities in the dev/test environment.
+
+| File | Purpose |
+|---|---|
+| `generate_synthetic_claims.py` | New script — generates `data-output/claims/claims.output.json` and `claims-logs.output.json` |
+| Source members | Read `data-output/netForum/netForum.output.json` — extract `memberId` / `email` fields |
+| Volume | ~5–15 claims per member across 2 plan years; mix of `processed`, `pending`, and `denied` statuses |
+| Claim types | Distribute across `medical`, `dental`, `vision`, `rx`, `mental_health` |
+| Documents | Generate at least one record per member eligible for each document type (see 7.4) so all generation tools can be exercised in testing |
+
+Seed via the same pattern as `seed_change_logs.py` — add a `seed_claims.py` that loads the synthetic JSON into the `claims` table directly.
+
+---
+
+### 7.4 Member Benefits Bot — Tools
+
+The bot exposes read-only query tools and document generation tools. No account mutation tools are included.
+
+#### Query Tools
+
+| Tool | Example prompt | Action |
+|---|---|---|
+| `get_open_claims` | *"Do I have any open claims?"* | Returns pending/appealed claims for the authenticated member |
+| `get_claims_summary` | *"How much did my insurance pay last year?"* | Aggregates `amount_paid` by plan year |
+| `search_claims` | *"Any claims for Dr. Smith?"* | Vector similarity search over member's claims |
+| `get_plan_details` | *"What does my dental plan cover?"* | Returns plan metadata for member's enrolled plan |
+| `get_deductible_status` | *"How much of my deductible have I met?"* | Computes YTD spend vs. deductible limit |
+
+#### Document Generation Tools
+
+| Tool | Document produced | Trigger |
+|---|---|---|
+| `generate_annual_spending` | Annual spending summary (PDF/HTML) — total billed, paid, out-of-pocket by category | *"Generate my annual spending summary for 2025"* |
+| `generate_tax_document` | HSA/FSA-eligible expense report formatted for tax filing | *"I need my tax document for healthcare expenses"* |
+| `generate_spd` | Summary Plan Description for the member's enrolled plan | *"Send me my summary plan description"* |
+| `generate_eob` | Explanation of Benefits for a specific claim | *"Generate an EOB for my March claim"* |
+| `generate_enrollment_form` | Enrollment/change form pre-filled with member's current elections | *"I need an enrollment form"* |
+| `generate_beneficiary_form` | Beneficiary designation form pre-filled with member data | *"Generate a beneficiary form for me"* |
+
+Document generation follows the same `createAndCloseTicket()` pattern — a ticket is opened, the document is generated (rendered to PDF or HTML), a download link or attachment is returned to the member, and the ticket auto-closes. Documents are written to a member-scoped S3 prefix (`s3://user-search-docs/{memberId}/`) and the signed URL is returned in the chat response.
+
+---
+
+### 7.5 Implementation Steps
+
+| Phase | Step | Task |
+|---|---|---|
+| Data | 1 | Create `infra/db/init/16_claims.sql` and `17_claims_logs.sql` |
+| Data | 2 | Build `services/etl-claims-line/` (copy from existing ETL line, update schema mapping) |
+| Data | 3 | Write `generate_synthetic_claims.py` sourcing member IDs from `netForum.output.json` |
+| Data | 4 | Write `seed_claims.py` to load synthetic data into `claims` table |
+| Data | 5 | Add `etl-claims-line` to `docker-compose.etl-claims-line.yml` and `npm run dev:up` |
+| App | 6 | Scaffold `services/member-benefits-app/` — Express app, SAML middleware, Bedrock client |
+| App | 7 | Implement query tools (`get_open_claims`, `get_claims_summary`, `search_claims`, `get_plan_details`, `get_deductible_status`) |
+| App | 8 | Implement document generation tools — HTML templates per document type, PDF rendering via `puppeteer` or `pdfkit`, S3 upload, signed URL return |
+| App | 9 | Add member-scoped S3 bucket (`user-search-docs`) and IAM policy for signed URL generation |
+| Deploy | 10 | Add `k8s/member-benefits-deployment.yaml` — new EKS deployment, Service, and ALB Ingress rule |
+| Deploy | 11 | Add `member-benefits-app` to TeamCity build pipeline (image build → Artifactory → EKS rollout) |
+| Security | 12 | Enforce `req.user.memberId` filter on every DB query — no cross-member data access possible |
+| Security | 13 | Signed S3 URLs expire after 15 minutes; documents are never publicly accessible |
+
+---
+
+### 7.6 Security Considerations
+
+| Concern | Mitigation |
+|---|---|
+| Cross-member data access | All queries include a hard `WHERE member_id = $1` binding to `req.user.memberId` from the verified SAML assertion — never a client-supplied value |
+| Document access | S3 signed URLs scoped to `{memberId}/` prefix; 15-minute expiry; no public bucket policy |
+| Benefits data isolation | Claims tables are not referenced anywhere in `services/app` or `services/genai`; enforced by schema separation and separate service |
+| Prompt injection | Member-supplied prompts cannot override the `member_id` scope; tool inputs are validated before DB execution |
+| Document PII | Generated documents contain PII — S3 bucket versioning + lifecycle policy to auto-delete after 30 days |

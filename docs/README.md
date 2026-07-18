@@ -2,11 +2,11 @@
 
 ## Overview
 
-User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered agent (Ollama + qwen2.5:3b) can perform actions on user accounts via tool calling.
+User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) can perform actions on user accounts via tool calling.
 
 See [technology-stack.md](technology-stack.md) for a full inventory of every technology in the solution.  
 See [etl-architecture.md](etl-architecture.md) for the ETL pipeline and database schema reference.  
-See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the planned AWS production architecture (RDS, Lambda, Fargate).  
+See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the planned AWS production architecture (RDS, Lambda, EKS).  
 See [code-quality-review.md](code-quality-review.md) for the comprehensive code quality audit.
 
 ### Documentation Index
@@ -16,9 +16,9 @@ See [code-quality-review.md](code-quality-review.md) for the comprehensive code 
 | [technology-stack.md](technology-stack.md) | Full inventory of runtimes, libraries, models, Docker images, and tooling |
 | [etl-architecture.md](etl-architecture.md) | ETL pipeline design, database schema, and vectorisation approach |
 | [code-quality-review.md](code-quality-review.md) | Severity-ranked code quality findings with recommended tests |
-| [diagrams/](diagrams/README.md) | 11 Mermaid diagrams (C4, ER, sequence, state, deployment) |
-| [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) | AWS production architecture — RDS, Lambda, Fargate |
-| [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Agentic AI status and multi-step agent design |
+| [diagrams/](diagrams/README.md) | 9 Mermaid diagrams (C4, ER, sequence, state, AWS target architecture) |
+| [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) | AWS production architecture — RDS, Lambda, EKS, Bedrock |
+| [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Agentic AI status, multi-step agent design, and Member Benefits Bot (App A) plan |
 | [next-steps/genai-production-update.md](next-steps/genai-production-update.md) | How to turn PoC agent actions into real authenticated API calls |
 | [next-steps/saml-access-management.md](next-steps/saml-access-management.md) | SAML-based access management integration plan |
 | [security/](security/) | Security review findings (4 reports) |

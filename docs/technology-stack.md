@@ -26,8 +26,8 @@ A complete inventory of every technology, framework, library, model, and tool us
 
 | Technology | Version / Image | Purpose |
 |---|---|---|
-| **PostgreSQL** | 15 | Primary relational data store |
-| **pgvector** | Bundled with `pgvector/pgvector:pg15` | Vector similarity search extension |
+| **PostgreSQL** | 18 | Primary relational data store |
+| **pgvector** | Bundled with `pgvector/pgvector:pg18` | Vector similarity search extension |
 | **vector(384)** | — | Column type storing 384-dimension embeddings |
 | **HNSW indexes** | — | Approximate nearest-neighbour index (cosine distance) on 12 tables |
 | **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `12_stored_procedures.sql` |
@@ -54,11 +54,12 @@ The model runs **locally in-process** via ONNX Runtime (bundled inside `@xenova/
 
 | Technology | Model | Purpose |
 |---|---|---|
-| **Ollama** | `qwen2.5:3b` | LLM inference for the GenAI agent (tool calling, natural-language responses) |
+| **Ollama** | `qwen2.5:3b` | LLM inference for local development only — not used in production |
+| **Amazon Bedrock** | Model TBD via LLM review (candidates: Claude 3 Haiku, Claude 3.5 Sonnet, Amazon Nova Pro) | Production LLM inference for the GenAI agent (tool calling, natural-language responses) |
 
-Ollama runs as a separate Docker container (`ollama/ollama`) with a persistent volume for model weights. The GenAI service communicates with it via the `/api/chat` REST endpoint with `stream: false`.
+Ollama runs as a sidecar Docker container (`ollama/ollama`) for local development only. The GenAI service communicates with it via the `/api/chat` REST endpoint with `stream: false`. In production, Ollama is replaced by Amazon Bedrock's `converse` API called from an EKS pod with IRSA permissions (`bedrock:InvokeModel`).
 
-### Key LLM Parameters
+### Key LLM Parameters (local dev — Ollama)
 
 | Parameter | Value |
 |---|---|
@@ -91,7 +92,7 @@ Each ETL service is a long-running containerised process that:
 | **Docker Compose** | v2 (multi-file) | Service orchestration via 9 compose fragments |
 | **node:22** | Official Docker image | Base image for all 8 service containers |
 | **pgvector/pgvector:pg15** | Official image | Postgres + pgvector extension |
-| **ollama/ollama** | Official image | LLM inference server |
+| **ollama/ollama** | Official image | LLM inference server (local dev only) |
 
 ### Compose Fragments
 
@@ -162,8 +163,16 @@ Source JSON → ETL service → SBERT (all-MiniLM-L6-v2) → 384-dim vector
 
 ## Agent Pipeline (end to end)
 
+**Local development (Ollama):**
 ```
 User prompt → Express API → Ollama (qwen2.5:3b) → Tool call decision
   → Tool executor → PostgreSQL action → Ticket created
   → Tool result → Ollama (follow-up) → Natural-language reply → Browser
+```
+
+**Production (Amazon Bedrock):**
+```
+User prompt → Express API (EKS pod) → Bedrock converse API → Tool call decision
+  → Tool executor → RDS action (via RDS Proxy) → Ticket created
+  → Tool result → Bedrock (follow-up) → Natural-language reply → Browser
 ```

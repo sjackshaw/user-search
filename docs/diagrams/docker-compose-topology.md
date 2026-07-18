@@ -11,7 +11,7 @@ flowchart TB
     subgraph net ["Docker Network: user-search_default"]
         direction TB
 
-        PG["🗄️ postgres\npgvector/pgvector:pg15\nPort 5432"]:::infra
+        PG["🗄️ postgres\npgvector/pgvector:pg18\nPort 5432"]:::infra
 
         APP["📦 app\nNode.js 22\nExpress + SBERT\nPort 3000:3000"]:::app
 
