@@ -34,7 +34,7 @@ Groups.
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌────────────────────┐
 │   Agent      │────▶│  Action Router    │────▶│  Action Executors  │
-│  (Ollama)    │     │  (validates +     │     │  (per-system API   │
+│  (Bedrock)   │     │  (validates +     │     │  (per-system API   │
 │              │     │   authorises)     │     │   clients)         │
 └─────────────┘     └──────────────────┘     └────────┬───────────┘
                                                        │

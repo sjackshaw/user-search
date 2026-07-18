@@ -834,9 +834,9 @@
         // Refresh tickets and data card after any agent interaction
         await refreshTickets(_agentEmail);
 
-        // If the agent performed an action (returned a ticket), refresh the data card
+        // If the agent performed one or more actions, refresh the data card
         // so the user sees the updated state immediately
-        if (agentData && agentData.ticket) {
+        if (agentData && agentData.tickets && agentData.tickets.length > 0) {
           try {
             await refreshDetailData();
             appendAgentMessage('assistant', '🔄 User card data refreshed.');

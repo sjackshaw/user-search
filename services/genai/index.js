@@ -1,6 +1,7 @@
 'use strict';
 
-const express = require('express');
+const express   = require('express');
+const rateLimit = require('express-rate-limit');
 const { Pool }  = require('pg');
 
 const app     = express();
@@ -15,6 +16,17 @@ app.use('/api', (req, res, next) => {
   if (req.headers['x-api-key'] === API_KEY) return next();
   return res.status(401).json({ error: 'Unauthorised' });
 });
+
+// ── Rate limiter ─────────────────────────────────────────────────────────────
+// Scoped to /api/agent only — each request triggers one or two Ollama LLM
+// calls plus DB queries. Limits to 10 requests per IP per 60-second window.
+app.use('/api/agent', rateLimit({
+  windowMs: 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please wait before sending another prompt.' },
+}));
 
 // ── Postgres ──────────────────────────────────────────────────────────────────
 const pool = new Pool({
@@ -518,10 +530,156 @@ async function chatWithOllamaTools(messages, tools) {
   return data.message || {};
 }
 
+// ── Agent: tool dispatcher ───────────────────────────────────────────────────
+// Executes a single LLM tool call and returns { toolResultContent, ticket }.
+// Extracted so the multi-step agent loop can call it on each iteration.
+
+async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
+  const fnName = toolCall.function?.name;
+  const fnArgs = toolCall.function?.arguments || {};
+  let toolResultContent = '';
+  let ticket = null;
+
+  switch (fnName) {
+    case 'provision_account': {
+      const { ticket: t, actionResult } = await executeProvisionAccount(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.provisioned || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'provision_account',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'disable_account': {
+      const { ticket: t, actionResult } = await executeDisableAccount(pool, email, fnArgs, sessionId, records);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.disabled || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'disable_account',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'reset_password': {
+      const { ticket: t, actionResult } = await executeResetPassword(pool, email, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.reset || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'reset_password',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'update_attribute': {
+      const { ticket: t, actionResult } = await executeUpdateAttribute(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.updated || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'update_attribute',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'add_to_group': {
+      const { ticket: t, actionResult } = await executeAddToGroup(pool, email, fnArgs, sessionId, records);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.added || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'add_to_group',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'add_to_m365_group': {
+      const { ticket: t, actionResult } = await executeAddToM365Group(pool, email, fnArgs, sessionId, records);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.added || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'add_to_m365_group',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'create_ticket': {
+      const { title, description } = fnArgs;
+      const result = await pool.query(
+        `INSERT INTO agent_tickets (email, title, description, session_id)
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [email, title || 'Untitled ticket', description || '', sessionId || null]
+      );
+      ticket = result.rows[0];
+      toolResultContent = JSON.stringify({
+        success: true,
+        ticketId: ticket.id,
+        ticketStatus: 'open',
+        title: ticket.title,
+        note: 'This is a general ticket that requires manual action.',
+      });
+      break;
+    }
+
+    case 'list_open_tickets': {
+      const { rows: tickets } = await pool.query(
+        `SELECT id, title, description, status, created_at
+         FROM agent_tickets
+         WHERE email = $1 AND status = 'open'
+         ORDER BY created_at DESC`,
+        [email]
+      );
+      toolResultContent = JSON.stringify({ tickets });
+      break;
+    }
+
+    case 'describe_capabilities': {
+      toolResultContent = JSON.stringify({
+        capabilities: [
+          'Provision a new account in Active Directory, NetForum, or External Users — supports cross-system provisioning (e.g. a NetForum user can be provisioned into AD). Action is performed immediately and the ticket is auto-closed.',
+          'Disable a user account across all systems (offboarding) — executed immediately.',
+          'Reset a password in Active Directory — executed immediately.',
+          'Update an attribute (email, name, type, sponsor) in a specific system — executed immediately.',
+          'Add a user to a distribution group (mailing list) — executed immediately.',
+          'Add a user to a Microsoft 365 group (M365, Security, or Teams group) — executed immediately with a configurable role (member or owner).',
+          'Create a general service ticket for anything else (stays open for manual follow-up).',
+          'List open tickets for the current user.',
+        ],
+      });
+      break;
+    }
+
+    default:
+      toolResultContent = JSON.stringify({ error: `Unknown tool: ${fnName}` });
+  }
+
+  return { toolResultContent, ticket };
+}
+
 // ── POST /api/agent ───────────────────────────────────────────────────────────
 // Receives a natural-language prompt together with the user-card context.
-// Uses LLM tool-calling to decide whether to create a ticket, list tickets,
-// or describe capabilities, then returns the agent's reply.
+// Uses LLM tool-calling to decide which actions to take. The agent loop runs
+// up to MAX_TOOL_STEPS iterations, allowing the LLM to chain multiple tool
+// calls in a single user turn (e.g. provision across several systems at once).
+// Returns { reply, tickets } where tickets is the array of all tickets created.
+
+const MAX_TOOL_STEPS = 5;
 
 app.post('/api/agent', async (req, res) => {
   try {
@@ -542,177 +700,54 @@ app.post('/api/agent', async (req, res) => {
 
     const systemContent = AGENT_SYSTEM_PROMPT + '\n\nUser context:\n' + contextBlock;
 
-    // First LLM call — may return a tool_call or a plain message
     const messages = [
       { role: 'system', content: systemContent },
       { role: 'user',   content: prompt },
     ];
 
-    const llmResponse = await chatWithOllamaTools(messages, AGENT_TOOLS);
+    // ── Multi-step agent loop ─────────────────────────────────────────────────
+    // Each iteration: call LLM → if tool_call, execute it and feed result back.
+    // Loop exits when the LLM returns a plain reply or MAX_TOOL_STEPS is reached.
 
-    // Check if the LLM wants to call a tool
-    if (llmResponse.tool_calls && llmResponse.tool_calls.length > 0) {
+    const tickets = [];
+    let replyText = '';
+    let steps = 0;
+
+    while (steps < MAX_TOOL_STEPS) {
+      const llmResponse = await chatWithOllamaTools(messages, AGENT_TOOLS);
+      messages.push(llmResponse);
+
+      if (!llmResponse.tool_calls || llmResponse.tool_calls.length === 0) {
+        // LLM returned a plain message — done
+        replyText = llmResponse.content || 'Done.';
+        break;
+      }
+
       const toolCall = llmResponse.tool_calls[0];
-      const fnName = toolCall.function?.name;
-      const fnArgs = toolCall.function?.arguments || {};
+      const { toolResultContent, ticket } = await executeToolCall(
+        toolCall,
+        { pool, email, sessionId, records }
+      );
 
-      let toolResultContent = '';
-      let ticket = null;
-
-      // Execute the tool
-      switch (fnName) {
-        case 'provision_account': {
-          const { ticket: t, actionResult } = await executeProvisionAccount(pool, email, fnArgs, sessionId);
-          ticket = t;
-          toolResultContent = JSON.stringify({
-            success: actionResult.provisioned || false,
-            ticketId: t.id,
-            ticketStatus: t.status,
-            action: 'provision_account',
-            ...actionResult,
-          });
-          break;
-        }
-
-        case 'disable_account': {
-          const { ticket: t, actionResult } = await executeDisableAccount(pool, email, fnArgs, sessionId, records);
-          ticket = t;
-          toolResultContent = JSON.stringify({
-            success: actionResult.disabled || false,
-            ticketId: t.id,
-            ticketStatus: t.status,
-            action: 'disable_account',
-            ...actionResult,
-          });
-          break;
-        }
-
-        case 'reset_password': {
-          const { ticket: t, actionResult } = await executeResetPassword(pool, email, sessionId);
-          ticket = t;
-          toolResultContent = JSON.stringify({
-            success: actionResult.reset || false,
-            ticketId: t.id,
-            ticketStatus: t.status,
-            action: 'reset_password',
-            ...actionResult,
-          });
-          break;
-        }
-
-        case 'update_attribute': {
-          const { ticket: t, actionResult } = await executeUpdateAttribute(pool, email, fnArgs, sessionId);
-          ticket = t;
-          toolResultContent = JSON.stringify({
-            success: actionResult.updated || false,
-            ticketId: t.id,
-            ticketStatus: t.status,
-            action: 'update_attribute',
-            ...actionResult,
-          });
-          break;
-        }
-
-        case 'add_to_group': {
-          const { ticket: t, actionResult } = await executeAddToGroup(pool, email, fnArgs, sessionId, records);
-          ticket = t;
-          toolResultContent = JSON.stringify({
-            success: actionResult.added || false,
-            ticketId: t.id,
-            ticketStatus: t.status,
-            action: 'add_to_group',
-            ...actionResult,
-          });
-          break;
-        }
-
-        case 'add_to_m365_group': {
-          const { ticket: t, actionResult } = await executeAddToM365Group(pool, email, fnArgs, sessionId, records);
-          ticket = t;
-          toolResultContent = JSON.stringify({
-            success: actionResult.added || false,
-            ticketId: t.id,
-            ticketStatus: t.status,
-            action: 'add_to_m365_group',
-            ...actionResult,
-          });
-          break;
-        }
-
-        case 'create_ticket': {
-          const { title, description } = fnArgs;
-          const result = await pool.query(
-            `INSERT INTO agent_tickets (email, title, description, session_id)
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [email, title || 'Untitled ticket', description || '', sessionId || null]
-          );
-          ticket = result.rows[0];
-          toolResultContent = JSON.stringify({
-            success: true,
-            ticketId: ticket.id,
-            ticketStatus: 'open',
-            title: ticket.title,
-            note: 'This is a general ticket that requires manual action.',
-          });
-          break;
-        }
-
-        case 'list_open_tickets': {
-          const { rows: tickets } = await pool.query(
-            `SELECT id, title, description, status, created_at
-             FROM agent_tickets
-             WHERE email = $1 AND status = 'open'
-             ORDER BY created_at DESC`,
-            [email]
-          );
-          toolResultContent = JSON.stringify({ tickets });
-          break;
-        }
-
-        case 'describe_capabilities': {
-          toolResultContent = JSON.stringify({
-            capabilities: [
-              'Provision a new account in Active Directory, NetForum, or External Users — supports cross-system provisioning (e.g. a NetForum user can be provisioned into AD). Action is performed immediately and the ticket is auto-closed.',
-              'Disable a user account across all systems (offboarding) — executed immediately.',
-              'Reset a password in Active Directory — executed immediately.',
-              'Update an attribute (email, name, type, sponsor) in a specific system — executed immediately.',
-              'Add a user to a distribution group (mailing list) — executed immediately.',
-              'Add a user to a Microsoft 365 group (M365, Security, or Teams group) — executed immediately with a configurable role (member or owner).',
-              'Create a general service ticket for anything else (stays open for manual follow-up).',
-              'List open tickets for the current user.',
-            ],
-          });
-          break;
-        }
-
-        default:
-          toolResultContent = JSON.stringify({ error: `Unknown tool: ${fnName}` });
-      }
-
-      // Feed the tool result back to the LLM for a human-readable reply
-      messages.push(llmResponse);                              // assistant message with tool_calls
-      messages.push({ role: 'tool', content: toolResultContent }); // tool result
-
-      const followUp = await chatWithOllamaTools(messages, AGENT_TOOLS);
-      const replyText = followUp.content || 'Done.';
-
-      // Persist conversation
-      if (sessionId) {
-        await saveMessage(sessionId, 'user', prompt);
-        await saveMessage(sessionId, 'assistant', replyText);
-      }
-
-      return res.json({ reply: replyText, ticket });
+      if (ticket) tickets.push(ticket);
+      messages.push({ role: 'tool', content: toolResultContent });
+      steps++;
     }
 
-    // No tool call — plain conversational reply
-    const replyText = llmResponse.content || '';
+    // If the loop exhausted MAX_TOOL_STEPS without a plain reply, ask the LLM
+    // to summarise what was done.
+    if (!replyText) {
+      const summary = await chatWithOllamaTools(messages, AGENT_TOOLS);
+      replyText = summary.content || 'Done.';
+    }
+
+    // Persist conversation
     if (sessionId) {
       await saveMessage(sessionId, 'user', prompt);
       await saveMessage(sessionId, 'assistant', replyText);
     }
 
-    return res.json({ reply: replyText, ticket: null });
+    return res.json({ reply: replyText, tickets });
   } catch (err) {
     console.error('[agent] error:', err);
     res.status(500).json({ error: err.message || 'Internal server error' });

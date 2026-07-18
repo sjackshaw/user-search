@@ -1,12 +1,17 @@
 # Next Steps: SAML-Based Access Management
 
 **Date:** February 25, 2026
+**Updated:** June 16, 2026
 
 ---
 
 ## 1. Objective
 
-Implement a **SAML 2.0 Single Sign-On (SSO)** integration to authenticate users and enforce role-based access control (RBAC) across the User Search application and GenAI assistant. User roles will be defined in the Identity Provider (IdP) and delivered as SAML attributes, with role metadata included in the ETL pipeline for auditability.
+Implement a **SAML 2.0 Single Sign-On (SSO)** integration to authenticate users and enforce role-based access control (RBAC) across the User Search application and GenAI assistant.
+
+**Scope:** The application is internal-only. Access is restricted to users with an **Active Directory account** — the corporate Active Directory (via Entra ID / Azure AD) is the SAML Identity Provider. No external users are in scope.
+
+**Constraint:** No roles currently exist in the IdP or any other system that map users to application-level permissions. The IdP SAML assertion will carry authentication claims only (identity, email, name) — **no role attribute will be present**. A separate role management capability must be built to assign and store application roles; this is described in Phase 3 below.
 
 ---
 
@@ -17,20 +22,20 @@ Implement a **SAML 2.0 Single Sign-On (SSO)** integration to authenticate users 
 | Authentication | **None** — the application is unauthenticated; all endpoints are open |
 | Authorisation | **None** — all users have equal access to search, lookup, chat, and ETL status |
 | User identity | Not tracked — GenAI chat sessions use client-generated UUIDs with no user binding |
-| Role definitions | Not yet implemented — roles to be sourced from IdP and ETL metadata |
+| Role definitions | **Not implemented and not available from IdP** — no role attributes exist in Active Directory or Entra ID for this application; a role management system must be built to assign roles to AD users |
 
 ---
 
 ## 3. Role Definitions
 
-Roles are defined in the SAML IdP and will be included as a SAML attribute in the assertion. The ETL pipeline will also ingest role metadata to enable role-aware queries and audit logging.
+> **Important:** Roles are **not** delivered by the SAML IdP. The AD/Entra ID assertion will only contain identity claims (email, first name, last name, UPN). Application roles are stored in the local database and managed via the role management system described in Phase 3. Until a role is explicitly assigned, all authenticated AD users receive the `viewer` role by default.
 
-| Role | Permissions | Description |
-|---|---|---|
-| `viewer` | Search, lookup, view change history | Read-only access to all data |
-| `analyst` | All `viewer` permissions + ETL status, GenAI chat (read-only queries) | Can use the assistant for analytical questions |
-| `operator` | All `analyst` permissions + GenAI agentic actions (add/remove group members) | Can instruct the AI to make changes |
-| `admin` | All `operator` permissions + user management, system configuration | Full access including role assignment visibility |
+| Role | Permissions | Description | Default |
+|---|---|---|---|
+| `viewer` | Search, lookup, view change history | Read-only access to all data | **Yes — all AD users** |
+| `analyst` | All `viewer` permissions + ETL status, GenAI agent (read-only queries) | Can use the assistant for analytical questions | No — must be assigned |
+| `operator` | All `analyst` permissions + GenAI agentic actions (provision, disable, reset, update, group management) | Can instruct the AI to make changes | No — must be assigned |
+| `admin` | All `operator` permissions + role assignment, system configuration | Full access including assigning roles to other users | No — must be assigned |
 
 ### 3.1 Role Hierarchy
 
@@ -39,6 +44,10 @@ admin ⊃ operator ⊃ analyst ⊃ viewer
 ```
 
 Each higher role inherits all permissions of the roles below it.
+
+### 3.2 Role Assignment Source of Truth
+
+Since no role system exists in the IdP, roles are managed in a dedicated `user_roles` table in Postgres. An `admin`-role user assigns roles to other AD users via the role management UI (see Phase 3). The SAML assertion is used only to verify identity — role is always read from the local database after authentication.
 
 ---
 
@@ -66,10 +75,10 @@ Each higher role inherits all permissions of the roles below it.
 
 | Service | Change |
 |---|---|
-| `services/app` | Add SAML SP middleware, session management, ACS endpoint, role-aware route guards |
+| `services/app` | Add SAML SP middleware, session management, ACS endpoint, role-aware route guards, role management API (`/api/admin/roles`), and role management UI panel |
 | `services/genai` | Accept authenticated user context (email, role) from app proxy; enforce tool-level permissions |
-| ETL services | Ingest role metadata from IdP-synced data source; include role in `active_directory` records |
-| Postgres | New `user_sessions` table; `role` column added to relevant tables |
+| ETL services | No changes required for SAML — role management is handled independently of the ETL pipeline |
+| Postgres | New `user_sessions` table; new `user_roles` table (replaces ETL-driven `app_role` column) |
 
 ---
 
@@ -106,12 +115,13 @@ module.exports = {
   entryPoint: process.env.SAML_ENTRY_POINT,        // IdP SSO URL
   cert: process.env.SAML_IDP_CERT,                  // IdP signing certificate (PEM)
   
-  // Attribute mapping
+  // Attribute mapping — identity claims only; no role attribute is available from the IdP.
+  // Application role is resolved from the local user_roles table after authentication.
   attributes: {
     email:     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
     firstName: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
     lastName:  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname',
-    role:      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+    // NOTE: 'role' is intentionally absent — Entra ID does not carry application role claims.
   },
 };
 ```
@@ -140,6 +150,18 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 CREATE INDEX idx_user_sessions_expire ON user_sessions (expire);
 ```
 
+After the SAML assertion is validated, the app looks up the user's role from the `user_roles` table (defaulting to `viewer` if no record exists):
+
+```js
+// In the SAML callback handler, after assertion validation:
+const { rows } = await pool.query(
+  `SELECT role FROM user_roles WHERE email = $1`,
+  [samlUser.email]
+);
+const role = rows[0]?.role || 'viewer'; // default: viewer for all AD users
+req.session.user = { ...samlUser, role };
+```
+
 Session payload will contain:
 
 ```json
@@ -148,7 +170,7 @@ Session payload will contain:
     "email": "jane.doe@corp.com",
     "firstName": "Jane",
     "lastName": "Doe",
-    "role": "operator"
+    "role": "viewer"
   },
   "authenticatedAt": "2026-02-25T10:00:00Z"
 }
@@ -242,47 +264,78 @@ All agent-executed changes record `performed_by` = the authenticated user's emai
 
 ---
 
-### Phase 3 — ETL Role Metadata Ingestion (Estimated: 2–3 days)
+### Phase 3 — Role Management System (Estimated: 3–4 days)
 
-#### Step 9: Extend Active Directory Schema
+Since no role source exists in the IdP or any upstream system, a role management capability must be built into the application. An `admin`-role user must be able to view all AD accounts and assign application roles to them.
 
-Add a `role` column to `active_directory` to store the user's application role as synced from the IdP:
+#### Step 9: Role Storage — `user_roles` Table
+
+Create a dedicated table to store application role assignments. This is separate from `active_directory` so that role changes do not require an ETL re-run and the audit trail is independent:
 
 ```sql
-ALTER TABLE active_directory ADD COLUMN IF NOT EXISTS app_role TEXT DEFAULT 'viewer';
+-- Add to infra/db/init/14_user_roles.sql
+CREATE TABLE IF NOT EXISTS user_roles (
+  email       TEXT        PRIMARY KEY,
+  role        TEXT        NOT NULL DEFAULT 'viewer'
+                          CHECK (role IN ('viewer', 'analyst', 'operator', 'admin')),
+  assigned_by TEXT,                          -- email of the admin who made the assignment
+  assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 ```
 
-#### Step 10: ETL Role Sync
+All authenticated AD users not in this table are implicitly `viewer`. An explicit `viewer` row is written on first login for auditability.
 
-The `etl-ad-line` service will read role assignments from the source data (exported from the IdP or an HR system) and include them in the primary data:
+#### Step 10: Role Management API Endpoints
 
-```json
-{
-  "first_name": "Jane",
-  "last_name": "Doe",
-  "email": "jane.doe@corp.com",
-  "type": "user",
-  "enabled": true,
-  "locked": false,
-  "passwordlastreset": "2026-01-15T00:00:00Z",
-  "app_role": "operator"
-}
+| Method | Path | Role Required | Purpose |
+|---|---|---|---|
+| `GET` | `/api/admin/roles` | `admin` | List all users with assigned roles |
+| `PUT` | `/api/admin/roles/:email` | `admin` | Assign or update a user's role |
+| `DELETE` | `/api/admin/roles/:email` | `admin` | Remove explicit role assignment (reverts user to `viewer`) |
+| `GET` | `/api/admin/roles/:email` | `admin` | Get a specific user's current role |
+
+```js
+// PUT /api/admin/roles/:email
+app.put('/api/admin/roles/:email', requireRole('admin'), async (req, res) => {
+  const { email } = req.params;
+  const { role } = req.body;
+  const VALID_ROLES = ['viewer', 'analyst', 'operator', 'admin'];
+  if (!VALID_ROLES.includes(role)) {
+    return res.status(400).json({ error: `role must be one of: ${VALID_ROLES.join(', ')}` });
+  }
+  await pool.query(
+    `INSERT INTO user_roles (email, role, assigned_by, updated_at)
+     VALUES ($1, $2, $3, now())
+     ON CONFLICT (email) DO UPDATE
+       SET role = $2, assigned_by = $3, updated_at = now()`,
+    [email, role, req.session.user.email]
+  );
+  res.json({ email, role, assigned_by: req.session.user.email });
+});
 ```
 
-Changes to `app_role` will be tracked in `source_change_logs` like any other field, providing a full audit trail of role assignments:
+#### Step 11: Role Management UI
 
-```
-[active_directory] jane.doe@corp.com — updated at 2026-02-25T10:00:00Z
-  field: app_role  "analyst" → "operator"
-```
+A role management panel must be added to the application, accessible only to `admin` users. Minimum requirements:
 
-#### Step 11: Role-Aware GenAI Context
+| Feature | Detail |
+|---|---|
+| User list | Displays all users from `active_directory` with their current role (join with `user_roles`, default `viewer`) |
+| Role assignment | Dropdown or button-set to assign `viewer` / `analyst` / `operator` / `admin` |
+| Audit trail | Shows `assigned_by` and `assigned_at` / `updated_at` for each assignment |
+| Search/filter | Filter by email, name, or current role |
+| Constraint | Only `admin` users can access this panel — all other roles receive `HTTP 403` |
 
-The GenAI system prompt and context retrieval can reference role data:
+> **Bootstrapping:** The first `admin` user must be seeded directly into the `user_roles` table (e.g. via an init script or a one-time CLI command) before the UI can be used. Subsequent admins are assigned via the UI.
 
-- *"What role does jane.doe@corp.com have?"* → queries `active_directory.app_role`
-- *"Who are all the operators?"* → filters `active_directory WHERE app_role = 'operator'`
-- *"When was John Smith's role last changed?"* → queries `source_change_logs WHERE field_name = 'app_role'`
+#### Step 12: Role-Aware GenAI Context
+
+The GenAI system prompt and context retrieval can reference role data via the `user_roles` table:
+
+- *"What role does jane.doe@corp.com have?"* → queries `user_roles WHERE email = ...`
+- *"Who are all the operators?"* → queries `user_roles WHERE role = 'operator'`
+- *"When was John Smith's role last changed?"* → queries `user_roles.updated_at`
 
 ---
 
@@ -290,12 +343,13 @@ The GenAI system prompt and context retrieval can reference role data:
 
 | Step | Task |
 |---|---|
-| 12 | SAML assertion signature validation with certificate rotation support |
-| 13 | Session expiry and re-authentication flow (configurable TTL, default 8 hours) |
-| 14 | CSRF protection on SAML callback and state-changing endpoints |
-| 15 | HTTPS enforcement (TLS termination at load balancer in AWS; local dev via reverse proxy) |
-| 16 | IdP metadata auto-refresh (periodic fetch of IdP metadata XML) |
-| 17 | Fallback for local development (optional bypass with `SAML_ENABLED=false` env var, auto-assigns `admin` role) |
+| 13 | SAML assertion signature validation with certificate rotation support |
+| 14 | Session expiry and re-authentication flow (configurable TTL, default 8 hours) |
+| 15 | CSRF protection on SAML callback and state-changing endpoints |
+| 16 | HTTPS enforcement (TLS termination at load balancer in AWS; local dev via reverse proxy) |
+| 17 | IdP metadata auto-refresh (periodic fetch of IdP metadata XML) |
+| 18 | Fallback for local development (optional bypass with `SAML_ENABLED=false` env var, auto-assigns `admin` role for dev convenience only) |
+| 19 | Seed script for initial `admin` user (`infra/db/init/seed_admin_role.sql` or CLI command) |
 
 ---
 
@@ -343,22 +397,27 @@ No new containers required. Changes are confined to the existing `app` and `gena
 |---|---|
 | SAML assertion replay | Validate `NotOnOrAfter` and `InResponseTo` conditions; reject assertions older than 5 minutes |
 | Session hijacking | `HttpOnly`, `Secure`, `SameSite=Strict` cookie flags; session stored server-side in Postgres |
-| Privilege escalation | Role derived exclusively from signed SAML assertion — cannot be modified client-side |
-| Role stale-ness | Session TTL forces periodic re-authentication; ETL syncs role changes from IdP source |
+| Privilege escalation | Identity derived from signed SAML assertion — cannot be modified client-side; role always re-read from `user_roles` table after authentication, never trusted from session alone |
+| Role stale-ness | Session TTL forces periodic re-authentication; on each re-auth, role is re-fetched from `user_roles` to pick up changes made by an admin |
+| Unauthorised role assignment | `PUT /api/admin/roles/:email` is guarded by `requireRole('admin')`; `assigned_by` is set from the server-side session, not from the request body |
+| Admin bootstrap risk | Initial admin seed is a one-time manual operation; document and restrict who can run it |
 | Local dev security | `SAML_ENABLED=false` only available when `NODE_ENV !== 'production'` |
-| Audit completeness | All agent actions tagged with `performed_by` from session; change log is append-only |
+| Audit completeness | All agent actions tagged with `performed_by` from session; role assignments record `assigned_by` and `updated_at`; change log is append-only |
 
 ---
 
 ## 9. Success Criteria
 
-- [ ] Users authenticate via SAML SSO before accessing the application
-- [ ] SAML assertions include the user's role as an attribute
+- [ ] Only users with a valid Active Directory account (via Entra ID SAML) can access the application
+- [ ] Non-AD users (external, unauthenticated) receive a redirect to the IdP login and cannot access any endpoint
+- [ ] SAML assertion is validated (signature, `NotOnOrAfter`, audience); no role attribute is expected or consumed from the assertion
+- [ ] After authentication, the user's role is resolved from the `user_roles` table; unenrolled AD users receive `viewer` by default
 - [ ] Route guards enforce minimum role requirements on all API endpoints
-- [ ] GenAI agentic tools (add/remove group members) are restricted to `operator` and above
+- [ ] GenAI agentic tools (provision, disable, reset password, update attributes, group management) are restricted to `operator` and above
 - [ ] `viewer` and `analyst` roles cannot trigger write actions via the assistant
-- [ ] All chat messages and change logs record the authenticated user's email
-- [ ] ETL pipeline syncs `app_role` from source data and tracks changes
-- [ ] Role changes appear in the change history UI
+- [ ] All agent actions and change logs record the authenticated user's email (`performed_by`)
+- [ ] `admin` users can assign and remove roles via the role management UI and API
+- [ ] Role assignments are stored in `user_roles` with `assigned_by` and `updated_at` for audit purposes
+- [ ] Initial `admin` user can be bootstrapped via a seed script before the UI is available
+- [ ] Role changes take effect on the user's next login (session re-authentication re-fetches role)
 - [ ] Local development works without an IdP via `SAML_ENABLED=false` bypass
-- [ ] Session expiry forces re-authentication after configured TTL

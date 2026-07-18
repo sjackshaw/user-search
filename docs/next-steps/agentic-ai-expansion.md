@@ -1,264 +1,196 @@
-# Agentic AI — User Card Agent
+# Agentic AI — User Card Agent: Production Hardening
 
-**Date:** February 26, 2026
-**Status:** ✅ Implemented (Phases 1–5 complete)
-
----
-
-## 1. Objective
-
-Embed an **agentic AI assistant directly into the user-card detail panel**. When a user opens a record (e.g. a person who exists in Active Directory but not in NetForum), they can issue natural-language requests — such as provisioning an account, updating attributes, or adding to groups — without leaving the card. The agent executes **real actions** against the database via LLM tool-calling. Each action creates a service ticket, executes the operation, and auto-closes the ticket on success. Open tickets for the displayed user are listed below the prompt in real time.
+**Date:** June 16, 2026
+**Status:** 🔧 Phase 6 — Production Path (in progress)
 
 ---
 
-## 2. Current State — Implemented
+## 1. Context
 
-| Component | Status |
+Phases 1–5 are complete. The agent is operational with 9 tools, 6 action executors, cross-system provisioning, M365 group support, and an embedded UI. The items below are the **remaining work** required to move the agent toward a production-ready state.
+
+Current implementation reference:
+- GenAI service: `services/genai/index.js`
+- Agent tickets DB init: `infra/db/init/15_agent_tickets.sql`
+- UI: `services/app/src/public/index.html`
+
+---
+
+## 2. Remaining Work
+
+### 2.2 ServiceNow / Jira Ticket Integration
+
+**File:** `services/genai/index.js` — `createAndCloseTicket()` function and all 6 executor callers
+
+The `agent_tickets` Postgres table is a local stand-in for an ITSM system. In production, ticket creation and closure should route to ServiceNow or Jira instead.
+
+**Implementation approach:**
+
+The `createAndCloseTicket()` helper is the single integration point. Replace the two Postgres queries inside it (INSERT + UPDATE) with API calls to the target ITSM:
+
+```js
+async function createAndCloseTicket(pool, email, title, description, sessionId, actionFn) {
+  // 1. Create ticket via ITSM API (replace Postgres INSERT)
+  const ticketId = await itsmClient.createTicket({ email, title, description, sessionId });
+
+  // 2. Execute the action
+  let actionResult;
+  try {
+    actionResult = await actionFn();
+  } catch (err) {
+    await itsmClient.addComment(ticketId, `⚠️ Action failed: ${err.message}`);
+    return { ticket: { id: ticketId }, actionResult: { success: false, error: err.message } };
+  }
+
+  // 3. Close ticket on success
+  await itsmClient.closeTicket(ticketId, '✅ Action completed automatically by agent.');
+  return { ticket: { id: ticketId, status: 'closed' }, actionResult };
+}
+```
+
+The existing `GET /api/tickets` and `PATCH /api/tickets/:id` endpoints will also need to delegate to the ITSM API (or be replaced by a redirect to the ITSM portal).
+
+**Steps:**
+| Step | Task |
 |---|---|
-| User card detail panel | `index.html` overlay — reads from `/api/lookup`, renders per-source sections (AD, NetForum, External Users, DG, M365, activity logs, SP permissions) |
-| GenAI agent service (`services/genai`) | Operational — LLM tool-calling via Ollama, 9 tools, 6 action executors, cross-system provisioning, M365 group support |
-| Database | Postgres with tables for `active_directory`, `netforum_members`, `external_users`, `distribution_groups`, `m365_group_memberships`, `agent_tickets`, and associated log tables |
-| Agent UI | Embedded in user-card panel with prompt input, message thread, spinner, tickets list, close button, auto-refresh |
-| Card auto-refresh | User card data refreshes automatically after agent actions to show updated state |
+| 1 | Create `services/genai/itsm-client.js` with `createTicket()`, `closeTicket()`, `addComment()`, `listOpenTickets()` methods |
+| 2 | Add environment variables: `ITSM_TYPE` (`servicenow`/`jira`), `ITSM_BASE_URL`, `ITSM_API_KEY` |
+| 3 | Replace Postgres ticket INSERT/UPDATE in `createAndCloseTicket()` with `itsmClient` calls |
+| 4 | Update `GET /api/tickets` to query ITSM for open tickets by email |
+| 5 | Update `PATCH /api/tickets/:id` to proxy close/reopen to ITSM API |
+| 6 | Keep `agent_tickets` table as audit log (write-only mirror) or remove if ITSM provides full audit trail |
 
 ---
 
-## 3. Implemented Experience
+### 2.3 SAML-Gated Permissions
 
-### 3.1 User Card with Embedded Agent
+**Files:** `services/genai/index.js`, `services/app/src/`
 
+Currently the only auth guard is an API key (`x-api-key` header). Role-based access control must be enforced so that only authorised roles can invoke destructive agent actions (disable account, provision account).
+
+**Role mapping** (from `docs/next-steps/saml-access-management.md`):
+
+| Role | Permitted agent actions |
+|---|---|
+| `viewer` | None — no agent access |
+| `analyst` | `list_open_tickets`, `describe_capabilities` |
+| `operator` | All tools except user management (`provision_account`, `disable_account`, `reset_password`, `update_attribute`, `add_to_group`, `add_to_m365_group`) |
+| `admin` | All tools |
+
+**Implementation steps:**
+
+| Step | Task |
+|---|---|
+| 1 | Complete SAML SSO integration (see `docs/next-steps/saml-access-management.md`) — this is a prerequisite |
+| 2 | Decode the SAML assertion server-side and attach `req.user.role` in middleware |
+| 3 | In `POST /api/agent`, after the API key guard, read `req.user.role` and compare the resolved `fnName` against a per-role allowlist |
+| 4 | Return `HTTP 403` with `{ error: 'Insufficient permissions for action: <tool>' }` if the role is not authorised |
+| 5 | Add `role` to `agent_tickets` (or ITSM ticket) for audit trail |
+| 6 | Expose the user's role to the UI so action buttons / prompt placeholder can be adapted accordingly |
+
+**Permitted tools per role (server-side allowlist):**
+```js
+const ROLE_TOOL_ALLOWLIST = {
+  viewer:   [],
+  analyst:  ['list_open_tickets', 'describe_capabilities'],
+  operator: ['provision_account', 'disable_account', 'reset_password',
+             'update_attribute', 'add_to_group', 'add_to_m365_group',
+             'create_ticket', 'list_open_tickets', 'describe_capabilities'],
+  admin:    null, // null = unrestricted
+};
 ```
-┌──────────────────────────────────────────────────────┐
-│  All records for jane.doe@corp.com            ✕      │
-│                                                      │
-│  ┌─ ACTIVE DIRECTORY ─────────────────────────────┐  │
-│  │  First Name: Jane    Last Name: Doe            │  │
-│  │  Email: jane.doe@corp.com   Enabled: Yes       │  │
-│  └────────────────────────────────────────────────┘  │
-│                                                      │
-│  ┌─ NETFORUM ─────────────────────────────────────┐  │
-│  │  No record found                               │  │
-│  └────────────────────────────────────────────────┘  │
-│                                                      │
-│  ╔═══════════════════════════════════════════════════╗│
-│  ║  🤖 User Card Agent                              ║│
-│  ║                                                   ║│
-│  ║  > "Provision a NetForum account for this user"   ║│
-│  ║                                                   ║│
-│  ║  Agent: Done — provisioned jane.doe@corp.com in   ║│
-│  ║  NetForum. Ticket #12 auto-closed.                ║│
-│  ╚═══════════════════════════════════════════════════╝│
-│                                                      │
-│  ── Open Tickets ────────────────────────────────────│
-│  (none — auto-closed on success)                     │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-```
-
-### 3.2 Supported Actions
-
-| Prompt | Agent Action | Tool |
-|---|---|---|
-| *"Provision a NetForum account for this user"* | Creates account in target system, auto-closes ticket | `provision_account` |
-| *"Disable this account — the user has left"* | Disables across all systems, auto-closes ticket | `disable_account` |
-| *"Reset this user's password"* | Resets AD password, auto-closes ticket | `reset_password` |
-| *"Change this user's sponsor to M. Chen"* | Updates field in target system, auto-closes ticket | `update_attribute` |
-| *"Add this user to the Marketing distribution group"* | Adds to DG with duplicate check, auto-closes ticket | `add_to_group` |
-| *"Add to the Engineering M365 group as owner"* | Adds to M365 group with role, auto-closes ticket | `add_to_m365_group` |
-| *"Provision this NetForum user into AD"* | Cross-system provisioning, auto-closes ticket | `provision_account` |
-| *"Open a ticket to investigate login issues"* | Creates general ticket (stays open for manual follow-up) | `create_ticket` |
-| *"What actions can I take?"* | Lists capabilities | `describe_capabilities` |
 
 ---
 
-## 4. Architecture
+## 4. Extended M365 Tenant Capabilities
 
-### 4.1 Overview
+The following tools extend the agent beyond the current six-action set. Each maps to a Graph API call and is grouped by audience. All actions follow the same `createAndCloseTicket()` pattern — ticket opened, Graph call executed, ticket auto-closed on success.
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                      User Card (UI)                          │
-│                                                              │
-│  ┌─────────────────────┐  ┌──────────────────────────────┐  │
-│  │ Record Sections      │  │ Agent Prompt + Messages       │  │
-│  │ (AD, NF, EU, DG,    │  │  ┌──────────────────────┐    │  │
-│  │  M365, Logs)         │  │  │ Text input + Send     │    │  │
-│  │                      │  │  └──────────┬───────────┘    │  │
-│  └─────────────────────┘  └─────────────┼────────────────┘  │
-│                                          │                    │
-│  ┌───────────────────────────────────────┼───────────────┐   │
-│  │ Open Tickets List (auto-refreshed)    │  [Close ✕]    │   │
-│  └───────────────────────────────────────┼───────────────┘   │
-└──────────────────────────────────────────┼───────────────────┘
-                                           │
-                    POST /api/agent        │   GET /api/tickets?email=…
-                    PATCH /api/tickets/:id │
-                                           ▼
-┌──────────────────────────────────────────────────────────────┐
-│                     GenAI Service (port 3001)                │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │  LLM Tool Selector (Ollama tool-calling)              │   │
-│  └──────────┬───────────────────────────────────────────┘   │
-│             │                                                │
-│   ┌─────────┼──────────────────────────────────────────┐    │
-│   ▼         ▼         ▼          ▼         ▼           ▼    │
-│ provision disable  reset_pw  update_attr add_to_group  ...  │
-│ _account  _account           _ibute                          │
-│   │         │         │          │         │           │    │
-│   ▼         ▼         ▼          ▼         ▼           ▼    │
-│  ┌──────────────────────────────────────────────────┐        │
-│  │  createAndCloseTicket() → execute → auto-close   │        │
-│  └──────────────────────────────────────────────────┘        │
-│         │                                                    │
-│         ▼                                                    │
-│  ┌──────────────────────────────────────────────────┐        │
-│  │              Postgres (pg.Pool)                   │        │
-│  │  agent_tickets · chat_messages · user tables      │        │
-│  └──────────────────────────────────────────────────┘        │
-└──────────────────────────────────────────────────────────────┘
-```
+### 4.1 Service Desk Tools (Tier-1 Ticket Elimination)
 
-### 4.2 API Endpoints
+| Tool name | User prompt example | Graph API call | Ticket auto-closes? |
+|---|---|---|---|
+| `reset_mfa` | *"Reset Jane's MFA so she can re-register"* | `DELETE /users/{id}/authentication/methods/{methodId}` | Yes |
+| `get_mfa_status` | *"Does John have MFA enabled?"* | `GET /users/{id}/authentication/methods` | Read-only — no ticket |
+| `assign_license` | *"Assign an E3 license to this user"* | `POST /users/{id}/assignLicense` | Yes |
+| `remove_license` | *"Remove the Visio license from this user"* | `POST /users/{id}/assignLicense` (removeLicenses) | Yes |
+| `grant_mailbox_access` | *"Give Sarah delegate access to Tom's mailbox"* | `POST /users/{id}/mailFolders/inbox/messageRules` / EWS | Yes |
+| `add_email_alias` | *"Add j.smith@corp.com as an alias for Jane"* | `PATCH /users/{id}` (proxyAddresses) | Yes |
+| `get_out_of_office` | *"Is John's out-of-office on?"* | `GET /users/{id}/mailboxSettings` | Read-only — no ticket |
+| `set_out_of_office` | *"Set Jane's OOF message to 'Back 23 June'"* | `PATCH /users/{id}/mailboxSettings` | Yes |
+| `add_to_teams_channel` | *"Add Jane to the #project-alpha channel"* | `POST /teams/{teamId}/channels/{channelId}/members` | Yes |
+| `grant_onedrive_access` | *"Give Sarah read access to Tom's OneDrive"* | `POST /drives/{id}/root/permissions` | Yes |
 
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/api/agent` | Send a natural-language prompt with user-card context; LLM selects a tool, executes the action, returns reply + ticket |
-| `GET` | `/api/tickets?email=<email>` | Retrieve open tickets for a given user |
-| `PATCH` | `/api/tickets/:id` | Close (or reopen) a ticket — requires email for ownership verification |
+### 4.2 Governance Tools
 
-### 4.3 Tool Definitions (9 tools)
+| Tool name | User prompt example | Graph API call | Ticket auto-closes? |
+|---|---|---|---|
+| `list_inactive_licenses` | *"Which users have unused E3 licenses?"* | `GET /reports/getOffice365ActiveUserDetail` | Read-only — no ticket |
+| `list_stale_guests` | *"Show guest accounts with no sign-in for 90 days"* | `GET /users?$filter=userType eq 'Guest'` + `signInActivity` | Read-only — no ticket |
+| `revoke_guest_access` | *"Revoke access for the Contoso guest account"* | `DELETE /users/{id}` or disable | Yes |
+| `dismiss_risky_user` | *"Dismiss the risk flag on Jane — it's a false positive"* | `POST /identityProtection/riskyUsers/dismiss` | Yes |
+| `list_app_consents` | *"What apps has John granted access to?"* | `GET /oauth2PermissionGrants?$filter=principalId eq '{id}'` | Read-only — no ticket |
+| `revoke_app_consent` | *"Revoke access for the 'Grammarly' app for John"* | `DELETE /oauth2PermissionGrants/{id}` | Yes |
+| `explain_ca_block` | *"Why is Jane blocked from Salesforce?"* | `GET /identity/conditionalAccess/policies` (evaluate) | Read-only — no ticket |
+| `get_device_compliance` | *"Why is John's laptop non-compliant?"* | `GET /deviceManagement/managedDevices?$filter=userPrincipalName eq '...'` | Read-only — no ticket |
+| `get_bitlocker_key` | *"Retrieve the BitLocker key for John's laptop"* | `GET /informationProtection/bitlockerRecoveryKeys` | Yes (audit trail) |
 
-| Tool | Type | Description |
-|---|---|---|
-| `provision_account` | Action | Create account in AD, NetForum, or External Users (supports cross-system) |
-| `disable_account` | Action | Disable user across all systems (offboarding) |
-| `reset_password` | Action | Reset Active Directory password |
-| `update_attribute` | Action | Update a whitelisted field in a specific system |
-| `add_to_group` | Action | Add user to a distribution group (mailing list) |
-| `add_to_m365_group` | Action | Add user to an M365/Security/Teams group with role |
-| `create_ticket` | Fallback | Create a general ticket for manual follow-up |
-| `list_open_tickets` | Query | List open tickets for the current user |
-| `describe_capabilities` | Query | Describe available actions |
+### 4.3 Tool Implementation Pattern
 
-### 4.4 Execution Flow
+All new tools follow the same pattern as existing executors. Add each to `AGENT_TOOLS` in `services/genai/index.js` and create a corresponding `execute<ToolName>()` function. The only new dependency is a Graph API client:
 
-1. User opens a user card and types a request into the agent prompt
-2. The UI sends `POST /api/agent` with the prompt, full user-card context (all source records), and persistent session ID
-3. The GenAI service builds a system prompt that includes the user-card context, tool definitions, cross-system awareness rules, and group type guidance
-4. The LLM responds with a **tool call** (e.g. `provision_account` with arguments)
-5. The handler calls `createAndCloseTicket()` which: creates a ticket → executes the action → auto-closes the ticket on success
-6. The tool result is fed back to the LLM for a human-readable confirmation
-7. The UI displays the reply, refreshes the tickets list, and re-fetches the user card data (card glows blue on refresh)
-
----
-
-## 5. Database
-
-### 5.1 Agent Tickets Table
-
-```sql
-CREATE TABLE IF NOT EXISTS agent_tickets (
-  id           SERIAL       PRIMARY KEY,
-  email        TEXT         NOT NULL,
-  title        TEXT         NOT NULL,
-  description  TEXT         NOT NULL,
-  status       TEXT         NOT NULL DEFAULT 'open',
-  session_id   UUID,
-  created_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
-  updated_at   TIMESTAMPTZ  NOT NULL DEFAULT now()
+```js
+// services/genai/graph-client.js
+const { ClientSecretCredential } = require('@azure/identity');
+const { Client } = require('@microsoft/microsoft-graph-client');
+const { TokenCredentialAuthenticationProvider } = require(
+  '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials'
 );
+
+const credential = new ClientSecretCredential(
+  process.env.ENTRA_TENANT_ID,
+  process.env.ENTRA_CLIENT_ID,
+  process.env.ENTRA_CLIENT_SECRET
+);
+
+const authProvider = new TokenCredentialAuthenticationProvider(credential, {
+  scopes: ['https://graph.microsoft.com/.default'],
+});
+
+module.exports = Client.initWithMiddleware({ authProvider });
 ```
 
-Init script: `infra/db/init/15_agent_tickets.sql`
+Each executor then uses `graphClient.api('/users/...').get()` / `.patch()` / `.post()` / `.delete()` instead of `pool.query()`.
 
----
+### 4.4 Hackathon Priority Subset
 
-## 6. Implementation Status
+For the initial presentation, the four highest-impact capabilities are:
 
-### Phase 1 — Database & API ✅ Complete
-
-| Step | Task | Status |
-|---|---|---|
-| 1 | Create `infra/db/init/15_agent_tickets.sql` | ✅ |
-| 2 | Add `POST /api/agent` route with tool-calling logic | ✅ |
-| 3 | Add `GET /api/tickets?email=` route | ✅ |
-| 4 | Define `AGENT_TOOLS` and `AGENT_SYSTEM_PROMPT` | ✅ |
-
-### Phase 2 — UI Integration ✅ Complete
-
-| Step | Task | Status |
-|---|---|---|
-| 5 | Add agent prompt + tickets section to detail panel | ✅ |
-| 6 | Implement `sendAgentPrompt()` and `refreshTickets()` | ✅ |
-| 7 | Style agent section (purple accent, message bubbles) | ✅ |
-| 8 | Auto-load tickets on card open | ✅ |
-
-### Phase 3 — Polish & Hardening ✅ Complete
-
-| Step | Task | Status |
-|---|---|---|
-| 9 | Loading spinner and error handling | ✅ |
-| 10 | Close tickets from UI (`PATCH /api/tickets/:id`) | ✅ |
-| 11 | Persistent agent chat sessions per user | ✅ |
-| 12 | Tested across AD-only, NetForum-only, multi-source users | ✅ |
-
-### Phase 4 — Action-Capable Agent ✅ Complete
-
-| Step | Task | Status |
-|---|---|---|
-| 13 | Replace generic `create_ticket` with 6 action tools | ✅ |
-| 14 | `createAndCloseTicket()` helper (create → execute → auto-close) | ✅ |
-| 15 | Duplicate-entry guards in all executors | ✅ |
-| 16 | Error cases leave tickets open for manual follow-up | ✅ |
-
-### Phase 5 — Cross-System & M365 ✅ Complete
-
-| Step | Task | Status |
-|---|---|---|
-| 17 | Cross-system provisioning (e.g. NF → AD) | ✅ |
-| 18 | `add_to_m365_group` tool with role support | ✅ |
-| 19 | System prompt: CROSS-SYSTEM AWARENESS + GROUP TYPES sections | ✅ |
-| 20 | Card auto-refresh after agent actions (blue flash animation) | ✅ |
-| 21 | `renderMarkdown()` for agent message formatting | ✅ |
-
-### Phase 6 — Production Path (Future)
-
-| Step | Description |
+| Capability | Why it lands |
 |---|---|
-| Replace `agent_tickets` with ServiceNow / Jira API integration | Swap the Postgres insert for an API call; keep the same tool interface |
-| Add SAML-gated permissions | Only authorised roles can create certain ticket types (see SAML access management plan) |
-| Multi-step agent | Chain lookups and actions (e.g. "Provision this user in all missing systems") |
-| Rate limiting | Add per-session rate limiter on `POST /api/agent` |
+| **MFA reset** (`reset_mfa`) | Universal pain point — everyone has filed or received this ticket. Resolving it from a Teams chat in under 10 seconds is immediately understood. |
+| **Inactive license detection** (`list_inactive_licenses`) | Produces a concrete cost-savings number that can go on a slide: "X unused E3 licenses at $Y/month." |
+| **Guest user lifecycle** (`list_stale_guests` + `revoke_guest_access`) | Compliance and access hygiene; guests with no sign-in for 90+ days are an easy win to quantify. |
 
 ---
 
-## 7. Security Considerations
+## 5. Security Considerations for Remaining Work
 
-| Concern | Mitigation |
-|---|---|
-| SQL injection via LLM tool arguments | `target_system` validated against server-side allowlist (`VALID_SYSTEMS`); `field` validated against `ALLOWED_FIELDS`; all user values parameterised |
-| Unauthorised ticket creation | API key guard on all `/api` routes; future SAML integration will enforce role-based access |
-| Prompt injection | Tool calls are validated against the tool schema; system prompt does not accept override instructions |
-| Data leakage | Agent only sees data already visible on the user card; no additional access granted |
-| Audit trail | Every ticket records `session_id` and timestamps; tickets are append-only (no deletes) |
-| Ticket ownership | `PATCH /api/tickets/:id` requires email for ownership verification |
-| LIKE wildcards | Group name search escapes `%` and `_` metacharacters |
-| XSS in agent messages | `renderMarkdown()` runs `esc()` first (HTML entity encoding), then applies restricted regex for markdown formatting |
-
-See [findings4.md](../security/findings4.md) for the full agent security review.
+| Item | Concern | Mitigation |
+|---|---|---|
+| ITSM integration | API key leakage, SSRF | Store ITSM credentials in environment variables only; validate `ITSM_BASE_URL` against a domain allowlist |
+| SAML permissions | Privilege escalation via crafted prompts | Enforce tool allowlist server-side, never trust client-supplied role claims |
+| Graph API credentials | Client secret exposure, over-permissioned app | Store in Secrets Manager / managed identity; grant only permissions needed for deployed tools; rotate secrets |
+| Governance tool abuse | `revoke_app_consent`, `dismiss_risky_user`, `get_bitlocker_key` are high-risk | Gate all governance tools behind `admin` role in `ROLE_TOOL_ALLOWLIST`; log every invocation with user identity |
+| BitLocker key access | Key retrieval is sensitive; must be auditable | Always create a ticket (even for read operations) so there is a ServiceNow audit record; restrict to `admin` role |
 
 ---
 
-## 8. Success Criteria
+## 6. Success Criteria
 
-- [x] User card detail panel shows an embedded agent prompt at the bottom
-- [x] User can type a natural-language request and receive an agent response
-- [x] Agent executes real actions (provision, disable, reset, update, add to group) with auto-closing tickets
-- [x] Open tickets for the displayed user are listed below the prompt and refresh automatically
-- [x] Agent correctly identifies data gaps and cross-system opportunities
-- [x] Existing user card functionality (record display, activity logs, change history) is unaffected
-- [x] Tickets persist across page reloads and are visible when the same user card is reopened
-- [x] Card data refreshes automatically after agent actions to show updated state
-- [x] M365 group support with role assignment (member/owner)
-- [x] Cross-system provisioning (e.g. NetForum user → Active Directory)
+- [ ] Agent tickets are created and closed via the ServiceNow API rather than the local `agent_tickets` table
+- [ ] An `operator`-role user can invoke all action tools; a `viewer`-role user receives `HTTP 403`
+- [ ] `list_inactive_licenses` returns a list of users with unactivated licenses, sourced live from Graph reporting API
+- [ ] `list_app_consents` and `revoke_app_consent` read and modify OAuth2 permission grants for a specified user
+- [ ] `list_stale_guests` and `revoke_guest_access` identify and remove guest accounts inactive for a configurable number of days
+- [ ] All governance tools (`dismiss_risky_user`, `get_bitlocker_key`, `revoke_app_consent`) are restricted to `admin` role and generate a ServiceNow audit ticket regardless of outcome
