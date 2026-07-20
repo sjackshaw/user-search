@@ -3,6 +3,7 @@
 const express   = require('express');
 const rateLimit = require('express-rate-limit');
 const { Pool }  = require('pg');
+const graphClient = require('./graph-client');
 
 const app     = express();
 const PORT    = parseInt(process.env.PORT || '3001', 10);
@@ -163,6 +164,312 @@ const AGENT_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'reset_mfa',
+      description:
+        'Reset the displayed user\'s Microsoft 365 MFA registration so they can re-register. ' +
+        'Use when the user asks to reset, clear, or re-register MFA/authenticator methods.',
+      parameters: {
+        type: 'object',
+        properties: {
+          method_id: { type: 'string', description: 'Optional Microsoft Graph authentication method ID. If omitted, all resettable methods are targeted.' },
+          reason: { type: 'string', description: 'Reason for the MFA reset.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_mfa_status',
+      description:
+        'Check whether the displayed user has Microsoft 365 MFA/authentication methods registered. ' +
+        'Use when the user asks whether MFA is enabled or what MFA methods exist.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'assign_license',
+      description:
+        'Assign a Microsoft 365 license to the displayed user. Use when the user asks to assign E3, E5, Visio, Project, or another license.',
+      parameters: {
+        type: 'object',
+        properties: {
+          license_sku: { type: 'string', description: 'Friendly license name, such as E3, E5, Visio, or Project.' },
+          sku_id: { type: 'string', description: 'Optional Microsoft Graph subscribedSku GUID.' },
+          reason: { type: 'string', description: 'Reason for assigning the license.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'remove_license',
+      description:
+        'Remove a Microsoft 365 license from the displayed user. Use when the user asks to remove E3, E5, Visio, Project, or another license.',
+      parameters: {
+        type: 'object',
+        properties: {
+          license_sku: { type: 'string', description: 'Friendly license name, such as E3, E5, Visio, or Project.' },
+          sku_id: { type: 'string', description: 'Optional Microsoft Graph subscribedSku GUID.' },
+          reason: { type: 'string', description: 'Reason for removing the license.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'grant_mailbox_access',
+      description:
+        'Grant delegate mailbox access involving the displayed user. Use when asked to give another person delegate access to this mailbox, or give this user access to another mailbox.',
+      parameters: {
+        type: 'object',
+        properties: {
+          delegate_email: { type: 'string', description: 'Delegate user email address receiving access.' },
+          mailbox_email: { type: 'string', description: 'Mailbox owner email. Defaults to the displayed user.' },
+          access_level: { type: 'string', enum: ['read', 'full_access', 'send_as'], description: 'Mailbox access level. Defaults to read.' },
+          reason: { type: 'string', description: 'Reason for granting access.' },
+        },
+        required: ['delegate_email'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'add_email_alias',
+      description:
+        'Add an email alias/proxy address to the displayed Microsoft 365 user.',
+      parameters: {
+        type: 'object',
+        properties: {
+          alias_email: { type: 'string', description: 'Alias email address to add.' },
+          reason: { type: 'string', description: 'Reason for adding the alias.' },
+        },
+        required: ['alias_email'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_out_of_office',
+      description:
+        'Check the displayed user\'s Microsoft 365 out-of-office/automatic replies setting.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'set_out_of_office',
+      description:
+        'Set or update the displayed user\'s Microsoft 365 out-of-office/automatic replies message.',
+      parameters: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', description: 'Out-of-office message body.' },
+          start_time: { type: 'string', description: 'Optional ISO start time.' },
+          end_time: { type: 'string', description: 'Optional ISO end time.' },
+          reason: { type: 'string', description: 'Reason for setting out-of-office.' },
+        },
+        required: ['message'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'add_to_teams_channel',
+      description:
+        'Add the displayed user to a Microsoft Teams channel.',
+      parameters: {
+        type: 'object',
+        properties: {
+          team_id: { type: 'string', description: 'Microsoft Teams team ID.' },
+          channel_id: { type: 'string', description: 'Microsoft Teams channel ID.' },
+          team_name: { type: 'string', description: 'Optional team name for local demo or summary.' },
+          channel_name: { type: 'string', description: 'Optional channel name for local demo or summary.' },
+          reason: { type: 'string', description: 'Reason for adding the user to the channel.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'grant_onedrive_access',
+      description:
+        'Grant another user access to the displayed user\'s OneDrive root folder.',
+      parameters: {
+        type: 'object',
+        properties: {
+          recipient_email: { type: 'string', description: 'Recipient email address receiving OneDrive access.' },
+          role: { type: 'string', enum: ['read', 'write'], description: 'OneDrive permission role. Defaults to read.' },
+          reason: { type: 'string', description: 'Reason for granting OneDrive access.' },
+        },
+        required: ['recipient_email'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_inactive_licenses',
+      description:
+        'List Microsoft 365 users who appear to have unused or inactive licenses, including an estimated monthly savings figure. ' +
+        'Use when the user asks about unused E3 licenses, inactive licenses, license waste, or license cost savings.',
+      parameters: {
+        type: 'object',
+        properties: {
+          license_sku: { type: 'string', description: 'License SKU to inspect. Defaults to E3.' },
+          inactive_days: { type: 'integer', description: 'Number of inactive days to treat as stale. Defaults to 90.' },
+          monthly_cost: { type: 'number', description: 'Monthly cost per license for savings estimate. Defaults to M365_E3_MONTHLY_COST or 36.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_stale_guests',
+      description:
+        'List guest or external accounts that have been inactive for a configurable number of days. ' +
+        'Use when the user asks for stale guests, guest access hygiene, or guest lifecycle review.',
+      parameters: {
+        type: 'object',
+        properties: {
+          inactive_days: { type: 'integer', description: 'Number of inactive days to treat as stale. Defaults to 90.' },
+          limit: { type: 'integer', description: 'Maximum number of guests to return. Defaults to 10.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'revoke_guest_access',
+      description:
+        'Revoke access for a stale guest or external Microsoft 365 user. ' +
+        'Use after identifying a stale guest account or when the user explicitly asks to revoke guest access.',
+      parameters: {
+        type: 'object',
+        properties: {
+          guest_email: { type: 'string', description: 'Guest email to revoke. Defaults to the displayed user.' },
+          reason: { type: 'string', description: 'Reason for revoking guest access.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'dismiss_risky_user',
+      description:
+        'Dismiss Microsoft Entra ID Protection risk for a user after investigation. ' +
+        'Use only when the user asks to clear or dismiss a risky-user flag as a false positive.',
+      parameters: {
+        type: 'object',
+        properties: {
+          user_id: { type: 'string', description: 'Optional Entra user object ID. Defaults to resolving the displayed user.' },
+          user_email: { type: 'string', description: 'Optional risky user email. Defaults to the displayed user.' },
+          reason: { type: 'string', description: 'Reason for dismissing the risk flag.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_app_consents',
+      description:
+        'List OAuth app consent grants for the displayed user or a specified user. ' +
+        'Use when asked what apps have been granted access.',
+      parameters: {
+        type: 'object',
+        properties: {
+          user_email: { type: 'string', description: 'Optional user email. Defaults to the displayed user.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'revoke_app_consent',
+      description:
+        'Revoke an OAuth app consent grant for the displayed user or a specified user.',
+      parameters: {
+        type: 'object',
+        properties: {
+          consent_id: { type: 'string', description: 'OAuth2 permission grant ID to revoke.' },
+          app_name: { type: 'string', description: 'Friendly app name, used for local demo or summary.' },
+          user_email: { type: 'string', description: 'Optional user email. Defaults to the displayed user.' },
+          reason: { type: 'string', description: 'Reason for revoking app consent.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'explain_ca_block',
+      description:
+        'Explain likely Conditional Access policy reasons a user is blocked from an app. ' +
+        'Use when asked why a user cannot access Salesforce, Teams, SharePoint, or another app.',
+      parameters: {
+        type: 'object',
+        properties: {
+          app_name: { type: 'string', description: 'Application the user is blocked from.' },
+          user_email: { type: 'string', description: 'Optional user email. Defaults to the displayed user.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_device_compliance',
+      description:
+        'Get Microsoft Intune device compliance information for the displayed user or a specified user.',
+      parameters: {
+        type: 'object',
+        properties: {
+          user_email: { type: 'string', description: 'Optional user email. Defaults to the displayed user.' },
+          device_name: { type: 'string', description: 'Optional device name to narrow results.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_bitlocker_key',
+      description:
+        'Retrieve a BitLocker recovery key with an audit ticket. Use only when explicitly asked for a BitLocker recovery key.',
+      parameters: {
+        type: 'object',
+        properties: {
+          device_id: { type: 'string', description: 'Optional device ID associated with the recovery key.' },
+          key_id: { type: 'string', description: 'Optional BitLocker recovery key ID.' },
+          device_name: { type: 'string', description: 'Optional device name for local demo or summary.' },
+          reason: { type: 'string', description: 'Reason for retrieving the BitLocker key.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'create_ticket',
       description:
         'Create a general service ticket when no specific action tool applies. ' +
@@ -245,7 +552,6 @@ async function createAndCloseTicket(pool, email, title, description, sessionId, 
 
 // ── Shared constants for executor validation ──────────────────────────────────
 const {
-  VALID_SYSTEMS,
   SYSTEM_LABELS,
   SAFE_TABLES,
   SAFE_COLUMNS,
@@ -465,6 +771,542 @@ async function executeAddToM365Group(pool, email, fnArgs, sessionId, records) {
   });
 }
 
+async function executeResetMfa(pool, email, fnArgs, sessionId) {
+  const methodId = fnArgs.method_id || null;
+  const reason = fnArgs.reason || 'User needs to re-register MFA.';
+  const title = 'Reset Microsoft 365 MFA registration';
+  const description = `Reset MFA registration for ${email}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      if (methodId) {
+        await graphClient.api(`/users/${encodeURIComponent(email)}/authentication/methods/${encodeURIComponent(methodId)}`).delete();
+        return { reset: true, email, methodsReset: 1, graphMode: graphClient.mode };
+      }
+
+      const methods = await graphClient.api(`/users/${encodeURIComponent(email)}/authentication/methods`).get();
+      const resettableMethods = (methods.value || []).filter(method => method.id);
+      for (const method of resettableMethods) {
+        await graphClient.api(`/users/${encodeURIComponent(email)}/authentication/methods/${encodeURIComponent(method.id)}`).delete();
+      }
+      return { reset: true, email, methodsReset: resettableMethods.length, graphMode: graphClient.mode };
+    }
+
+    const { rows } = await pool.query(
+      `SELECT id FROM active_directory WHERE email = $1
+       UNION ALL
+       SELECT id FROM external_users WHERE email = $1
+       LIMIT 1`,
+      [email]
+    );
+    if (rows.length === 0) {
+      throw new Error(`No local directory account found for ${email}`);
+    }
+
+    return { reset: true, email, methodsReset: methodId ? 1 : 'all', graphMode: graphClient.mode };
+  });
+}
+
+async function ensureLocalUser(pool, email) {
+  const { rows } = await pool.query(
+    `SELECT email, first_name, last_name, type, 'active_directory' AS source
+     FROM active_directory WHERE email = $1
+     UNION ALL
+     SELECT email, first_name, last_name, type, 'external_users' AS source
+     FROM external_users WHERE email = $1
+     UNION ALL
+     SELECT email, first_name, last_name, type, 'netforum_members' AS source
+     FROM netforum_members WHERE email = $1
+     LIMIT 1`,
+    [email]
+  );
+  if (rows.length === 0) {
+    throw new Error(`No local user record found for ${email}`);
+  }
+  return rows[0];
+}
+
+function graphUserPath(email, suffix) {
+  return `/users/${encodeURIComponent(email)}${suffix}`;
+}
+
+async function executeGetMfaStatus(pool, email) {
+  if (graphClient.mode === 'graph') {
+    const methods = await graphClient.api(graphUserPath(email, '/authentication/methods')).get();
+    return {
+      graphMode: graphClient.mode,
+      email,
+      enabled: (methods.value || []).length > 0,
+      methods: methods.value || [],
+    };
+  }
+
+  const user = await ensureLocalUser(pool, email);
+  return {
+    graphMode: graphClient.mode,
+    email,
+    enabled: true,
+    methods: [
+      { id: 'mock-authenticator-app', type: 'Microsoft Authenticator app' },
+      { id: 'mock-sms', type: 'SMS' },
+    ],
+    source: user.source,
+  };
+}
+
+async function executeAssignLicense(pool, email, fnArgs, sessionId) {
+  const licenseSku = fnArgs.license_sku || fnArgs.sku_id || 'E3';
+  const skuId = fnArgs.sku_id || licenseSku;
+  const reason = fnArgs.reason || `Assign ${licenseSku} license.`;
+  const title = `Assign Microsoft 365 license — ${licenseSku}`;
+  const description = `Assign ${licenseSku} license to ${email}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      await graphClient.api(graphUserPath(email, '/assignLicense')).post({
+        addLicenses: [{ skuId }],
+        removeLicenses: [],
+      });
+      return { assigned: true, email, licenseSku, skuId, graphMode: graphClient.mode };
+    }
+
+    const user = await ensureLocalUser(pool, email);
+    return { assigned: true, email, licenseSku, skuId, source: user.source, graphMode: graphClient.mode };
+  });
+}
+
+async function executeRemoveLicense(pool, email, fnArgs, sessionId) {
+  const licenseSku = fnArgs.license_sku || fnArgs.sku_id || 'E3';
+  const skuId = fnArgs.sku_id || licenseSku;
+  const reason = fnArgs.reason || `Remove ${licenseSku} license.`;
+  const title = `Remove Microsoft 365 license — ${licenseSku}`;
+  const description = `Remove ${licenseSku} license from ${email}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      await graphClient.api(graphUserPath(email, '/assignLicense')).post({
+        addLicenses: [],
+        removeLicenses: [skuId],
+      });
+      return { removed: true, email, licenseSku, skuId, graphMode: graphClient.mode };
+    }
+
+    const user = await ensureLocalUser(pool, email);
+    return { removed: true, email, licenseSku, skuId, source: user.source, graphMode: graphClient.mode };
+  });
+}
+
+async function executeGrantMailboxAccess(pool, email, fnArgs, sessionId) {
+  const delegateEmail = fnArgs.delegate_email;
+  const mailboxEmail = fnArgs.mailbox_email || email;
+  const accessLevel = fnArgs.access_level || 'read';
+  const reason = fnArgs.reason || 'Mailbox delegate access requested.';
+  const title = `Grant mailbox access — ${mailboxEmail}`;
+  const description = `Grant ${delegateEmail} ${accessLevel} access to ${mailboxEmail}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, mailboxEmail, title, description, sessionId, async () => {
+    if (!delegateEmail) throw new Error('delegate_email is required.');
+    if (graphClient.mode === 'graph') {
+      await graphClient.api(graphUserPath(mailboxEmail, '/mailFolders/inbox/messageRules')).post({
+        displayName: `Delegate access for ${delegateEmail}`,
+        isEnabled: true,
+        actions: { forwardTo: [{ emailAddress: { address: delegateEmail } }] },
+      });
+      return { granted: true, mailboxEmail, delegateEmail, accessLevel, graphMode: graphClient.mode };
+    }
+
+    await ensureLocalUser(pool, mailboxEmail);
+    await ensureLocalUser(pool, delegateEmail);
+    return { granted: true, mailboxEmail, delegateEmail, accessLevel, graphMode: graphClient.mode };
+  });
+}
+
+async function executeAddEmailAlias(pool, email, fnArgs, sessionId) {
+  const aliasEmail = fnArgs.alias_email;
+  const reason = fnArgs.reason || 'Email alias requested.';
+  const title = `Add email alias — ${aliasEmail || 'missing alias'}`;
+  const description = `Add alias ${aliasEmail} to ${email}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (!aliasEmail) throw new Error('alias_email is required.');
+    if (graphClient.mode === 'graph') {
+      const user = await graphClient.api(graphUserPath(email, '?$select=proxyAddresses')).get();
+      const proxyAddresses = Array.from(new Set([...(user.proxyAddresses || []), `smtp:${aliasEmail}`]));
+      await graphClient.api(graphUserPath(email, '')).patch({ proxyAddresses });
+      return { added: true, email, aliasEmail, graphMode: graphClient.mode };
+    }
+
+    await ensureLocalUser(pool, email);
+    return { added: true, email, aliasEmail, graphMode: graphClient.mode };
+  });
+}
+
+async function executeGetOutOfOffice(pool, email) {
+  if (graphClient.mode === 'graph') {
+    const settings = await graphClient.api(graphUserPath(email, '/mailboxSettings')).get();
+    return { graphMode: graphClient.mode, email, automaticRepliesSetting: settings.automaticRepliesSetting || null };
+  }
+
+  const user = await ensureLocalUser(pool, email);
+  return {
+    graphMode: graphClient.mode,
+    email,
+    status: 'disabled',
+    message: '',
+    source: user.source,
+  };
+}
+
+async function executeSetOutOfOffice(pool, email, fnArgs, sessionId) {
+  const message = fnArgs.message;
+  const reason = fnArgs.reason || 'Out-of-office update requested.';
+  const title = 'Set Microsoft 365 out-of-office';
+  const description = `Set out-of-office for ${email}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (!message) throw new Error('message is required.');
+    const automaticRepliesSetting = {
+      status: fnArgs.start_time || fnArgs.end_time ? 'scheduled' : 'alwaysEnabled',
+      externalAudience: 'all',
+      internalReplyMessage: message,
+      externalReplyMessage: message,
+    };
+    if (fnArgs.start_time && fnArgs.end_time) {
+      automaticRepliesSetting.scheduledStartDateTime = { dateTime: fnArgs.start_time, timeZone: 'UTC' };
+      automaticRepliesSetting.scheduledEndDateTime = { dateTime: fnArgs.end_time, timeZone: 'UTC' };
+    }
+
+    if (graphClient.mode === 'graph') {
+      await graphClient.api(graphUserPath(email, '/mailboxSettings')).patch({ automaticRepliesSetting });
+      return { updated: true, email, automaticRepliesSetting, graphMode: graphClient.mode };
+    }
+
+    await ensureLocalUser(pool, email);
+    return { updated: true, email, automaticRepliesSetting, graphMode: graphClient.mode };
+  });
+}
+
+async function executeAddToTeamsChannel(pool, email, fnArgs, sessionId) {
+  const teamId = fnArgs.team_id;
+  const channelId = fnArgs.channel_id;
+  const teamName = fnArgs.team_name || teamId || 'unspecified team';
+  const channelName = fnArgs.channel_name || channelId || 'unspecified channel';
+  const reason = fnArgs.reason || 'Teams channel access requested.';
+  const title = `Add to Teams channel — ${channelName}`;
+  const description = `Add ${email} to Teams channel ${teamName}/${channelName}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      if (!teamId || !channelId) throw new Error('team_id and channel_id are required for live Graph Teams channel membership.');
+      await graphClient.api(`/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/members`).post({
+        '@odata.type': '#microsoft.graph.aadUserConversationMember',
+        roles: [],
+        'user@odata.bind': `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(email)}`,
+      });
+      return { added: true, email, teamId, channelId, graphMode: graphClient.mode };
+    }
+
+    await ensureLocalUser(pool, email);
+    return { added: true, email, teamName, channelName, graphMode: graphClient.mode };
+  });
+}
+
+async function executeGrantOneDriveAccess(pool, email, fnArgs, sessionId) {
+  const recipientEmail = fnArgs.recipient_email;
+  const role = fnArgs.role || 'read';
+  const reason = fnArgs.reason || 'OneDrive access requested.';
+  const title = 'Grant OneDrive access';
+  const description = `Grant ${recipientEmail} ${role} access to ${email}'s OneDrive. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (!recipientEmail) throw new Error('recipient_email is required.');
+    if (graphClient.mode === 'graph') {
+      await graphClient.api(graphUserPath(email, '/drive/root/invite')).post({
+        recipients: [{ email: recipientEmail }],
+        requireSignIn: true,
+        sendInvitation: false,
+        roles: [role],
+      });
+      return { granted: true, email, recipientEmail, role, graphMode: graphClient.mode };
+    }
+
+    await ensureLocalUser(pool, email);
+    await ensureLocalUser(pool, recipientEmail);
+    return { granted: true, email, recipientEmail, role, graphMode: graphClient.mode };
+  });
+}
+
+async function executeListInactiveLicenses(pool, fnArgs) {
+  const licenseSku = fnArgs.license_sku || 'E3';
+  const inactiveDays = Number.isInteger(fnArgs.inactive_days) ? fnArgs.inactive_days : 90;
+  const monthlyCost = typeof fnArgs.monthly_cost === 'number'
+    ? fnArgs.monthly_cost
+    : parseFloat(process.env.M365_E3_MONTHLY_COST || '36');
+
+  if (graphClient.mode === 'graph') {
+    const report = await graphClient
+      .api('/reports/getOffice365ActiveUserDetail(period=\'D90\')')
+      .get();
+    return {
+      graphMode: graphClient.mode,
+      licenseSku,
+      inactiveDays,
+      report,
+      note: 'Graph reporting data returned directly; filter by Assigned Products and Last Activity Date before license removal.',
+    };
+  }
+
+  const { rows } = await pool.query(
+    `SELECT first_name, last_name, email, type, passwordlastreset, created_at
+     FROM active_directory
+     WHERE enabled = true
+       AND (passwordlastreset IS NULL OR passwordlastreset < now() - ($1::int * interval '1 day'))
+     ORDER BY passwordlastreset NULLS FIRST, created_at ASC
+     LIMIT 25`,
+    [inactiveDays]
+  );
+
+  const users = rows.map(row => ({
+    name: `${row.first_name} ${row.last_name}`,
+    email: row.email,
+    type: row.type,
+    lastActivity: row.passwordlastreset || row.created_at,
+    licenseSku,
+    estimatedMonthlySavings: monthlyCost,
+  }));
+
+  return {
+    graphMode: graphClient.mode,
+    licenseSku,
+    inactiveDays,
+    count: users.length,
+    estimatedMonthlySavings: Number((users.length * monthlyCost).toFixed(2)),
+    users,
+  };
+}
+
+async function executeListStaleGuests(pool, fnArgs) {
+  const inactiveDays = Number.isInteger(fnArgs.inactive_days) ? fnArgs.inactive_days : 90;
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 50) : 10;
+
+  if (graphClient.mode === 'graph') {
+    const guests = await graphClient
+      .api(`/users?$filter=userType eq 'Guest'&$select=id,displayName,mail,userPrincipalName,accountEnabled,signInActivity&$top=${limit}`)
+      .get();
+    return { graphMode: graphClient.mode, inactiveDays, guests: guests.value || [] };
+  }
+
+  const { rows } = await pool.query(
+    `SELECT first_name, last_name, email, type, sponsor, enabled, created_at
+     FROM external_users
+     WHERE enabled = true
+       AND (type ILIKE '%guest%' OR type ILIKE '%contractor%' OR sponsor IS NOT NULL)
+       AND created_at < now() - ($1::int * interval '1 day')
+     ORDER BY created_at ASC
+     LIMIT $2`,
+    [inactiveDays, limit]
+  );
+
+  return {
+    graphMode: graphClient.mode,
+    inactiveDays,
+    count: rows.length,
+    guests: rows.map(row => ({
+      name: `${row.first_name} ${row.last_name}`,
+      email: row.email,
+      type: row.type,
+      sponsor: row.sponsor,
+      enabled: row.enabled,
+      lastSeen: row.created_at,
+    })),
+  };
+}
+
+async function executeRevokeGuestAccess(pool, email, fnArgs, sessionId) {
+  const guestEmail = fnArgs.guest_email || email;
+  const reason = fnArgs.reason || 'Stale guest account lifecycle cleanup.';
+  const title = 'Revoke Microsoft 365 guest access';
+  const description = `Revoke guest access for ${guestEmail}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, guestEmail, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      await graphClient.api(`/users/${encodeURIComponent(guestEmail)}`).delete();
+      return { revoked: true, email: guestEmail, graphMode: graphClient.mode };
+    }
+
+    const { rowCount } = await pool.query(
+      `UPDATE external_users
+       SET enabled = false
+       WHERE email = $1
+         AND enabled = true
+         AND (type ILIKE '%guest%' OR type ILIKE '%contractor%' OR sponsor IS NOT NULL)`,
+      [guestEmail]
+    );
+
+    if (rowCount === 0) {
+      throw new Error(`No enabled local guest/external account found for ${guestEmail}`);
+    }
+
+    return { revoked: true, email: guestEmail, graphMode: graphClient.mode };
+  });
+}
+
+async function resolveGraphUserId(email, fallbackUserId) {
+  if (fallbackUserId) return fallbackUserId;
+  const user = await graphClient.api(graphUserPath(email, '?$select=id')).get();
+  if (!user.id) throw new Error(`Could not resolve Microsoft Graph user ID for ${email}`);
+  return user.id;
+}
+
+async function executeDismissRiskyUser(pool, email, fnArgs, sessionId) {
+  const targetEmail = fnArgs.user_email || email;
+  const reason = fnArgs.reason || 'Risk reviewed and confirmed as false positive.';
+  const title = 'Dismiss Microsoft Entra risky-user flag';
+  const description = `Dismiss risky-user flag for ${targetEmail}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, targetEmail, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      const userId = await resolveGraphUserId(targetEmail, fnArgs.user_id);
+      await graphClient.api('/identityProtection/riskyUsers/dismiss').post({ userIds: [userId] });
+      return { dismissed: true, email: targetEmail, userId, graphMode: graphClient.mode };
+    }
+
+    const user = await ensureLocalUser(pool, targetEmail);
+    return { dismissed: true, email: targetEmail, userId: fnArgs.user_id || user.email, graphMode: graphClient.mode };
+  });
+}
+
+async function executeListAppConsents(pool, email, fnArgs) {
+  const targetEmail = fnArgs.user_email || email;
+
+  if (graphClient.mode === 'graph') {
+    const userId = await resolveGraphUserId(targetEmail);
+    const grants = await graphClient
+      .api(`/oauth2PermissionGrants?$filter=principalId eq '${userId}'`)
+      .get();
+    return { graphMode: graphClient.mode, email: targetEmail, userId, consents: grants.value || [] };
+  }
+
+  const user = await ensureLocalUser(pool, targetEmail);
+  return {
+    graphMode: graphClient.mode,
+    email: targetEmail,
+    source: user.source,
+    consents: [
+      { id: `mock-${targetEmail}-grammarly`, appName: 'Grammarly', scopes: ['User.Read', 'Mail.Read'] },
+      { id: `mock-${targetEmail}-salesforce`, appName: 'Salesforce', scopes: ['User.Read'] },
+    ],
+  };
+}
+
+async function executeRevokeAppConsent(pool, email, fnArgs, sessionId) {
+  const targetEmail = fnArgs.user_email || email;
+  const appName = fnArgs.app_name || fnArgs.consent_id || 'specified app';
+  const reason = fnArgs.reason || 'OAuth app consent no longer approved.';
+  const title = `Revoke app consent — ${appName}`;
+  const description = `Revoke app consent for ${targetEmail}: ${appName}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, targetEmail, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      if (!fnArgs.consent_id) throw new Error('consent_id is required to revoke live Graph app consent.');
+      await graphClient.api(`/oauth2PermissionGrants/${encodeURIComponent(fnArgs.consent_id)}`).delete();
+      return { revoked: true, email: targetEmail, consentId: fnArgs.consent_id, appName, graphMode: graphClient.mode };
+    }
+
+    await ensureLocalUser(pool, targetEmail);
+    return { revoked: true, email: targetEmail, consentId: fnArgs.consent_id || `mock-${appName}`, appName, graphMode: graphClient.mode };
+  });
+}
+
+async function executeExplainCaBlock(pool, email, fnArgs) {
+  const targetEmail = fnArgs.user_email || email;
+  const appName = fnArgs.app_name || 'the requested app';
+
+  if (graphClient.mode === 'graph') {
+    const policies = await graphClient.api('/identity/conditionalAccess/policies').get();
+    return {
+      graphMode: graphClient.mode,
+      email: targetEmail,
+      appName,
+      policies: policies.value || [],
+      note: 'Graph Conditional Access policies returned for evaluation against sign-in logs and user/device state.',
+    };
+  }
+
+  await ensureLocalUser(pool, targetEmail);
+  return {
+    graphMode: graphClient.mode,
+    email: targetEmail,
+    appName,
+    likelyCaBlock: true,
+    reasons: [
+      'Device compliance is required for this cloud app.',
+      'MFA is required for external network access.',
+      'Guest or contractor accounts require approved client apps.',
+    ],
+  };
+}
+
+async function executeGetDeviceCompliance(pool, email, fnArgs) {
+  const targetEmail = fnArgs.user_email || email;
+  const deviceName = fnArgs.device_name || null;
+
+  if (graphClient.mode === 'graph') {
+    const filter = `userPrincipalName eq '${targetEmail}'`;
+    const devices = await graphClient
+      .api(`/deviceManagement/managedDevices?$filter=${encodeURIComponent(filter)}`)
+      .get();
+    const values = deviceName
+      ? (devices.value || []).filter(device => (device.deviceName || '').toLowerCase().includes(deviceName.toLowerCase()))
+      : (devices.value || []);
+    return { graphMode: graphClient.mode, email: targetEmail, deviceName, devices: values };
+  }
+
+  const user = await ensureLocalUser(pool, targetEmail);
+  return {
+    graphMode: graphClient.mode,
+    email: targetEmail,
+    devices: [
+      {
+        deviceName: deviceName || `${user.first_name || 'User'}-Laptop`,
+        complianceState: 'noncompliant',
+        os: 'macOS',
+        issue: 'Encryption policy has not reported in the last 24 hours.',
+      },
+    ],
+  };
+}
+
+async function executeGetBitlockerKey(pool, email, fnArgs, sessionId) {
+  const deviceName = fnArgs.device_name || fnArgs.device_id || fnArgs.key_id || 'specified device';
+  const reason = fnArgs.reason || 'BitLocker recovery requested for support.';
+  const title = `Retrieve BitLocker recovery key — ${deviceName}`;
+  const description = `Retrieve BitLocker recovery key for ${email}, device ${deviceName}. Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    if (graphClient.mode === 'graph') {
+      const keyPath = fnArgs.key_id
+        ? `/informationProtection/bitlocker/recoveryKeys/${encodeURIComponent(fnArgs.key_id)}?$select=id,createdDateTime,deviceId,key`
+        : `/informationProtection/bitlocker/recoveryKeys?$filter=deviceId eq '${fnArgs.device_id || ''}'`;
+      const key = await graphClient.api(keyPath).get();
+      return { retrieved: true, email, deviceName, key, graphMode: graphClient.mode };
+    }
+
+    await ensureLocalUser(pool, email);
+    return {
+      retrieved: true,
+      email,
+      deviceName,
+      key: {
+        id: fnArgs.key_id || 'mock-bitlocker-key',
+        deviceId: fnArgs.device_id || 'mock-device-id',
+        recoveryKey: '111111-222222-333333-444444-555555-666666-777777-888888',
+      },
+      graphMode: graphClient.mode,
+    };
+  });
+}
+
 // ── Agent: system prompt ──────────────────────────────────────────────────────
 
 const AGENT_SYSTEM_PROMPT = `You are a helpful agent embedded in a user-card panel. You have context about the user's records across multiple systems (Active Directory, NetForum, External Users, Distribution Groups, M365 Groups, etc.).
@@ -477,6 +1319,25 @@ You can perform real actions on user accounts. When the user asks you to take an
 - **update_attribute**: Change a specific field (email, first_name, last_name, type, sponsor) in a specific system. Determine which system to target from the user context.
 - **add_to_group**: Add the user to a distribution group (mailing list) by name.
 - **add_to_m365_group**: Add the user to a Microsoft 365 group (M365, Security, or Teams group) by name. Optionally specify the role (member or owner).
+- **reset_mfa**: Reset the user's Microsoft 365 MFA registration so they can re-register.
+- **get_mfa_status**: Check registered Microsoft 365 MFA/authentication methods. Read-only; no ticket is created.
+- **assign_license**: Assign a Microsoft 365 license to the user.
+- **remove_license**: Remove a Microsoft 365 license from the user.
+- **grant_mailbox_access**: Grant delegate mailbox access.
+- **add_email_alias**: Add an email alias/proxy address.
+- **get_out_of_office**: Check the user's out-of-office setting. Read-only; no ticket is created.
+- **set_out_of_office**: Set the user's out-of-office message.
+- **add_to_teams_channel**: Add the user to a Teams channel.
+- **grant_onedrive_access**: Grant another user access to this user's OneDrive.
+- **list_inactive_licenses**: Find likely unused Microsoft 365 licenses and estimate monthly savings. Read-only; no ticket is created.
+- **list_stale_guests**: Find stale guest/external accounts. Read-only; no ticket is created.
+- **revoke_guest_access**: Revoke a stale guest/external user's access. Creates and auto-closes a ticket on success.
+- **dismiss_risky_user**: Dismiss a Microsoft Entra risky-user flag after investigation.
+- **list_app_consents**: List OAuth app consent grants for a user. Read-only; no ticket is created.
+- **revoke_app_consent**: Revoke an OAuth app consent grant.
+- **explain_ca_block**: Explain likely Conditional Access policy blocks. Read-only; no ticket is created.
+- **get_device_compliance**: Get Intune managed-device compliance details. Read-only; no ticket is created.
+- **get_bitlocker_key**: Retrieve a BitLocker recovery key with a ticket audit trail.
 - **create_ticket**: Only use this as a fallback for requests that don't fit the above tools.
 
 Each action tool will: create a ticket → execute the action → auto-close the ticket if successful. If the action fails, the ticket stays open for manual follow-up.
@@ -486,6 +1347,7 @@ CROSS-SYSTEM AWARENESS:
 - You can provision accounts across systems (e.g. a user who only has a NetForum account can be provisioned into Active Directory).
 - You can add any user to a distribution group or M365 group regardless of which system(s) they currently exist in.
 - When provisioning cross-system, extract name and email from whichever source record is available.
+- Microsoft 365 governance tools may inspect tenant-level data, not just the displayed user. Clearly state when results are local demo estimates rather than live Graph data.
 
 GROUP TYPES:
 - Distribution groups = mailing lists → use add_to_group
@@ -537,8 +1399,8 @@ async function chatWithOllamaTools(messages, tools) {
 async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
   const fnName = toolCall.function?.name;
   const fnArgs = toolCall.function?.arguments || {};
-  let toolResultContent = '';
-  let ticket = null;
+  let toolResultContent;
+  let ticket;
 
   switch (fnName) {
     case 'provision_account': {
@@ -619,6 +1481,232 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
       break;
     }
 
+    case 'reset_mfa': {
+      const { ticket: t, actionResult } = await executeResetMfa(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.reset || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'reset_mfa',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'get_mfa_status': {
+      const actionResult = await executeGetMfaStatus(pool, email);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'get_mfa_status',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'assign_license': {
+      const { ticket: t, actionResult } = await executeAssignLicense(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.assigned || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'assign_license',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'remove_license': {
+      const { ticket: t, actionResult } = await executeRemoveLicense(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.removed || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'remove_license',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'grant_mailbox_access': {
+      const { ticket: t, actionResult } = await executeGrantMailboxAccess(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.granted || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'grant_mailbox_access',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'add_email_alias': {
+      const { ticket: t, actionResult } = await executeAddEmailAlias(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.added || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'add_email_alias',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'get_out_of_office': {
+      const actionResult = await executeGetOutOfOffice(pool, email);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'get_out_of_office',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'set_out_of_office': {
+      const { ticket: t, actionResult } = await executeSetOutOfOffice(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.updated || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'set_out_of_office',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'add_to_teams_channel': {
+      const { ticket: t, actionResult } = await executeAddToTeamsChannel(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.added || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'add_to_teams_channel',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'grant_onedrive_access': {
+      const { ticket: t, actionResult } = await executeGrantOneDriveAccess(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.granted || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'grant_onedrive_access',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_inactive_licenses': {
+      const actionResult = await executeListInactiveLicenses(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_inactive_licenses',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_stale_guests': {
+      const actionResult = await executeListStaleGuests(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_stale_guests',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'revoke_guest_access': {
+      const { ticket: t, actionResult } = await executeRevokeGuestAccess(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.revoked || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'revoke_guest_access',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'dismiss_risky_user': {
+      const { ticket: t, actionResult } = await executeDismissRiskyUser(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.dismissed || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'dismiss_risky_user',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_app_consents': {
+      const actionResult = await executeListAppConsents(pool, email, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_app_consents',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'revoke_app_consent': {
+      const { ticket: t, actionResult } = await executeRevokeAppConsent(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.revoked || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'revoke_app_consent',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'explain_ca_block': {
+      const actionResult = await executeExplainCaBlock(pool, email, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'explain_ca_block',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'get_device_compliance': {
+      const actionResult = await executeGetDeviceCompliance(pool, email, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'get_device_compliance',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'get_bitlocker_key': {
+      const { ticket: t, actionResult } = await executeGetBitlockerKey(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.retrieved || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'get_bitlocker_key',
+        ...actionResult,
+      });
+      break;
+    }
+
     case 'create_ticket': {
       const { title, description } = fnArgs;
       const result = await pool.query(
@@ -658,6 +1746,22 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
           'Update an attribute (email, name, type, sponsor) in a specific system — executed immediately.',
           'Add a user to a distribution group (mailing list) — executed immediately.',
           'Add a user to a Microsoft 365 group (M365, Security, or Teams group) — executed immediately with a configurable role (member or owner).',
+          'Reset Microsoft 365 MFA registration — executed immediately with a ticket audit trail.',
+          'Check Microsoft 365 MFA status — read-only.',
+          'Assign or remove Microsoft 365 licenses — executed immediately with a ticket audit trail.',
+          'Grant mailbox delegate access — executed immediately with a ticket audit trail.',
+          'Add an email alias — executed immediately with a ticket audit trail.',
+          'Check or set out-of-office — status checks are read-only; updates create a ticket audit trail.',
+          'Add a user to a Teams channel — executed immediately with a ticket audit trail.',
+          'Grant OneDrive access — executed immediately with a ticket audit trail.',
+          'List inactive Microsoft 365 licenses with estimated savings — read-only.',
+          'List stale guest accounts — read-only.',
+          'Revoke guest access — executed immediately with a ticket audit trail.',
+          'Dismiss Microsoft Entra risky-user flags — executed immediately with a ticket audit trail.',
+          'List and revoke OAuth app consents — listing is read-only; revocation creates a ticket audit trail.',
+          'Explain Conditional Access blocks — read-only.',
+          'Get device compliance details — read-only.',
+          'Retrieve BitLocker recovery keys — creates a ticket audit trail.',
           'Create a general service ticket for anything else (stays open for manual follow-up).',
           'List open tickets for the current user.',
         ],

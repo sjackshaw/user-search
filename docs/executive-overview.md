@@ -16,7 +16,7 @@ User Search is a proof-of-concept platform that consolidates all six lines of us
 
 1. **Intelligent Search** — A support analyst types a name, an email fragment, or a plain-English description of the issue. The system uses vector search (semantic similarity, not just keyword matching) to surface every related record across all six data sources instantly. The analyst sees the complete picture — Active Directory status, netForum membership, group memberships, activity logs, permissions — in one place, without asking another team.
 
-2. **AI-Powered Actions** — From that same view, the analyst can issue natural-language instructions to an AI agent: *"Provision a netForum account for this user," "Disable this account across all systems," "Add this user to the Marketing distribution group."* The agent executes the action, creates an auditable ticket, and confirms the result. No handoff required.
+2. **AI-Powered Actions** — From that same view, the analyst can issue natural-language instructions to an AI agent: *"Provision a netForum account for this user," "Reset this user's MFA," "Show stale guest accounts," "Explain this Conditional Access block."* The agent executes the action or governance lookup, creates auditable tickets for write operations and sensitive reads, and confirms the result. No handoff required.
 
 The result is that the **first-line support team can both diagnose and resolve** the majority of user issues that currently require multi-team coordination.
 
@@ -30,7 +30,7 @@ For the technology leaders in the room, a brief look under the hood:
 |---|---|---|
 | **Data Ingestion (ETL)** | Six automated pipelines pull user data from each source system on a scheduled basis, detect changes, and load records into a central database. Each record is converted into a numerical vector (embedding) that captures its semantic meaning. | Node.js services, PostgreSQL with pgvector, SBERT embeddings (all-MiniLM-L6-v2) |
 | **Search** | When an analyst searches, the query is converted into the same vector space and matched against all records using cosine similarity. This enables fuzzy, context-aware matching — not just exact keyword hits. Cross-source intersection queries show which systems a user exists in and where gaps are. | pgvector HNSW indexes, stored procedures, Express API |
-| **AI Agent** | A large language model receives the analyst's request along with the user's data context. It determines the correct action, calls the appropriate tool (provision, disable, reset, update, add to group), executes it, and responds in plain English. Every action generates a service ticket for audit. | Ollama `qwen2.5:3b` (local dev only); Amazon Bedrock (production), LLM tool-calling, nine integrated tools |
+| **AI Agent** | A large language model receives the analyst's request along with the user's data context. It determines the correct tool across account operations, Microsoft 365 service desk actions, and governance checks, then responds in plain English. Write actions and sensitive reads generate service tickets for audit. | Ollama `qwen2.5:3b` (local dev only); Amazon Bedrock (production), LLM tool-calling, 28 integrated tools, Microsoft Graph client |
 | **Application** | A web interface where analysts search for users, view consolidated records, and interact with the AI agent — all in one screen. | Express, server-rendered UI |
 
 All components run as Docker containers and can be started with a single command.
@@ -67,8 +67,8 @@ The architecture — ingest data from multiple sources, vectorize it, serve a un
 
 A natural next application is **member search**: consolidating all lines of member data into a single view, similar to what this platform does for users, but extending to include specialized data such as:
 
-- Cyber goals 
-- Form 7 
+- Cyber goals
+- Form 7
 - Certification and credential records
 - Engagement and activity history across systems
 

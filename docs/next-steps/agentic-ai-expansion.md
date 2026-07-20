@@ -102,78 +102,6 @@ const ROLE_TOOL_ALLOWLIST = {
 
 ---
 
-## 4. Extended M365 Tenant Capabilities
-
-The following tools extend the agent beyond the current six-action set. Each maps to a Graph API call and is grouped by audience. All actions follow the same `createAndCloseTicket()` pattern — ticket opened, Graph call executed, ticket auto-closed on success.
-
-### 4.1 Service Desk Tools (Tier-1 Ticket Elimination)
-
-| Tool name | User prompt example | Graph API call | Ticket auto-closes? |
-|---|---|---|---|
-| `reset_mfa` | *"Reset Jane's MFA so she can re-register"* | `DELETE /users/{id}/authentication/methods/{methodId}` | Yes |
-| `get_mfa_status` | *"Does John have MFA enabled?"* | `GET /users/{id}/authentication/methods` | Read-only — no ticket |
-| `assign_license` | *"Assign an E3 license to this user"* | `POST /users/{id}/assignLicense` | Yes |
-| `remove_license` | *"Remove the Visio license from this user"* | `POST /users/{id}/assignLicense` (removeLicenses) | Yes |
-| `grant_mailbox_access` | *"Give Sarah delegate access to Tom's mailbox"* | `POST /users/{id}/mailFolders/inbox/messageRules` / EWS | Yes |
-| `add_email_alias` | *"Add j.smith@corp.com as an alias for Jane"* | `PATCH /users/{id}` (proxyAddresses) | Yes |
-| `get_out_of_office` | *"Is John's out-of-office on?"* | `GET /users/{id}/mailboxSettings` | Read-only — no ticket |
-| `set_out_of_office` | *"Set Jane's OOF message to 'Back 23 June'"* | `PATCH /users/{id}/mailboxSettings` | Yes |
-| `add_to_teams_channel` | *"Add Jane to the #project-alpha channel"* | `POST /teams/{teamId}/channels/{channelId}/members` | Yes |
-| `grant_onedrive_access` | *"Give Sarah read access to Tom's OneDrive"* | `POST /drives/{id}/root/permissions` | Yes |
-
-### 4.2 Governance Tools
-
-| Tool name | User prompt example | Graph API call | Ticket auto-closes? |
-|---|---|---|---|
-| `list_inactive_licenses` | *"Which users have unused E3 licenses?"* | `GET /reports/getOffice365ActiveUserDetail` | Read-only — no ticket |
-| `list_stale_guests` | *"Show guest accounts with no sign-in for 90 days"* | `GET /users?$filter=userType eq 'Guest'` + `signInActivity` | Read-only — no ticket |
-| `revoke_guest_access` | *"Revoke access for the Contoso guest account"* | `DELETE /users/{id}` or disable | Yes |
-| `dismiss_risky_user` | *"Dismiss the risk flag on Jane — it's a false positive"* | `POST /identityProtection/riskyUsers/dismiss` | Yes |
-| `list_app_consents` | *"What apps has John granted access to?"* | `GET /oauth2PermissionGrants?$filter=principalId eq '{id}'` | Read-only — no ticket |
-| `revoke_app_consent` | *"Revoke access for the 'Grammarly' app for John"* | `DELETE /oauth2PermissionGrants/{id}` | Yes |
-| `explain_ca_block` | *"Why is Jane blocked from Salesforce?"* | `GET /identity/conditionalAccess/policies` (evaluate) | Read-only — no ticket |
-| `get_device_compliance` | *"Why is John's laptop non-compliant?"* | `GET /deviceManagement/managedDevices?$filter=userPrincipalName eq '...'` | Read-only — no ticket |
-| `get_bitlocker_key` | *"Retrieve the BitLocker key for John's laptop"* | `GET /informationProtection/bitlockerRecoveryKeys` | Yes (audit trail) |
-
-### 4.3 Tool Implementation Pattern
-
-All new tools follow the same pattern as existing executors. Add each to `AGENT_TOOLS` in `services/genai/index.js` and create a corresponding `execute<ToolName>()` function. The only new dependency is a Graph API client:
-
-```js
-// services/genai/graph-client.js
-const { ClientSecretCredential } = require('@azure/identity');
-const { Client } = require('@microsoft/microsoft-graph-client');
-const { TokenCredentialAuthenticationProvider } = require(
-  '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials'
-);
-
-const credential = new ClientSecretCredential(
-  process.env.ENTRA_TENANT_ID,
-  process.env.ENTRA_CLIENT_ID,
-  process.env.ENTRA_CLIENT_SECRET
-);
-
-const authProvider = new TokenCredentialAuthenticationProvider(credential, {
-  scopes: ['https://graph.microsoft.com/.default'],
-});
-
-module.exports = Client.initWithMiddleware({ authProvider });
-```
-
-Each executor then uses `graphClient.api('/users/...').get()` / `.patch()` / `.post()` / `.delete()` instead of `pool.query()`.
-
-### 4.4 Hackathon Priority Subset
-
-For the initial presentation, the four highest-impact capabilities are:
-
-| Capability | Why it lands |
-|---|---|
-| **MFA reset** (`reset_mfa`) | Universal pain point — everyone has filed or received this ticket. Resolving it from a Teams chat in under 10 seconds is immediately understood. |
-| **Inactive license detection** (`list_inactive_licenses`) | Produces a concrete cost-savings number that can go on a slide: "X unused E3 licenses at $Y/month." |
-| **Guest user lifecycle** (`list_stale_guests` + `revoke_guest_access`) | Compliance and access hygiene; guests with no sign-in for 90+ days are an easy win to quantify. |
-
----
-
 ## 5. Security Considerations for Remaining Work
 
 | Item | Concern | Mitigation |
@@ -190,9 +118,6 @@ For the initial presentation, the four highest-impact capabilities are:
 
 - [ ] Agent tickets are created and closed via the ServiceNow API rather than the local `agent_tickets` table
 - [ ] An `operator`-role user can invoke all action tools; a `viewer`-role user receives `HTTP 403`
-- [ ] `list_inactive_licenses` returns a list of users with unactivated licenses, sourced live from Graph reporting API
-- [ ] `list_app_consents` and `revoke_app_consent` read and modify OAuth2 permission grants for a specified user
-- [ ] `list_stale_guests` and `revoke_guest_access` identify and remove guest accounts inactive for a configurable number of days
 - [ ] All governance tools (`dismiss_risky_user`, `get_bitlocker_key`, `revoke_app_consent`) are restricted to `admin` role and generate a ServiceNow audit ticket regardless of outcome
 
 ---

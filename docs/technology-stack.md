@@ -67,6 +67,18 @@ Ollama runs as a sidecar Docker container (`ollama/ollama`) for local developmen
 | Context window | 4096 tokens |
 | Tool calling | Ollama native tool-call interface |
 
+### GenAI Agent Tools
+
+The user-card GenAI agent exposes 28 tool-calling capabilities grouped by scope:
+
+| Group | Examples | Audit behavior |
+|---|---|---|
+| Account operations | Provision account, disable account, reset password, update attributes, add distribution or M365 group membership | Write actions create and auto-close `agent_tickets` on success |
+| Microsoft 365 service desk | MFA reset/status, license assignment/removal, mailbox access, aliases, out-of-office, Teams channel membership, OneDrive access | Read-only checks skip tickets; write actions create audit tickets |
+| Governance | Inactive licenses, stale guests, guest revocation, risky-user dismissal, app consents, Conditional Access explanation, device compliance, BitLocker recovery | Read-only checks skip tickets except BitLocker key retrieval, which is always ticketed |
+
+Microsoft Graph integration is centralized in `services/genai/graph-client.js`. Local development uses a safe mock client unless `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, and `ENTRA_CLIENT_SECRET` are configured.
+
 ---
 
 ## ETL & Scheduling
@@ -76,6 +88,7 @@ Ollama runs as a sidecar Docker container (`ollama/ollama`) for local developmen
 | **node-cron** | ^3.0.3 | Cron-based scheduling for ETL pipeline runs |
 
 Each ETL service is a long-running containerised process that:
+
 1. Loads the SBERT model at startup
 2. Reads source JSON data
 3. Vectorises records in configurable batches (`BATCH_SIZE=64`)
@@ -117,6 +130,7 @@ Each ETL service is a long-running containerised process that:
 | **Jest** | ^29.0.0 | Unit and data-shape test runner |
 
 Tests cover:
+
 - Query parser logic (source aliases, intersection detection, attribute filters, preprocessing)
 - GenAI validation module (safe identifiers, target system validation, SQL injection prevention)
 - ETL data-shape validation for all 6 source datasets
@@ -154,7 +168,7 @@ Tests cover:
 
 ## Vector Search Pipeline (end to end)
 
-```
+```text
 Source JSON → ETL service → SBERT (all-MiniLM-L6-v2) → 384-dim vector
   → PostgreSQL + pgvector → HNSW index (cosine distance)
   → Stored procedure (sp_search_all_sources / sp_search_filtered)
@@ -164,15 +178,18 @@ Source JSON → ETL service → SBERT (all-MiniLM-L6-v2) → 384-dim vector
 ## Agent Pipeline (end to end)
 
 **Local development (Ollama):**
-```
+
+```text
 User prompt → Express API → Ollama (qwen2.5:3b) → Tool call decision
-  → Tool executor → PostgreSQL action → Ticket created
+  → Tool executor → PostgreSQL action or Graph mock → Ticket when required
   → Tool result → Ollama (follow-up) → Natural-language reply → Browser
 ```
 
 **Production (Amazon Bedrock):**
-```
+
+```text
 User prompt → Express API (EKS pod) → Bedrock converse API → Tool call decision
-  → Tool executor → RDS action (via RDS Proxy) → Ticket created
+  → Tool executor → RDS action (via RDS Proxy), Microsoft Graph, or ITSM API
+  → Ticket when required
   → Tool result → Bedrock (follow-up) → Natural-language reply → Browser
 ```
