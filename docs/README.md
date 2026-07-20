@@ -2,7 +2,7 @@
 
 ## Overview
 
-User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) can perform actions on user accounts via tool calling.
+User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered user-card agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) exposes 28 tool-calling actions for account operations, Microsoft 365 service desk workflows, and governance checks.
 
 See [technology-stack.md](technology-stack.md) for a full inventory of every technology in the solution.  
 See [etl-architecture.md](etl-architecture.md) for the ETL pipeline and database schema reference.  
@@ -18,7 +18,7 @@ See [code-quality-review.md](code-quality-review.md) for the comprehensive code 
 | [code-quality-review.md](code-quality-review.md) | Severity-ranked code quality findings with recommended tests |
 | [diagrams/](diagrams/README.md) | 9 Mermaid diagrams (C4, ER, sequence, state, AWS target architecture) |
 | [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) | AWS production architecture — RDS, Lambda, EKS, Bedrock |
-| [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Agentic AI status, multi-step agent design, and Member Benefits Bot (App A) plan |
+| [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Remaining agent production hardening and Member Benefits Bot (App A) plan |
 | [next-steps/genai-production-update.md](next-steps/genai-production-update.md) | How to turn PoC agent actions into real authenticated API calls |
 | [next-steps/saml-access-management.md](next-steps/saml-access-management.md) | SAML-based access management integration plan |
 | [security/](security/) | Security review findings (4 reports) |
@@ -32,6 +32,7 @@ The fastest way to get everything running is the bootstrap script in the `startu
 ```
 
 The script will:
+
 1. Verify Docker is installed and running
 2. Create a `.env` file with sensible defaults (if one doesn't exist)
 3. Build all Docker images in parallel
@@ -40,7 +41,7 @@ The script will:
 6. Start all ETL, app, and GenAI services
 7. Pull the Ollama LLM model on first run
 
-Once complete the app is available at **http://localhost:3000**.
+Once complete the app is available at **[http://localhost:3000](http://localhost:3000)**.
 
 To tear down:
 
@@ -87,7 +88,14 @@ On first run, pull the model once:
 docker exec user-search-ollama-1 ollama pull qwen2.5:3b
 ```
 
-The chat UI is available at `http://localhost:3000`. The GenAI service powers the user-card agent (LLM tool-calling) at `http://localhost:3001/api/agent`.
+The browser UI is available at `http://localhost:3000`. Search for a user and open a detail card to use the embedded User Card Agent. Agent buttons are grouped by scope:
+
+- **Current User Options** — user-scoped service desk actions such as MFA reset/status, license assignment/removal, mailbox access, aliases, out-of-office, Teams channel membership, and OneDrive access.
+- **General use** — tenant/governance actions such as inactive licenses, stale guests, app consents, Conditional Access blocks, device compliance, BitLocker recovery, and risk dismissal.
+
+The GenAI service powers the user-card agent at `http://localhost:3001/api/agent`; health is available at `http://localhost:3001/health`.
+
+Microsoft Graph integration is centralized in `services/genai/graph-client.js`. Local development runs in safe `mock` mode unless `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, and `ENTRA_CLIENT_SECRET` are configured.
 
 ### Seeding historical change data
 
@@ -153,12 +161,13 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `docs/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, Fargate migration plan |
 | `docs/diagrams/aws-target-architecture.md` | Mermaid diagram — AWS target architecture (VPC, ALB, Lambda, RDS) |
 | `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
-| `services/genai/` | GenAI service: LLM tool-calling agent, action executors, ticket management |
+| `services/genai/` | GenAI service: 28-tool LLM agent, action executors, Graph client, ticket management |
+| `services/genai/graph-client.js` | Microsoft Graph client wrapper with local mock fallback |
 | `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
 | `infra/db/init/15_agent_tickets.sql` | `agent_tickets` table schema |
 | `docs/technology-stack.md` | Complete inventory of every technology, library, model, and tool |
 | `docs/code-quality-review.md` | Comprehensive code quality audit with severity-ranked findings |
-| `docs/next-steps/agentic-ai-expansion.md` | Agentic AI implementation status and architecture |
+| `docs/next-steps/agentic-ai-expansion.md` | Remaining agent production hardening and Member Benefits Bot plan |
 | `docs/next-steps/genai-production-update.md` | How to turn PoC agent actions into real API calls |
 | `docs/security/findings4.md` | Security review: agentic AI findings |
 | `seed_change_logs.py` | Generates seed SQL for `source_change_logs` and `etl_job_logs` historical data |
@@ -191,7 +200,7 @@ On macOS Docker Desktop, named volumes may perform better for the Postgres data 
 
 Create a local `.env.dev` (add to `.gitignore`) with dev secrets, e.g.:
 
-```
+```dotenv
 POSTGRES_PASSWORD=postgres
 PGPASSWORD=postgres
 ```

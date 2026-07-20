@@ -106,6 +106,17 @@
     .agent-input-row button{padding:9px 16px;background:#7c3aed;color:#fff;border:none;border-radius:20px;font-size:.88rem;cursor:pointer;font-weight:600;transition:background .15s;flex-shrink:0}
     .agent-input-row button:hover:not(:disabled){background:#6d28d9}
     .agent-input-row button:disabled{opacity:.55;cursor:default}
+    .agent-quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .agent-action-group{border:1px solid #e9d5ff;border-radius:8px;background:#fff;padding:9px 10px}
+    .agent-action-label{display:block;font-size:.7rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#6b21a8;margin-bottom:7px}
+    .agent-action-buttons{display:flex;gap:6px;flex-wrap:wrap}
+    .agent-action-buttons button{border-radius:999px;cursor:pointer;font-size:.74rem;font-weight:600;padding:5px 8px;transition:background .15s,border-color .15s,color .15s}
+    .agent-action-buttons button:disabled{opacity:.55;cursor:default}
+    .agent-action-buttons .user-option{background:#f5f3ff;border:1px solid #c4b5fd;color:#5b21b6}
+    .agent-action-buttons .user-option:hover:not(:disabled){background:#ede9fe;border-color:#a78bfa}
+    .agent-action-buttons .general-option{background:#ecfeff;border:1px solid #67e8f9;color:#155e75}
+    .agent-action-buttons .general-option:hover:not(:disabled){background:#cffafe;border-color:#22d3ee}
+    @media (max-width:560px){.agent-quick-actions{grid-template-columns:1fr}}
     .agent-thinking{padding:8px 12px;border-radius:10px;background:#ede9fe;font-size:.84rem;color:#888;font-style:italic;align-self:flex-start}
     .agent-tickets-section{margin-top:14px}
     .tickets-header{font-size:.9rem;font-weight:700;color:#6b21a8;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #ede9fe}
@@ -344,6 +355,37 @@
             <div class="agent-input-row">
               <input type="text" id="agent-input" placeholder="Ask the agent to take an action…" autocomplete="off" />
               <button id="agent-send">Send</button>
+            </div>
+            <div class="agent-quick-actions" aria-label="Agent quick actions">
+              <div class="agent-action-group">
+                <span class="agent-action-label">Current User Options</span>
+                <div class="agent-action-buttons">
+                  <button type="button" class="user-option" data-agent-prompt="Reset this user's MFA so they can re-register">Reset MFA</button>
+                  <button type="button" class="user-option" data-agent-prompt="Does this user have MFA enabled?">MFA status</button>
+                  <button type="button" class="user-option" data-agent-prompt="Assign an E3 license to this user">Assign license</button>
+                  <button type="button" class="user-option" data-agent-prompt="Remove the Visio license from this user">Remove license</button>
+                  <button type="button" class="user-option" data-agent-prompt="Grant delegate mailbox access for this user">Mailbox access</button>
+                  <button type="button" class="user-option" data-agent-prompt="Add an email alias to this user">Add alias</button>
+                  <button type="button" class="user-option" data-agent-prompt="Is this user's out-of-office on?">OOF status</button>
+                  <button type="button" class="user-option" data-agent-prompt="Set this user's out-of-office message">Set OOF</button>
+                  <button type="button" class="user-option" data-agent-prompt="Add this user to a Teams channel">Teams channel</button>
+                  <button type="button" class="user-option" data-agent-prompt="Grant OneDrive access for this user">OneDrive access</button>
+                </div>
+              </div>
+              <div class="agent-action-group">
+                <span class="agent-action-label">General use</span>
+                <div class="agent-action-buttons">
+                  <button type="button" class="general-option" data-agent-prompt="Which users have unused E3 licenses?">Unused E3 licenses</button>
+                  <button type="button" class="general-option" data-agent-prompt="Show guest accounts inactive for 90 days">Stale guests</button>
+                  <button type="button" class="general-option" data-agent-prompt="Revoke guest access for this user because the account is stale">Revoke guest access</button>
+                  <button type="button" class="general-option" data-agent-prompt="Dismiss the risk flag for this user as a false positive">Dismiss risk</button>
+                  <button type="button" class="general-option" data-agent-prompt="What apps has this user granted access to?">App consents</button>
+                  <button type="button" class="general-option" data-agent-prompt="Revoke app consent for this user">Revoke consent</button>
+                  <button type="button" class="general-option" data-agent-prompt="Why is this user blocked by Conditional Access?">CA block</button>
+                  <button type="button" class="general-option" data-agent-prompt="Get device compliance for this user">Device compliance</button>
+                  <button type="button" class="general-option" data-agent-prompt="Retrieve the BitLocker key for this user's laptop">BitLocker key</button>
+                </div>
+              </div>
             </div>
             <div id="agent-error" class="agent-error" style="display:none"></div>
           </div>
@@ -740,6 +782,12 @@
       agentInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); sendAgentPrompt(); }
       });
+      document.querySelectorAll('[data-agent-prompt]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          agentInput.value = btn.dataset.agentPrompt || '';
+          sendAgentPrompt();
+        });
+      });
     }
 
     // Simple markdown-to-HTML renderer for agent messages
@@ -790,6 +838,7 @@
       agentInput.value = '';
       agentInput.disabled = true;
       agentSend.disabled = true;
+      document.querySelectorAll('[data-agent-prompt]').forEach(btn => { btn.disabled = true; });
       _agentSending = true;
 
       appendAgentMessage('user', prompt);
@@ -853,6 +902,7 @@
       } finally {
         agentInput.disabled = false;
         agentSend.disabled = false;
+        document.querySelectorAll('[data-agent-prompt]').forEach(btn => { btn.disabled = false; });
         _agentSending = false;
         agentInput.focus();
       }
