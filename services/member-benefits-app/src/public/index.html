@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Member Benefits Bot</title>
+  <style>
+    :root {
+      --ink: #172026;
+      --muted: #64727d;
+      --line: #d7e0df;
+      --paper: #fbfaf6;
+      --panel: #ffffff;
+      --teal: #0f766e;
+      --teal-dark: #115e59;
+      --gold: #c98b2e;
+      --rose: #b84a62;
+      --shadow: 0 18px 44px rgba(30, 41, 59, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(15,118,110,.12), transparent 32%),
+        radial-gradient(circle at 78% 8%, rgba(201,139,46,.22), transparent 28%),
+        repeating-linear-gradient(90deg, rgba(23,32,38,.035) 0 1px, transparent 1px 48px),
+        var(--paper);
+      font-family: Avenir Next, Trebuchet MS, sans-serif;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(251, 250, 246, .9);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    h1 { margin: 0; font-size: 24px; letter-spacing: 0; }
+    h2 { margin: 0 0 14px; font-size: 17px; letter-spacing: 0; }
+    p { margin: 0; color: var(--muted); }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      gap: 20px;
+      padding: 24px;
+      max-width: 1380px;
+      margin: 0 auto;
+    }
+
+    section, aside {
+      background: rgba(255, 255, 255, .88);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+    }
+
+    aside { padding: 18px; align-self: start; position: sticky; top: 86px; }
+    section { padding: 18px; }
+
+    label { display: block; margin: 14px 0 6px; color: var(--muted); font-size: 13px; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      font: inherit;
+      background: white;
+      color: var(--ink);
+    }
+
+    textarea { min-height: 92px; resize: vertical; }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      background: var(--teal);
+      color: white;
+      font: inherit;
+      font-weight: 700;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    button.secondary { background: #e8efee; color: var(--teal-dark); }
+    button.warn { background: var(--rose); }
+    button:hover { filter: brightness(.96); }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .layout { display: grid; gap: 20px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .metric { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .metric strong { display: block; font-size: 24px; margin-top: 4px; }
+
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
+    .status { color: var(--muted); font-size: 13px; }
+    .pill { display: inline-block; border-radius: 999px; padding: 3px 8px; background: #eef6f4; color: var(--teal-dark); font-size: 12px; }
+    .answer { white-space: pre-wrap; background: #f7fbfa; border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-height: 76px; }
+
+    @media (max-width: 820px) {
+      header { align-items: flex-start; flex-direction: column; }
+      main { grid-template-columns: 1fr; padding: 16px; }
+      aside { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Member Benefits Bot</h1>
+      <p>Member-scoped claims, plan details, deductible status, and generated benefit documents.</p>
+    </div>
+    <span class="pill">Port 3002</span>
+  </header>
+
+  <main>
+    <aside>
+      <h2>Member Session</h2>
+      <p class="status">Local SAML stand-in: choose a netForum-backed member email.</p>
+      <label for="memberEmail">Member email</label>
+      <input id="memberEmail" list="memberList" autocomplete="off">
+      <datalist id="memberList"></datalist>
+      <div class="toolbar">
+        <button id="loadSession">Load Member</button>
+      </div>
+      <p id="sessionStatus" class="status"></p>
+
+      <label for="prompt">Ask the bot</label>
+      <textarea id="prompt">Do I have any open claims?</textarea>
+      <div class="toolbar">
+        <button id="askBot">Ask</button>
+        <button class="secondary" id="clearOutput">Clear</button>
+      </div>
+    </aside>
+
+    <div class="layout">
+      <section>
+        <h2>Quick Actions</h2>
+        <div class="button-grid">
+          <button data-action="openClaims">Open Claims</button>
+          <button data-action="summary">Claims Summary</button>
+          <button data-action="deductible">Deductible Status</button>
+          <button data-action="planDental">Dental Plan</button>
+          <button data-action="searchDental">Search Dental Claims</button>
+          <button data-doc="annual_spending">Annual Spending</button>
+          <button data-doc="tax_document">Tax Document</button>
+          <button data-doc="spd">SPD</button>
+          <button data-doc="eob">EOB</button>
+          <button data-doc="enrollment_form">Enrollment Form</button>
+          <button data-doc="beneficiary_form">Beneficiary Form</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Result</h2>
+        <div class="answer" id="answer">Load a member to begin.</div>
+      </section>
+
+      <section>
+        <h2>Claims</h2>
+        <div class="cards" id="metrics"></div>
+        <div style="overflow:auto; margin-top: 14px;">
+          <table>
+            <thead>
+              <tr><th>Claim</th><th>Type</th><th>Provider</th><th>Date</th><th>Status</th><th>Billed</th><th>Paid</th></tr>
+            </thead>
+            <tbody id="claimRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const apiKey = window.APP_API_KEY || '';
+    const memberEmail = document.getElementById('memberEmail');
+    const memberList = document.getElementById('memberList');
+    const sessionStatus = document.getElementById('sessionStatus');
+    const answer = document.getElementById('answer');
+    const claimRows = document.getElementById('claimRows');
+    const metrics = document.getElementById('metrics');
+    const promptBox = document.getElementById('prompt');
+    let currentMember = null;
+    let lastClaims = [];
+
+    function headers() {
+      const h = { 'Content-Type': 'application/json' };
+      if (apiKey) h['x-api-key'] = apiKey;
+      if (memberEmail.value) h['x-member-email'] = memberEmail.value;
+      return h;
+    }
+
+    function money(value) {
+      return Number(value || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+
+    async function request(url, options = {}) {
+      const res = await fetch(url, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Request failed');
+      return body;
+    }
+
+    function showJson(label, data) {
+      answer.textContent = `${label}\n${JSON.stringify(data, null, 2)}`;
+    }
+
+    function renderClaims(claims) {
+      lastClaims = claims || [];
+      claimRows.innerHTML = lastClaims.map(claim => `<tr>
+        <td>${claim.claimId}</td>
+        <td>${claim.claimType}</td>
+        <td>${claim.provider}</td>
+        <td>${claim.serviceDate}</td>
+        <td>${claim.status}</td>
+        <td>${money(claim.amountBilled)}</td>
+        <td>${money(claim.amountPaid)}</td>
+      </tr>`).join('');
+    }
+
+    function renderMetrics(summary) {
+      const totals = (summary || []).reduce((acc, row) => {
+        acc.claims += row.claimCount || 0;
+        acc.billed += row.billed || 0;
+        acc.paid += row.paid || 0;
+        acc.member += row.memberResponsibility || 0;
+        return acc;
+      }, { claims: 0, billed: 0, paid: 0, member: 0 });
+      metrics.innerHTML = [
+        ['Claims', totals.claims],
+        ['Billed', money(totals.billed)],
+        ['Paid', money(totals.paid)],
+        ['Member Responsibility', money(totals.member)],
+      ].map(([label, value]) => `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`).join('');
+    }
+
+    async function loadSession() {
+      const body = await request('/api/session');
+      currentMember = body.member;
+      memberEmail.value = currentMember.memberEmail;
+      localStorage.setItem('benefitsMemberEmail', currentMember.memberEmail);
+      memberList.innerHTML = body.sampleMembers.map(member => `<option value="${member.memberEmail}">${member.memberId}</option>`).join('');
+      sessionStatus.textContent = `${currentMember.memberId} loaded`;
+      await loadSummary();
+    }
+
+    async function loadOpenClaims() {
+      const body = await request('/api/claims/open');
+      renderClaims(body.claims);
+      showJson('Open claims', body.claims);
+    }
+
+    async function loadSummary() {
+      const body = await request('/api/claims/summary');
+      renderMetrics(body.summary);
+      showJson('Claims summary', body.summary);
+    }
+
+    async function loadDeductible() {
+      const body = await request('/api/deductible');
+      showJson('Deductible status', body.deductible);
+    }
+
+    async function loadDentalPlan() {
+      const body = await request('/api/plan?type=dental');
+      showJson('Dental plan', body.plan);
+    }
+
+    async function searchDentalClaims() {
+      const body = await request('/api/claims/search?q=dental');
+      renderClaims(body.claims);
+      showJson('Dental claims', body.claims);
+    }
+
+    async function askBot() {
+      const body = await request('/api/bot', { method: 'POST', body: JSON.stringify({ prompt: promptBox.value }) });
+      showJson(`${body.tool}: ${body.message}`, body.data);
+      if (Array.isArray(body.data) && body.data[0]?.claimId) renderClaims(body.data);
+    }
+
+    async function generateDoc(type) {
+      const body = { planYear: new Date().getFullYear() };
+      if (type === 'eob') {
+        if (!lastClaims.length) await loadOpenClaims();
+        body.claimId = lastClaims[0]?.claimId;
+      }
+      if (type === 'spd') body.planType = 'medical';
+      const doc = await request(`/api/documents/${type}`, { method: 'POST', body: JSON.stringify(body) });
+      answer.innerHTML = `Generated ${doc.document.type}: <a href="${doc.document.url}" target="_blank" rel="noreferrer">${doc.document.filename}</a>`;
+    }
+
+    document.getElementById('loadSession').addEventListener('click', () => loadSession().catch(err => answer.textContent = err.message));
+    document.getElementById('askBot').addEventListener('click', () => askBot().catch(err => answer.textContent = err.message));
+    document.getElementById('clearOutput').addEventListener('click', () => { answer.textContent = ''; claimRows.innerHTML = ''; });
+    document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => {
+      const actions = { openClaims: loadOpenClaims, summary: loadSummary, deductible: loadDeductible, planDental: loadDentalPlan, searchDental: searchDentalClaims };
+      actions[button.dataset.action]().catch(err => answer.textContent = err.message);
+    }));
+    document.querySelectorAll('[data-doc]').forEach(button => button.addEventListener('click', () => generateDoc(button.dataset.doc).catch(err => answer.textContent = err.message)));
+
+    memberEmail.value = localStorage.getItem('benefitsMemberEmail') || '';
+    loadSession().catch(err => { answer.textContent = err.message; });
+  </script>
+</body>
+</html>

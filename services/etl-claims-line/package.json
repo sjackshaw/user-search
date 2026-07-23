@@ -1,0 +1,14 @@
+{
+  "name": "etl-claims-line",
+  "version": "0.1.0",
+  "description": "ETL vectorizer for member benefits claims + claims logs",
+  "main": "vectorize.js",
+  "scripts": {
+    "start": "node vectorize.js"
+  },
+  "dependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "node-cron": "^3.0.3",
+    "pg": "^8.13.0"
+  }
+}

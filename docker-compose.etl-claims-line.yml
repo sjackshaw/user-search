@@ -1,0 +1,17 @@
+services:
+  etl-claims-line:
+    build: ./services/etl-claims-line
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data-output/model-cache:/root/.cache/huggingface/hub
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: appdb
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      BATCH_SIZE: 64
+      CRON_SCHEDULE: "0 * * * *"
+    restart: unless-stopped

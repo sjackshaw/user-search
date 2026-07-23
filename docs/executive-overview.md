@@ -43,7 +43,7 @@ This is not a slide deck. The proof of concept is fully functional with syntheti
 
 - **Real Data Integration** — The ETL pipelines are designed to swap synthetic JSON files for live API connections (Microsoft Graph for Entra ID/M365, netForum REST API, Exchange, SharePoint). A production implementation guide covers credential management, authenticated API calls, and error handling for every source system.
 
-- **AWS Cloud Deployment** — A phased migration plan moves each component to managed AWS services: PostgreSQL moves to Amazon RDS, the six ETL pipelines become AWS Lambda functions triggered by EventBridge, the application runs on Amazon EKS behind a load balancer, and the AI model calls Amazon Bedrock for managed LLM inference. The plan covers networking, security, secrets management, and cost estimates.
+- **AWS Cloud Deployment** — A phased migration plan moves each component to managed AWS services: PostgreSQL moves to Amazon RDS, the seven ETL pipelines become AWS Lambda functions triggered by EventBridge, the application runs on Amazon EKS behind a load balancer, and the AI model calls Amazon Bedrock for managed LLM inference. The plan covers networking, security, secrets management, and cost estimates.
 
 Both plans are included in the repository documentation and are ready for engineering estimation and scheduling.
 

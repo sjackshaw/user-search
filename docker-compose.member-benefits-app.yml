@@ -1,0 +1,17 @@
+services:
+  member-benefits-app:
+    build: ./services/member-benefits-app
+    image: user-search_member-benefits-app:dev
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/appdb
+      - PORT=3002
+      - API_KEY=dev-key-please-change
+      - DOCUMENT_DIR=/usr/src/app/generated-docs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data-output/member-benefits-docs:/usr/src/app/generated-docs

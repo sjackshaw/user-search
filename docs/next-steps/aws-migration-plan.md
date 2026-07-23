@@ -622,7 +622,7 @@ See [findings4.md](../security/findings4.md) for the full agent-specific securit
 |---|---|---|
 | RDS PostgreSQL | db.t3.medium, Multi-AZ, 20 GB gp3 | ~$70 |
 | RDS Proxy | 1 proxy | ~$22 |
-| Lambda (6 ETL + app + genai) | 8 functions total; app/genai scale to zero | ~$8 |
+| Lambda (7 ETL + app + genai) | 9 functions total; app/genai scale to zero | ~$9 |
 | API Gateway | REST API fronting app Lambda | ~$10 |
 | Bedrock | Claude 3 Haiku, ~50k tokens/day | ~$15 |
 | S3 | <1 GB data | ~$0.03 |
