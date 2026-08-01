@@ -1,8 +1,0 @@
-node_modules/
-test/
-coverage/
-generated-docs/
-*.log
-.env*
-.DS_Store
-*.md
