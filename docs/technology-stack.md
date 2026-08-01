@@ -36,7 +36,7 @@ A complete inventory of every technology, framework, library, model, and tool us
 
 | Package | Version | Service(s) |
 |---|---|---|
-| **pg** (node-postgres) | ^8.13.0 | All services (app, genai, 7 ETL lines) |
+| **pg** (node-postgres) | ^8.13.0 | All services (app, genai, 6 ETL lines) |
 
 ---
 

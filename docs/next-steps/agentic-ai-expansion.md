@@ -122,6 +122,6 @@ const ROLE_TOOL_ALLOWLIST = {
 
 ---
 
-## 7. Member Benefits Bot (moved)
+## 7. Former Member-Benefits Work
 
-The Member Benefits Bot (`services/member-benefits-app`) and its supporting claims ETL line (`etl-claims-line`, `claims`/`claims_logs` schema) have moved to the `document-search` repository, which pairs more closely with that work. See that repository's docs for the current design, remaining production steps, and security considerations.
+The former member-benefits experience and its dedicated claims ETL workflow were removed from this repository as part of the current user-search focus. Any related work now lives in the `document-search` repository, where that product-specific implementation continues.

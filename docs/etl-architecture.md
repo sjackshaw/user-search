@@ -4,7 +4,7 @@
 
 The pipeline consists of six **line** ETL services and one application service, all coordinated via Docker Compose. Each line service handles both its primary data source and its associated activity/sync log table within a single container, sharing one SBERT model instance and one Postgres connection pool.
 
-> The isolated claims ETL line (formerly `etl-claims-line`, feeding the Member Benefits Bot) has moved to the `document-search` repository.
+> The former member-benefits ETL path and application were removed from this repository. Any related work now sits in the `document-search` repository.
 
 Each line service follows this pattern on startup (and then cron, hourly):
 
