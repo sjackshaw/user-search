@@ -4,12 +4,12 @@
 
 User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six user/search sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered user-card agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) exposes 28 tool-calling actions for account operations, Microsoft 365 service desk workflows, and governance checks.
 
-> The Member Benefits Bot (member-facing claims/plan chatbot) and its isolated claims ETL line have moved to the `document-search` repository, alongside the rest of the document-search team's work.
+> The former member-benefits experience and its dedicated ETL line were removed from this repository. Any related work now lives in the `document-search` repository.
 
 See [technology-stack.md](technology-stack.md) for a full inventory of every technology in the solution.  
 See [etl-architecture.md](etl-architecture.md) for the ETL pipeline and database schema reference.  
-See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the planned AWS production architecture (RDS, Lambda, EKS).  
-See [code-quality-review.md](code-quality-review.md) for the comprehensive code quality audit.
+See [executive-overview.md](executive-overview.md) for the business context and solution rationale.  
+See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the planned AWS production architecture (RDS, Lambda, EKS).
 
 ### Documentation Index
 
@@ -17,13 +17,12 @@ See [code-quality-review.md](code-quality-review.md) for the comprehensive code 
 |---|---|
 | [technology-stack.md](technology-stack.md) | Full inventory of runtimes, libraries, models, Docker images, and tooling |
 | [etl-architecture.md](etl-architecture.md) | ETL pipeline design, database schema, and vectorisation approach |
-| [code-quality-review.md](code-quality-review.md) | Severity-ranked code quality findings with recommended tests |
+| [executive-overview.md](executive-overview.md) | Business context, target users, and solution value proposition |
 | [diagrams/](diagrams/README.md) | 9 Mermaid diagrams (C4, ER, sequence, state, AWS target architecture) |
 | [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) | AWS production architecture — RDS, Lambda, EKS, Bedrock |
 | [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Remaining agent production hardening plan |
 | [next-steps/genai-production-update.md](next-steps/genai-production-update.md) | How to turn PoC agent actions into real authenticated API calls |
 | [next-steps/saml-access-management.md](next-steps/saml-access-management.md) | SAML-based access management integration plan |
-| [security/](security/) | Security review findings (4 reports) |
 
 ## Quickstart — full dev stack
 
@@ -160,7 +159,7 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `data-output/` | Host-mounted output directories for debugging and DB persistence |
 | `eslint.config.mjs` | ESLint 9 flat config — covers all service JS |
 | `generate_synthetic.py` | Python script that generates all synthetic data for all line services |
-| `docs/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, Fargate migration plan |
+| `docs/next-steps/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, EKS, and Bedrock migration plan |
 | `docs/diagrams/aws-target-architecture.md` | Mermaid diagram — AWS target architecture (VPC, ALB, Lambda, RDS) |
 | `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
 | `services/genai/` | GenAI service: 28-tool LLM agent, action executors, Graph client, ticket management |
@@ -168,10 +167,10 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
 | `infra/db/init/15_agent_tickets.sql` | `agent_tickets` table schema |
 | `docs/technology-stack.md` | Complete inventory of every technology, library, model, and tool |
-| `docs/code-quality-review.md` | Comprehensive code quality audit with severity-ranked findings |
+| `docs/executive-overview.md` | Business context, target users, and solution value proposition |
 | `docs/next-steps/agentic-ai-expansion.md` | Remaining agent production hardening plan |
 | `docs/next-steps/genai-production-update.md` | How to turn PoC agent actions into real API calls |
-| `docs/security/findings4.md` | Security review: agentic AI findings |
+| `docs/next-steps/saml-access-management.md` | SAML-based access management and RBAC plan |
 | `seed_change_logs.py` | Generates seed SQL for `source_change_logs` and `etl_job_logs` historical data |
 | `seed_change_logs.sql` | Generated seed SQL (apply once after first Postgres init) |
 
