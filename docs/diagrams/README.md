@@ -8,11 +8,11 @@ Mermaid diagrams documenting the user-search platform architecture, data flows, 
 |---|---|---|
 | AWS Target Architecture | [aws-target-architecture.md](aws-target-architecture.md) | Full AWS production architecture — VPC, EKS, Lambda, RDS, Bedrock, S3, EventBridge |
 | C4 System Context | [c4-system-context.md](c4-system-context.md) | Top-level view: users, the platform, and external systems |
-| ETL Data Flow | [etl-data-flow.md](etl-data-flow.md) | End-to-end flow from synthetic JSON through transform → vectorize → pgvector (7 lines, including claims) |
+| ETL Data Flow | [etl-data-flow.md](etl-data-flow.md) | End-to-end flow from synthetic JSON through transform → vectorize → pgvector (6 lines) |
 | Search Sequence | [search-sequence.md](search-sequence.md) | Step-by-step sequence for `/api/search` requests (stored-procedure based) |
 | Lookup Sequence | [lookup-sequence.md](lookup-sequence.md) | Step-by-step sequence for `/api/lookup` detail panel requests (10 sources) |
-| Entity Relationship | [entity-relationship.md](entity-relationship.md) | Database tables, fields, and relationships across search, agent, and claims data |
-| Docker Compose Topology | [docker-compose-topology.md](docker-compose-topology.md) | Service dependencies, volumes, and network topology (11 compose fragments) |
+| Entity Relationship | [entity-relationship.md](entity-relationship.md) | Database tables, fields, and relationships across search and agent data |
+| Docker Compose Topology | [docker-compose-topology.md](docker-compose-topology.md) | Service dependencies, volumes, and network topology (9 compose fragments) |
 | ETL Job State | [state-etl-job.md](state-etl-job.md) | State machine for a single ETL job lifecycle |
 | GenAI Architecture | [genai-target-architecture.md](genai-target-architecture.md) | C4 container diagram — local dev GenAI platform architecture; note that the agent now exposes 28 tools across account, Microsoft 365 service desk, and governance workflows |
 
