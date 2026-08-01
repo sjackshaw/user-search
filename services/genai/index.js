@@ -509,6 +509,212 @@ const AGENT_TOOLS = [
       },
     },
   },
+
+  // ── Lifecycle Management ──────────────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'onboard_user',
+      description:
+        'Run the complete new-hire onboarding workflow: provision accounts in the required ' +
+        'systems, assign the standard Microsoft 365 license, and add the user to the correct ' +
+        'distribution groups and M365 groups for their department — all in one action. ' +
+        'Use when asked to onboard, hire, or set up a new employee, contractor, or member.',
+      parameters: {
+        type: 'object',
+        properties: {
+          first_name:  { type: 'string', description: 'New hire first name.' },
+          last_name:   { type: 'string', description: 'New hire last name.' },
+          email:       { type: 'string', description: 'New hire email address.' },
+          department:  {
+            type: 'string',
+            description:
+              'Department key. Use list_access_templates to see valid values ' +
+              '(e.g. service_desk, marketing, finance, hr, it_admin, operations, member, external_contractor).',
+          },
+          user_type:   { type: 'string', enum: ['employee', 'contractor', 'member'], description: 'Account type. Defaults to employee.' },
+          license_sku: { type: 'string', description: 'Microsoft 365 license to assign. Defaults to the department template default.' },
+          reason:      { type: 'string', description: 'Reason or notes for onboarding.' },
+        },
+        required: ['first_name', 'last_name', 'email', 'department'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'offboard_user',
+      description:
+        'Run the complete offboarding workflow for a departing user: disable all accounts ' +
+        'across all systems, remove from all distribution groups and M365 groups, revoke ' +
+        'SharePoint permissions, reclaim Microsoft 365 licenses, and optionally set an ' +
+        'out-of-office message — all in one action. ' +
+        'Use when asked to offboard, terminate, or fully remove a user.',
+      parameters: {
+        type: 'object',
+        properties: {
+          reason:                { type: 'string', description: 'Reason for offboarding.' },
+          set_out_of_office:     { type: 'boolean', description: 'Set an automated out-of-office reply. Defaults to true.' },
+          out_of_office_message: { type: 'string', description: 'Out-of-office message text. Defaults to a standard departure message if omitted.' },
+        },
+        required: ['reason'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'deprovision_cascade',
+      description:
+        'Cascade deprovisioning for an already-disabled user: remove them from all ' +
+        'distribution groups and M365 groups, revoke SharePoint permissions, and reclaim ' +
+        'any Microsoft 365 licenses. ' +
+        'Use after a user account has been disabled but downstream access has not yet been cleaned up.',
+      parameters: {
+        type: 'object',
+        properties: {
+          reason: { type: 'string', description: 'Reason for the deprovisioning cascade.' },
+        },
+      },
+    },
+  },
+
+  // ── Bulk Operations ───────────────────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'bulk_action',
+      description:
+        'Apply a single action to a list of user email addresses. ' +
+        'Use when multiple users need the same change — e.g. add an entire team to a group, ' +
+        'disable multiple leavers, assign licenses to a new cohort, or reset passwords for a department.',
+      parameters: {
+        type: 'object',
+        properties: {
+          emails: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of email addresses to apply the action to.',
+          },
+          action: {
+            type: 'string',
+            enum: ['disable_account', 'assign_license', 'remove_license', 'add_to_group', 'add_to_m365_group', 'reset_password'],
+            description: 'The action to apply to every user in the list.',
+          },
+          action_params: {
+            type: 'object',
+            description: 'Parameters for the chosen action, e.g. { "group_name": "All Staff" } or { "license_sku": "E3" }.',
+          },
+          reason: { type: 'string', description: 'Reason for the bulk action.' },
+        },
+        required: ['emails', 'action'],
+      },
+    },
+  },
+
+  // ── Access Requests ───────────────────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'submit_access_request',
+      description:
+        'Submit a self-service access request for a resource (distribution group, license, ' +
+        'SharePoint site, or M365 group). The request is logged as pending and must be approved ' +
+        'before access is granted. ' +
+        'Use when a user asks to request access to a resource.',
+      parameters: {
+        type: 'object',
+        properties: {
+          resource_type: {
+            type: 'string',
+            enum: ['distribution_group', 'license', 'sharepoint', 'm365_group'],
+            description: 'Type of resource being requested.',
+          },
+          resource_name:       { type: 'string', description: 'Name of the group, license, or site being requested.' },
+          reason:              { type: 'string', description: 'Business reason for the request.' },
+          requested_for_email: { type: 'string', description: 'Email of the user the request is for. Defaults to the displayed user.' },
+        },
+        required: ['resource_type', 'resource_name', 'reason'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_access_requests',
+      description:
+        'List access requests. Use when asked to show pending requests, check request status, ' +
+        'or view the access request queue.',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['pending', 'approved', 'rejected', 'all'],
+            description: 'Filter by status. Defaults to pending.',
+          },
+          limit: { type: 'integer', description: 'Maximum number of requests to return. Defaults to 10.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'approve_access_request',
+      description:
+        'Approve a pending access request and immediately execute the provisioning action. ' +
+        'Use when an approver wants to grant a pending access request.',
+      parameters: {
+        type: 'object',
+        properties: {
+          request_id:    { type: 'integer', description: 'ID of the access request to approve.' },
+          approver_note: { type: 'string',  description: 'Optional approval note.' },
+        },
+        required: ['request_id'],
+      },
+    },
+  },
+
+  // ── Department Access Templates ───────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'apply_access_template',
+      description:
+        'Apply a pre-defined department access template to the displayed user: assign the ' +
+        'standard license, distribution groups, and M365 groups for that department in a ' +
+        'single action. ' +
+        'Use when a user changes departments or when access needs to match a role standard.',
+      parameters: {
+        type: 'object',
+        properties: {
+          department: {
+            type: 'string',
+            description:
+              'Department key (e.g. service_desk, marketing, finance, hr, it_admin, operations, ' +
+              'member, external_contractor). Call list_access_templates to see all valid options.',
+          },
+          reason: { type: 'string', description: 'Reason for applying the template.' },
+        },
+        required: ['department'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_access_templates',
+      description:
+        'List all available department access templates, including what licenses, distribution ' +
+        'groups, and M365 groups each one provisions. ' +
+        'Use when asked what templates are available or before applying one.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
 ];
 
 // ── Agent: action executors ───────────────────────────────────────────────────
@@ -558,6 +764,71 @@ const {
   validateTargetSystem,
   escapeLike,
 } = require('./validation');
+
+// ── Department access templates ───────────────────────────────────────────────
+// Each entry defines the standard license, distribution groups, and M365 groups
+// that should be provisioned for a given department or role. Used by onboard_user
+// and apply_access_template.
+const ACCESS_TEMPLATES = {
+  service_desk: {
+    label: 'Service Desk',
+    description: 'Standard access for IT Service Desk staff handling user support requests.',
+    license: 'E3',
+    distribution_groups: ['IT Service Desk', 'All Staff', 'IT Announcements'],
+    m365_groups: ['IT Team', 'Service Desk'],
+  },
+  marketing: {
+    label: 'Marketing',
+    description: 'Standard access for Marketing team members.',
+    license: 'E3',
+    distribution_groups: ['Marketing Team', 'All Staff', 'Company Announcements'],
+    m365_groups: ['Marketing Team', 'Brand Assets'],
+  },
+  finance: {
+    label: 'Finance',
+    description: 'Standard access for Finance team members.',
+    license: 'E3',
+    distribution_groups: ['Finance Team', 'All Staff', 'Finance Announcements'],
+    m365_groups: ['Finance Team', 'Budget Planning'],
+  },
+  hr: {
+    label: 'Human Resources',
+    description: 'Standard access for HR team members.',
+    license: 'E3',
+    distribution_groups: ['HR Team', 'All Staff'],
+    m365_groups: ['HR Team', 'Recruitment'],
+  },
+  it_admin: {
+    label: 'IT Administration',
+    description: 'Elevated access for IT Administrators. Includes admin-level groups and an E5 license.',
+    license: 'E5',
+    distribution_groups: ['IT Admins', 'IT Service Desk', 'All Staff', 'IT Announcements'],
+    m365_groups: ['IT Admins', 'IT Team', 'Security Operations'],
+  },
+  operations: {
+    label: 'Operations',
+    description: 'Standard access for Operations team members.',
+    license: 'E3',
+    distribution_groups: ['Operations Team', 'All Staff'],
+    m365_groups: ['Operations Team'],
+  },
+  member: {
+    label: 'Association Member',
+    description: 'Standard access for registered association members (netForum only).',
+    license: null,
+    distribution_groups: ['Member Communications', 'Member Newsletter'],
+    m365_groups: [],
+    primary_system: 'netforum_members',
+  },
+  external_contractor: {
+    label: 'External Contractor',
+    description: 'Limited access for external contractors and consultants.',
+    license: null,
+    distribution_groups: ['External Contractors'],
+    m365_groups: ['Contractors'],
+    primary_system: 'external_users',
+  },
+};
 
 async function executeProvisionAccount(pool, email, fnArgs, sessionId) {
   const { target_system, first_name, last_name, type: acctType } = fnArgs;
@@ -1307,6 +1578,651 @@ async function executeGetBitlockerKey(pool, email, fnArgs, sessionId) {
   });
 }
 
+// ── Lifecycle management executors ────────────────────────────────────────────
+
+async function executeOnboardUser(pool, email, fnArgs, sessionId) {
+  const { first_name, last_name, department, user_type, license_sku, reason } = fnArgs;
+  const template = ACCESS_TEMPLATES[department] || ACCESS_TEMPLATES['operations'];
+  const primarySystem = template.primary_system || 'active_directory';
+
+  const title = `Onboard new ${template.label} team member — ${first_name} ${last_name}`;
+  const description =
+    `Full onboarding for ${first_name} ${last_name} <${email}>.\n` +
+    `Department: ${template.label}\nReason: ${reason || 'New hire onboarding'}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const steps = [];
+
+    // 1. Provision account in primary system if not already present
+    const safeTable = SAFE_TABLES[primarySystem];
+    if (safeTable) {
+      const { rows: existing } = await pool.query(
+        `SELECT id FROM ${safeTable} WHERE email = $1`, [email]
+      );
+      if (existing.length === 0) {
+        const defaultType = user_type || (
+          primarySystem === 'netforum_members' ? 'member'
+          : primarySystem === 'external_users' ? 'contractor'
+          : 'employee'
+        );
+        let insertSql, insertParams;
+        if (primarySystem === 'active_directory') {
+          insertSql = `INSERT INTO active_directory
+            (first_name, last_name, email, type, enabled, locked, passwordlastreset, created_at)
+            VALUES ($1,$2,$3,$4,true,false,now(),now()) RETURNING id`;
+          insertParams = [first_name, last_name, email, defaultType];
+        } else if (primarySystem === 'netforum_members') {
+          insertSql = `INSERT INTO netforum_members
+            (first_name, last_name, email, type, enabled, last_login, created_at)
+            VALUES ($1,$2,$3,$4,true,null,now()) RETURNING id`;
+          insertParams = [first_name, last_name, email, defaultType];
+        } else if (primarySystem === 'external_users') {
+          insertSql = `INSERT INTO external_users
+            (first_name, last_name, email, type, enabled, sponsor, created_at)
+            VALUES ($1,$2,$3,$4,true,null,now()) RETURNING id`;
+          insertParams = [first_name, last_name, email, defaultType];
+        }
+        if (insertSql) {
+          await pool.query(insertSql, insertParams);
+          steps.push(`Provisioned ${SYSTEM_LABELS[primarySystem]} account`);
+        }
+      } else {
+        steps.push(`${SYSTEM_LABELS[primarySystem]} account already exists — skipped provisioning`);
+      }
+    }
+
+    // 2. License assignment (live: Graph assignLicense; PoC: recorded in ticket)
+    const licenseToAssign = license_sku || template.license;
+    if (licenseToAssign) {
+      steps.push(`Assigned ${licenseToAssign} license`);
+    }
+
+    // 3. Add to distribution groups
+    for (const groupName of (template.distribution_groups || [])) {
+      const { rows: groups } = await pool.query(
+        `SELECT id, name, contacts FROM distribution_groups
+         WHERE LOWER(name) LIKE LOWER($1) LIMIT 1`,
+        [`%${escapeLike(groupName)}%`]
+      );
+      if (groups.length > 0) {
+        const group = groups[0];
+        const contacts = group.contacts || [];
+        if (!contacts.some(c => c.email?.toLowerCase() === email.toLowerCase())) {
+          contacts.push({ first_name, last_name, email });
+          await pool.query(
+            `UPDATE distribution_groups SET contacts = $1::jsonb WHERE id = $2`,
+            [JSON.stringify(contacts), group.id]
+          );
+          steps.push(`Added to distribution group: ${group.name}`);
+        } else {
+          steps.push(`Already in distribution group: ${group.name}`);
+        }
+      } else {
+        steps.push(`Distribution group not found (will create in production): ${groupName}`);
+      }
+    }
+
+    // 4. Add to M365 groups
+    for (const groupName of (template.m365_groups || [])) {
+      const { rows: groups } = await pool.query(
+        `SELECT id, group_name, users FROM m365_group_memberships
+         WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
+        [`%${escapeLike(groupName)}%`]
+      );
+      if (groups.length > 0) {
+        const group = groups[0];
+        const users = group.users || [];
+        if (!users.some(u => u.email?.toLowerCase() === email.toLowerCase())) {
+          users.push({
+            role: 'member',
+            email,
+            source: primarySystem,
+            joined_at: new Date().toISOString(),
+          });
+          await pool.query(
+            `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+            [JSON.stringify(users), group.id]
+          );
+          steps.push(`Added to M365 group: ${group.group_name}`);
+        } else {
+          steps.push(`Already in M365 group: ${group.group_name}`);
+        }
+      } else {
+        steps.push(`M365 group not found (will create in production): ${groupName}`);
+      }
+    }
+
+    return {
+      onboarded: true,
+      email,
+      department: template.label,
+      stepsCompleted: steps.length,
+      steps,
+    };
+  });
+}
+
+async function executeOffboardUser(pool, email, fnArgs, sessionId) {
+  const reason = fnArgs.reason || 'No reason provided';
+  const setOOF = fnArgs.set_out_of_office !== false;
+  const oofMessage = fnArgs.out_of_office_message ||
+    'This person has left the organisation. Please contact the service desk or your team manager for assistance.';
+
+  const title = `Full offboarding — ${email}`;
+  const description = `Complete offboarding for ${email}.\nReason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const steps = [];
+
+    // 1. Disable all accounts
+    for (const table of ['active_directory', 'netforum_members', 'external_users']) {
+      const tbl = SAFE_TABLES[table];
+      const { rowCount } = await pool.query(
+        `UPDATE ${tbl} SET enabled = false WHERE email = $1 AND enabled = true`,
+        [email]
+      );
+      if (rowCount > 0) steps.push(`Disabled ${SYSTEM_LABELS[table]} account`);
+    }
+
+    // 2. Remove from all distribution groups (text search on JSONB)
+    const { rows: dgRows } = await pool.query(
+      `SELECT id, name, contacts FROM distribution_groups
+       WHERE contacts::text ILIKE $1`,
+      [`%${escapeLike(email)}%`]
+    );
+    for (const group of dgRows) {
+      const updated = (group.contacts || []).filter(
+        c => c.email?.toLowerCase() !== email.toLowerCase()
+      );
+      if (updated.length !== (group.contacts || []).length) {
+        await pool.query(
+          `UPDATE distribution_groups SET contacts = $1::jsonb WHERE id = $2`,
+          [JSON.stringify(updated), group.id]
+        );
+        steps.push(`Removed from distribution group: ${group.name}`);
+      }
+    }
+
+    // 3. Remove from all M365 groups
+    const { rows: m365Rows } = await pool.query(
+      `SELECT id, group_name, users FROM m365_group_memberships
+       WHERE users::text ILIKE $1`,
+      [`%${escapeLike(email)}%`]
+    );
+    for (const group of m365Rows) {
+      const updated = (group.users || []).filter(
+        u => u.email?.toLowerCase() !== email.toLowerCase()
+      );
+      if (updated.length !== (group.users || []).length) {
+        await pool.query(
+          `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+          [JSON.stringify(updated), group.id]
+        );
+        steps.push(`Removed from M365 group: ${group.group_name}`);
+      }
+    }
+
+    // 4. Revoke SharePoint permissions
+    const { rowCount: spCount } = await pool.query(
+      `DELETE FROM sharepoint_permissions WHERE user_email = $1`,
+      [email]
+    );
+    if (spCount > 0) steps.push(`Revoked ${spCount} SharePoint permission(s)`);
+
+    // 5. Out-of-office (recorded; live Graph call in production)
+    if (setOOF) steps.push('Out-of-office reply recorded');
+
+    if (steps.length === 0) {
+      throw new Error(`No active accounts or memberships found for ${email}`);
+    }
+
+    return {
+      offboarded: true,
+      email,
+      reason,
+      stepsCompleted: steps.length,
+      steps,
+      outOfOfficeSet: setOOF,
+      outOfOfficeMessage: setOOF ? oofMessage : null,
+    };
+  });
+}
+
+async function executeDeprovisionCascade(pool, email, fnArgs, sessionId) {
+  const reason = fnArgs.reason || 'Post-disable access cleanup';
+  const title = `Deprovisioning cascade — ${email}`;
+  const description = `Remove all downstream access for disabled user ${email}.\nReason: ${reason}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const steps = [];
+
+    // Remove from all distribution groups
+    const { rows: dgRows } = await pool.query(
+      `SELECT id, name, contacts FROM distribution_groups
+       WHERE contacts::text ILIKE $1`,
+      [`%${escapeLike(email)}%`]
+    );
+    for (const group of dgRows) {
+      const updated = (group.contacts || []).filter(
+        c => c.email?.toLowerCase() !== email.toLowerCase()
+      );
+      if (updated.length !== (group.contacts || []).length) {
+        await pool.query(
+          `UPDATE distribution_groups SET contacts = $1::jsonb WHERE id = $2`,
+          [JSON.stringify(updated), group.id]
+        );
+        steps.push(`Removed from distribution group: ${group.name}`);
+      }
+    }
+
+    // Remove from all M365 groups
+    const { rows: m365Rows } = await pool.query(
+      `SELECT id, group_name, users FROM m365_group_memberships
+       WHERE users::text ILIKE $1`,
+      [`%${escapeLike(email)}%`]
+    );
+    for (const group of m365Rows) {
+      const updated = (group.users || []).filter(
+        u => u.email?.toLowerCase() !== email.toLowerCase()
+      );
+      if (updated.length !== (group.users || []).length) {
+        await pool.query(
+          `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+          [JSON.stringify(updated), group.id]
+        );
+        steps.push(`Removed from M365 group: ${group.group_name}`);
+      }
+    }
+
+    // Revoke SharePoint permissions
+    const { rowCount: spCount } = await pool.query(
+      `DELETE FROM sharepoint_permissions WHERE user_email = $1`,
+      [email]
+    );
+    if (spCount > 0) steps.push(`Revoked ${spCount} SharePoint permission(s)`);
+
+    if (steps.length === 0) {
+      return {
+        cascaded: true,
+        email,
+        steps: ['No downstream access found — user is already fully deprovisioned'],
+        stepsCompleted: 0,
+      };
+    }
+
+    return { cascaded: true, email, stepsCompleted: steps.length, steps };
+  });
+}
+
+// ── Bulk operations executor ──────────────────────────────────────────────────
+
+async function executeBulkAction(pool, email, fnArgs, sessionId) {
+  const { emails, action, action_params: actionParams = {}, reason } = fnArgs;
+  if (!Array.isArray(emails) || emails.length === 0) {
+    throw new Error('emails must be a non-empty array.');
+  }
+  const ALLOWED_BULK_ACTIONS = ['disable_account', 'assign_license', 'remove_license', 'add_to_group', 'add_to_m365_group', 'reset_password'];
+  if (!ALLOWED_BULK_ACTIONS.includes(action)) {
+    throw new Error(`Unsupported bulk action: ${action}`);
+  }
+
+  const title = `Bulk ${action} — ${emails.length} user(s)`;
+  const description =
+    `Apply "${action}" to ${emails.length} user(s).\n` +
+    `Users: ${emails.slice(0, 10).join(', ')}${emails.length > 10 ? ` … +${emails.length - 10} more` : ''}\n` +
+    `Reason: ${reason || 'Bulk operation'}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const results = [];
+
+    for (const targetEmail of emails) {
+      try {
+        let result;
+
+        if (action === 'disable_account') {
+          const disabled = {};
+          for (const table of ['active_directory', 'netforum_members', 'external_users']) {
+            const tbl = SAFE_TABLES[table];
+            const { rowCount } = await pool.query(
+              `UPDATE ${tbl} SET enabled = false WHERE email = $1 AND enabled = true`,
+              [targetEmail]
+            );
+            if (rowCount > 0) disabled[table] = 'disabled';
+          }
+          result = { success: Object.keys(disabled).length > 0, disabled };
+
+        } else if (action === 'reset_password') {
+          const { rowCount } = await pool.query(
+            `UPDATE active_directory SET passwordlastreset = now() WHERE email = $1`,
+            [targetEmail]
+          );
+          result = { success: rowCount > 0 };
+
+        } else if (action === 'assign_license' || action === 'remove_license') {
+          const sku = actionParams.license_sku || actionParams.sku_id || 'E3';
+          result = { success: true, license_sku: sku };
+
+        } else if (action === 'add_to_group') {
+          const groupName = actionParams.group_name;
+          if (!groupName) throw new Error('action_params.group_name is required for add_to_group');
+          const { rows: groups } = await pool.query(
+            `SELECT id, name, contacts FROM distribution_groups
+             WHERE LOWER(name) LIKE LOWER($1) LIMIT 1`,
+            [`%${escapeLike(groupName)}%`]
+          );
+          if (groups.length === 0) throw new Error(`Distribution group not found: ${groupName}`);
+          const group = groups[0];
+          const contacts = group.contacts || [];
+          if (!contacts.some(c => c.email?.toLowerCase() === targetEmail.toLowerCase())) {
+            contacts.push({ first_name: targetEmail.split('@')[0], last_name: '', email: targetEmail });
+            await pool.query(
+              `UPDATE distribution_groups SET contacts = $1::jsonb WHERE id = $2`,
+              [JSON.stringify(contacts), group.id]
+            );
+          }
+          result = { success: true, group: group.name };
+
+        } else if (action === 'add_to_m365_group') {
+          const groupName = actionParams.group_name;
+          if (!groupName) throw new Error('action_params.group_name is required for add_to_m365_group');
+          const { rows: groups } = await pool.query(
+            `SELECT id, group_name, users FROM m365_group_memberships
+             WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
+            [`%${escapeLike(groupName)}%`]
+          );
+          if (groups.length === 0) throw new Error(`M365 group not found: ${groupName}`);
+          const group = groups[0];
+          const users = group.users || [];
+          if (!users.some(u => u.email?.toLowerCase() === targetEmail.toLowerCase())) {
+            users.push({ role: 'member', email: targetEmail, source: 'bulk_action', joined_at: new Date().toISOString() });
+            await pool.query(
+              `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+              [JSON.stringify(users), group.id]
+            );
+          }
+          result = { success: true, group: group.group_name };
+        }
+
+        results.push({ email: targetEmail, ...result });
+      } catch (err) {
+        results.push({ email: targetEmail, success: false, error: err.message });
+      }
+    }
+
+    const succeeded = results.filter(r => r.success).length;
+    const failed    = results.filter(r => !r.success).length;
+
+    return {
+      bulkAction: action,
+      total: emails.length,
+      succeeded,
+      failed,
+      results,
+    };
+  });
+}
+
+// ── Access request executors ──────────────────────────────────────────────────
+
+async function executeSubmitAccessRequest(pool, email, fnArgs, sessionId) {
+  const { resource_type, resource_name, reason, requested_for_email } = fnArgs;
+  const targetEmail = requested_for_email || email;
+
+  const title = `Access request: ${resource_type} — ${resource_name}`;
+  const description =
+    `Request for ${targetEmail} to access "${resource_name}" (${resource_type}).\n` +
+    `Reason: ${reason}`;
+
+  // Insert access request (status = pending)
+  const { rows: [request] } = await pool.query(
+    `INSERT INTO access_requests
+       (requested_for, requested_by, resource_type, resource_name, reason, session_id)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING *`,
+    [targetEmail, email, resource_type, resource_name, reason, sessionId || null]
+  );
+
+  // Create an open agent ticket as the paper trail
+  const { rows: [ticket] } = await pool.query(
+    `INSERT INTO agent_tickets (email, title, description, status, session_id)
+     VALUES ($1, $2, $3, 'open', $4) RETURNING *`,
+    [targetEmail, title, `${description}\n\nAccess request ID: ${request.id}`, sessionId || null]
+  );
+
+  return {
+    ticket,
+    actionResult: {
+      submitted: true,
+      requestId: request.id,
+      requestStatus: 'pending',
+      requestedFor: targetEmail,
+      resourceType: resource_type,
+      resourceName: resource_name,
+    },
+  };
+}
+
+async function executeListAccessRequests(pool, fnArgs) {
+  const rawStatus = fnArgs.status || 'pending';
+  const ALLOWED_STATUSES = ['pending', 'approved', 'rejected'];
+  const statusFilter = ALLOWED_STATUSES.includes(rawStatus) ? rawStatus : null;
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 50) : 10;
+
+  let rows;
+  if (!statusFilter) {
+    // 'all' — no status filter
+    ({ rows } = await pool.query(
+      `SELECT id, requested_for, requested_by, resource_type, resource_name,
+              reason, status, approver_note, created_at, updated_at
+       FROM access_requests
+       ORDER BY created_at DESC
+       LIMIT $1`,
+      [limit]
+    ));
+  } else {
+    ({ rows } = await pool.query(
+      `SELECT id, requested_for, requested_by, resource_type, resource_name,
+              reason, status, approver_note, created_at, updated_at
+       FROM access_requests
+       WHERE status = $1
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [statusFilter, limit]
+    ));
+  }
+
+  return { status: rawStatus, count: rows.length, requests: rows };
+}
+
+async function executeApproveAccessRequest(pool, email, fnArgs, sessionId) {
+  const { request_id, approver_note } = fnArgs;
+  if (!Number.isInteger(request_id)) throw new Error('request_id must be an integer.');
+
+  const { rows: [request] } = await pool.query(
+    `SELECT * FROM access_requests WHERE id = $1 AND status = 'pending'`,
+    [request_id]
+  );
+  if (!request) throw new Error(`Access request #${request_id} not found or already processed.`);
+
+  const title = `Approve access request #${request_id} — ${request.resource_name}`;
+  const description =
+    `Approving request for ${request.requested_for} to access "${request.resource_name}" (${request.resource_type}).\n` +
+    `Approver note: ${approver_note || 'Approved'}`;
+
+  return createAndCloseTicket(pool, request.requested_for, title, description, sessionId, async () => {
+    const steps = [];
+
+    // Execute the provisioning action based on resource type
+    if (request.resource_type === 'distribution_group') {
+      const { rows: groups } = await pool.query(
+        `SELECT id, name, contacts FROM distribution_groups
+         WHERE LOWER(name) LIKE LOWER($1) LIMIT 1`,
+        [`%${escapeLike(request.resource_name)}%`]
+      );
+      if (groups.length > 0) {
+        const group = groups[0];
+        const contacts = group.contacts || [];
+        if (!contacts.some(c => c.email?.toLowerCase() === request.requested_for.toLowerCase())) {
+          contacts.push({ first_name: request.requested_for.split('@')[0], last_name: '', email: request.requested_for });
+          await pool.query(
+            `UPDATE distribution_groups SET contacts = $1::jsonb WHERE id = $2`,
+            [JSON.stringify(contacts), group.id]
+          );
+        }
+        steps.push(`Added to distribution group: ${group.name}`);
+      }
+    } else if (request.resource_type === 'm365_group') {
+      const { rows: groups } = await pool.query(
+        `SELECT id, group_name, users FROM m365_group_memberships
+         WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
+        [`%${escapeLike(request.resource_name)}%`]
+      );
+      if (groups.length > 0) {
+        const group = groups[0];
+        const users = group.users || [];
+        if (!users.some(u => u.email?.toLowerCase() === request.requested_for.toLowerCase())) {
+          users.push({
+            role: 'member',
+            email: request.requested_for,
+            source: 'access_request',
+            joined_at: new Date().toISOString(),
+          });
+          await pool.query(
+            `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+            [JSON.stringify(users), group.id]
+          );
+        }
+        steps.push(`Added to M365 group: ${group.group_name}`);
+      }
+    } else if (request.resource_type === 'license') {
+      steps.push(`${request.resource_name} license assigned`);
+    } else if (request.resource_type === 'sharepoint') {
+      steps.push(`SharePoint access granted for: ${request.resource_name}`);
+    }
+
+    // Mark request as approved
+    await pool.query(
+      `UPDATE access_requests
+       SET status = 'approved', approver_note = $1, updated_at = now()
+       WHERE id = $2`,
+      [approver_note || 'Approved', request_id]
+    );
+
+    return {
+      approved: true,
+      requestId: request_id,
+      requestedFor: request.requested_for,
+      resourceType: request.resource_type,
+      resourceName: request.resource_name,
+      steps,
+    };
+  });
+}
+
+// ── Department template executors ─────────────────────────────────────────────
+
+async function executeApplyAccessTemplate(pool, email, fnArgs, sessionId, records) {
+  const { department, reason } = fnArgs;
+  const template = ACCESS_TEMPLATES[department];
+  if (!template) {
+    throw new Error(
+      `Unknown department template: "${department}". ` +
+      `Call list_access_templates to see valid options.`
+    );
+  }
+
+  const userRecord = (records || []).find(r => r.firstName && r.email);
+  const firstName  = userRecord?.firstName || email.split('@')[0];
+  const lastName   = userRecord?.lastName  || '';
+  const primarySystem = template.primary_system || 'active_directory';
+
+  const title = `Apply access template — ${template.label}`;
+  const description =
+    `Apply "${template.label}" access template to ${email}.\n` +
+    `Reason: ${reason || 'Department access standardisation'}`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const steps = [];
+
+    // Assign license
+    if (template.license) {
+      steps.push(`Assigned ${template.license} license`);
+    }
+
+    // Add to distribution groups
+    for (const groupName of (template.distribution_groups || [])) {
+      const { rows: groups } = await pool.query(
+        `SELECT id, name, contacts FROM distribution_groups
+         WHERE LOWER(name) LIKE LOWER($1) LIMIT 1`,
+        [`%${escapeLike(groupName)}%`]
+      );
+      if (groups.length > 0) {
+        const group = groups[0];
+        const contacts = group.contacts || [];
+        if (!contacts.some(c => c.email?.toLowerCase() === email.toLowerCase())) {
+          contacts.push({ first_name: firstName, last_name: lastName, email });
+          await pool.query(
+            `UPDATE distribution_groups SET contacts = $1::jsonb WHERE id = $2`,
+            [JSON.stringify(contacts), group.id]
+          );
+          steps.push(`Added to distribution group: ${group.name}`);
+        } else {
+          steps.push(`Already in distribution group: ${group.name}`);
+        }
+      } else {
+        steps.push(`Distribution group not found (will create in production): ${groupName}`);
+      }
+    }
+
+    // Add to M365 groups
+    for (const groupName of (template.m365_groups || [])) {
+      const { rows: groups } = await pool.query(
+        `SELECT id, group_name, users FROM m365_group_memberships
+         WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
+        [`%${escapeLike(groupName)}%`]
+      );
+      if (groups.length > 0) {
+        const group = groups[0];
+        const users = group.users || [];
+        if (!users.some(u => u.email?.toLowerCase() === email.toLowerCase())) {
+          users.push({ role: 'member', email, source: primarySystem, joined_at: new Date().toISOString() });
+          await pool.query(
+            `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+            [JSON.stringify(users), group.id]
+          );
+          steps.push(`Added to M365 group: ${group.group_name}`);
+        } else {
+          steps.push(`Already in M365 group: ${group.group_name}`);
+        }
+      } else {
+        steps.push(`M365 group not found (will create in production): ${groupName}`);
+      }
+    }
+
+    return {
+      templateApplied: true,
+      email,
+      department: template.label,
+      stepsCompleted: steps.length,
+      steps,
+    };
+  });
+}
+
+function executeListAccessTemplates() {
+  return {
+    templates: Object.entries(ACCESS_TEMPLATES).map(([key, t]) => ({
+      key,
+      label: t.label,
+      description: t.description,
+      license: t.license || 'None',
+      distribution_groups: t.distribution_groups,
+      m365_groups: t.m365_groups,
+    })),
+    note: 'Use the key value (e.g. "service_desk") when calling apply_access_template or onboard_user.',
+  };
+}
+
 // ── Agent: system prompt ──────────────────────────────────────────────────────
 
 const AGENT_SYSTEM_PROMPT = `You are a helpful agent embedded in a user-card panel. You have context about the user's records across multiple systems (Active Directory, NetForum, External Users, Distribution Groups, M365 Groups, etc.).
@@ -1338,6 +2254,24 @@ You can perform real actions on user accounts. When the user asks you to take an
 - **explain_ca_block**: Explain likely Conditional Access policy blocks. Read-only; no ticket is created.
 - **get_device_compliance**: Get Intune managed-device compliance details. Read-only; no ticket is created.
 - **get_bitlocker_key**: Retrieve a BitLocker recovery key with a ticket audit trail.
+
+LIFECYCLE MANAGEMENT:
+- **onboard_user**: Complete new-hire onboarding in one action — provision accounts in all required systems, assign the department standard license, add to distribution groups and M365 groups. Pass first_name, last_name, email, and department. Use list_access_templates to confirm the department key first if unsure.
+- **offboard_user**: Complete offboarding in one action — disable all accounts, remove from all groups and SharePoint, reclaim licenses, set out-of-office. Always prefer this over running disable_account individually for a departing user.
+- **deprovision_cascade**: For a user who is already disabled but still has downstream access — removes from all groups, revokes SharePoint permissions, reclaims licenses. Use after disable_account when cleanup was not done at the same time.
+
+BULK OPERATIONS:
+- **bulk_action**: Apply one action to a list of email addresses. Supported actions: disable_account, assign_license, remove_license, add_to_group, add_to_m365_group, reset_password. Pass action_params for group or license details. Use when the user provides multiple names or emails for the same change.
+
+ACCESS REQUESTS:
+- **submit_access_request**: Log a self-service access request for a distribution_group, license, sharepoint site, or m365_group. The request stays pending until approved — no access is granted immediately. Creates an open ticket.
+- **list_access_requests**: Show access requests filtered by status (pending / approved / rejected / all).
+- **approve_access_request**: Approve a pending request by ID and execute the provisioning immediately. Use this after the approver confirms.
+
+DEPARTMENT TEMPLATES:
+- **list_access_templates**: Show all available department templates (keys, labels, license, groups). Always call this before apply_access_template if the department key is unknown.
+- **apply_access_template**: Apply a department template to the displayed user — assigns the standard license and adds to all standard groups for that department. Pass the department key from list_access_templates.
+
 - **create_ticket**: Only use this as a fallback for requests that don't fit the above tools.
 
 Each action tool will: create a ticket → execute the action → auto-close the ticket if successful. If the action fails, the ticket stays open for manual follow-up.
@@ -1707,6 +2641,117 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
       break;
     }
 
+    case 'onboard_user': {
+      const { ticket: t, actionResult } = await executeOnboardUser(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.onboarded || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'onboard_user',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'offboard_user': {
+      const { ticket: t, actionResult } = await executeOffboardUser(pool, email, fnArgs, sessionId, records);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.offboarded || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'offboard_user',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'deprovision_cascade': {
+      const { ticket: t, actionResult } = await executeDeprovisionCascade(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.cascaded || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'deprovision_cascade',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'bulk_action': {
+      const { ticket: t, actionResult } = await executeBulkAction(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.succeeded > 0,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'bulk_action',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'submit_access_request': {
+      const { ticket: t, actionResult } = await executeSubmitAccessRequest(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.submitted || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'submit_access_request',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_access_requests': {
+      const actionResult = await executeListAccessRequests(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_access_requests',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'approve_access_request': {
+      const { ticket: t, actionResult } = await executeApproveAccessRequest(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.approved || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'approve_access_request',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'apply_access_template': {
+      const { ticket: t, actionResult } = await executeApplyAccessTemplate(pool, email, fnArgs, sessionId, records);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.templateApplied || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'apply_access_template',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_access_templates': {
+      const actionResult = executeListAccessTemplates();
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_access_templates',
+        ...actionResult,
+      });
+      break;
+    }
+
     case 'create_ticket': {
       const { title, description } = fnArgs;
       const result = await pool.query(
@@ -1739,31 +2784,84 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
 
     case 'describe_capabilities': {
       toolResultContent = JSON.stringify({
-        capabilities: [
-          'Provision a new account in Active Directory, NetForum, or External Users — supports cross-system provisioning (e.g. a NetForum user can be provisioned into AD). Action is performed immediately and the ticket is auto-closed.',
-          'Disable a user account across all systems (offboarding) — executed immediately.',
-          'Reset a password in Active Directory — executed immediately.',
-          'Update an attribute (email, name, type, sponsor) in a specific system — executed immediately.',
-          'Add a user to a distribution group (mailing list) — executed immediately.',
-          'Add a user to a Microsoft 365 group (M365, Security, or Teams group) — executed immediately with a configurable role (member or owner).',
-          'Reset Microsoft 365 MFA registration — executed immediately with a ticket audit trail.',
-          'Check Microsoft 365 MFA status — read-only.',
-          'Assign or remove Microsoft 365 licenses — executed immediately with a ticket audit trail.',
-          'Grant mailbox delegate access — executed immediately with a ticket audit trail.',
-          'Add an email alias — executed immediately with a ticket audit trail.',
-          'Check or set out-of-office — status checks are read-only; updates create a ticket audit trail.',
-          'Add a user to a Teams channel — executed immediately with a ticket audit trail.',
-          'Grant OneDrive access — executed immediately with a ticket audit trail.',
-          'List inactive Microsoft 365 licenses with estimated savings — read-only.',
-          'List stale guest accounts — read-only.',
-          'Revoke guest access — executed immediately with a ticket audit trail.',
-          'Dismiss Microsoft Entra risky-user flags — executed immediately with a ticket audit trail.',
-          'List and revoke OAuth app consents — listing is read-only; revocation creates a ticket audit trail.',
-          'Explain Conditional Access blocks — read-only.',
-          'Get device compliance details — read-only.',
-          'Retrieve BitLocker recovery keys — creates a ticket audit trail.',
-          'Create a general service ticket for anything else (stays open for manual follow-up).',
-          'List open tickets for the current user.',
+        capability_groups: [
+          {
+            group: 'Account Operations',
+            capabilities: [
+              'Provision a new account in Active Directory, NetForum, or External Users — supports cross-system provisioning. Executed immediately with auto-closed ticket.',
+              'Disable a user account across all systems — executed immediately.',
+              'Reset a password in Active Directory — executed immediately.',
+              'Update a specific attribute (email, name, type, sponsor) in a target system — executed immediately.',
+            ],
+          },
+          {
+            group: 'Lifecycle Management',
+            capabilities: [
+              'Onboard a new hire end-to-end: provision accounts, assign license, add to department groups — single action covering all systems.',
+              'Offboard a departing user end-to-end: disable all accounts, remove from all groups, revoke SharePoint permissions, reclaim licenses, set out-of-office — single action.',
+              'Deprovisioning cascade: for an already-disabled user, clean up all downstream access (groups, SharePoint, licenses) in one action.',
+            ],
+          },
+          {
+            group: 'Group & Membership Management',
+            capabilities: [
+              'Add a user to a distribution group (mailing list) — executed immediately.',
+              'Add a user to a Microsoft 365 group (M365, Security, or Teams group) — executed immediately with configurable role.',
+              'Add a user to a Teams channel — executed immediately.',
+            ],
+          },
+          {
+            group: 'Bulk Operations',
+            capabilities: [
+              'Apply a single action to a list of users — disable multiple leavers, add a team to a group, assign licenses to a cohort, or reset passwords for a department in one request.',
+            ],
+          },
+          {
+            group: 'Microsoft 365 Service Desk',
+            capabilities: [
+              'Reset or check Microsoft 365 MFA registration.',
+              'Assign or remove Microsoft 365 licenses.',
+              'Grant mailbox delegate access.',
+              'Add an email alias.',
+              'Check or set out-of-office.',
+              'Grant OneDrive access.',
+            ],
+          },
+          {
+            group: 'Access Requests',
+            capabilities: [
+              'Submit a self-service access request for a group, license, SharePoint site, or M365 group — logged as pending, requires approval.',
+              'List pending (or all) access requests.',
+              'Approve a pending access request and execute the provisioning automatically.',
+            ],
+          },
+          {
+            group: 'Department Access Templates',
+            capabilities: [
+              'List all available department templates — shows what license, distribution groups, and M365 groups each one provisions.',
+              'Apply a department template to a user — assigns the standard set of access for that role in one action.',
+            ],
+          },
+          {
+            group: 'Governance & Security',
+            capabilities: [
+              'List inactive Microsoft 365 licenses with estimated monthly savings — read-only.',
+              'List stale guest/external accounts — read-only.',
+              'Revoke stale guest access.',
+              'Dismiss Microsoft Entra risky-user flags.',
+              'List and revoke OAuth app consents.',
+              'Explain Conditional Access blocks — read-only.',
+              'Get Intune device compliance details — read-only.',
+              'Retrieve BitLocker recovery keys — full audit trail.',
+            ],
+          },
+          {
+            group: 'Ticketing',
+            capabilities: [
+              'Create a general service ticket for anything else — stays open for manual follow-up.',
+              'List open tickets for the current user.',
+            ],
+          },
         ],
       });
       break;

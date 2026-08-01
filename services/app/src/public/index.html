@@ -133,6 +133,10 @@
     .agent-spinner{display:inline-block;width:16px;height:16px;border:2px solid #c4b5fd;border-top-color:#7c3aed;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
     .agent-input-row input:disabled{opacity:.6;cursor:default}
     .agent-error{color:#991b1b;background:#fee2e2;border-radius:8px;padding:6px 10px;font-size:.82rem;margin-top:4px}
+    .agent-action-buttons .lifecycle-option{background:#fff7ed;border:1px solid #fdba74;color:#9a3412}
+    .agent-action-buttons .lifecycle-option:hover:not(:disabled){background:#fed7aa;border-color:#fb923c}
+    .agent-action-buttons .request-option{background:#f0fdf4;border:1px solid #86efac;color:#166534}
+    .agent-action-buttons .request-option:hover:not(:disabled){background:#dcfce7;border-color:#4ade80}
   </style>
 </head>
 <body>
@@ -373,7 +377,7 @@
                 </div>
               </div>
               <div class="agent-action-group">
-                <span class="agent-action-label">General use</span>
+                <span class="agent-action-label">Governance &amp; Security</span>
                 <div class="agent-action-buttons">
                   <button type="button" class="general-option" data-agent-prompt="Which users have unused E3 licenses?">Unused E3 licenses</button>
                   <button type="button" class="general-option" data-agent-prompt="Show guest accounts inactive for 90 days">Stale guests</button>
@@ -384,6 +388,42 @@
                   <button type="button" class="general-option" data-agent-prompt="Why is this user blocked by Conditional Access?">CA block</button>
                   <button type="button" class="general-option" data-agent-prompt="Get device compliance for this user">Device compliance</button>
                   <button type="button" class="general-option" data-agent-prompt="Retrieve the BitLocker key for this user's laptop">BitLocker key</button>
+                </div>
+              </div>
+              <div class="agent-action-group">
+                <span class="agent-action-label">Lifecycle Management</span>
+                <div class="agent-action-buttons">
+                  <button type="button" class="lifecycle-option" data-agent-prompt="What department templates are available?">Show templates</button>
+                  <button type="button" class="lifecycle-option" data-agent-prompt="Onboard a new hire into the service desk department">Onboard new hire</button>
+                  <button type="button" class="lifecycle-option" data-agent-prompt="Run the complete offboarding workflow for this user because they have left the organisation">Full offboarding</button>
+                  <button type="button" class="lifecycle-option" data-agent-prompt="Run the deprovisioning cascade for this user to clean up all remaining access">Deprovision access</button>
+                </div>
+              </div>
+              <div class="agent-action-group">
+                <span class="agent-action-label">Bulk Operations</span>
+                <div class="agent-action-buttons">
+                  <button type="button" class="general-option" data-agent-prompt="Add a list of users to the All Staff distribution group in bulk">Add team to group</button>
+                  <button type="button" class="general-option" data-agent-prompt="Assign E3 licenses to a list of users in bulk">Assign licenses (bulk)</button>
+                  <button type="button" class="general-option" data-agent-prompt="Disable multiple user accounts at the same time">Disable multiple users</button>
+                  <button type="button" class="general-option" data-agent-prompt="Reset passwords for a list of users">Reset passwords (bulk)</button>
+                </div>
+              </div>
+              <div class="agent-action-group">
+                <span class="agent-action-label">Access Requests</span>
+                <div class="agent-action-buttons">
+                  <button type="button" class="request-option" data-agent-prompt="Submit an access request for this user to join a distribution group">Request group access</button>
+                  <button type="button" class="request-option" data-agent-prompt="Submit an access request for an E3 license for this user">Request a license</button>
+                  <button type="button" class="request-option" data-agent-prompt="Show all pending access requests">View pending requests</button>
+                  <button type="button" class="request-option" data-agent-prompt="Approve access request number 1">Approve a request</button>
+                </div>
+              </div>
+              <div class="agent-action-group">
+                <span class="agent-action-label">Department Templates</span>
+                <div class="agent-action-buttons">
+                  <button type="button" class="request-option" data-agent-prompt="List all available department access templates">List templates</button>
+                  <button type="button" class="request-option" data-agent-prompt="Apply the service desk access template to this user">Apply: Service Desk</button>
+                  <button type="button" class="request-option" data-agent-prompt="Apply the IT administration access template to this user">Apply: IT Admin</button>
+                  <button type="button" class="request-option" data-agent-prompt="Apply the external contractor access template to this user">Apply: Contractor</button>
                 </div>
               </div>
             </div>
