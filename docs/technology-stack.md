@@ -19,7 +19,6 @@ A complete inventory of every technology, framework, library, model, and tool us
 | Package | Version | Service(s) |
 |---|---|---|
 | **Express** | ^4.21.0 | App (port 3000), GenAI (port 3001) |
-| **Express** | ^4.21.0 | Member Benefits app (port 3002) |
 
 ---
 
@@ -30,14 +29,14 @@ A complete inventory of every technology, framework, library, model, and tool us
 | **PostgreSQL** | 15 (`pgvector/pgvector:pg15`) | Primary relational data store |
 | **pgvector** | Bundled with `pgvector/pgvector:pg15` | Vector similarity search extension |
 | **vector(384)** | — | Column type storing 384-dimension embeddings |
-| **HNSW indexes** | — | Approximate nearest-neighbour index (cosine distance) on 14 ETL tables plus agent/search tables where applicable |
+| **HNSW indexes** | — | Approximate nearest-neighbour index (cosine distance) on 12 ETL tables plus agent/search tables where applicable |
 | **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `12_stored_procedures.sql` |
 
 ### Database Client
 
 | Package | Version | Service(s) |
 |---|---|---|
-| **pg** (node-postgres) | ^8.13.0 | All services (app, genai, member-benefits-app, 7 ETL lines) |
+| **pg** (node-postgres) | ^8.13.0 | All services (app, genai, 7 ETL lines) |
 
 ---
 
@@ -103,8 +102,8 @@ Each ETL service is a long-running containerised process that:
 | Technology | Version / Image | Purpose |
 |---|---|---|
 | **Docker** | — | Container runtime for all services |
-| **Docker Compose** | v2 (multi-file) | Service orchestration via 11 compose fragments |
-| **node:22** | Official Docker image | Base image for all 10 service containers |
+| **Docker Compose** | v2 (multi-file) | Service orchestration via 9 compose fragments |
+| **node:22** | Official Docker image | Base image for all 9 service containers |
 | **pgvector/pgvector:pg15** | Official image | Postgres + pgvector extension |
 | **ollama/ollama** | Official image | LLM inference server (local dev only) |
 
@@ -121,8 +120,6 @@ Each ETL service is a long-running containerised process that:
 | `docker-compose.etl-dg-line.yml` | etl-dg-line |
 | `docker-compose.etl-m365-line.yml` | etl-m365-line |
 | `docker-compose.etl-sp-line.yml` | etl-sp-line |
-| `docker-compose.etl-claims-line.yml` | etl-claims-line |
-| `docker-compose.member-benefits-app.yml` | member-benefits-app |
 
 ---
 

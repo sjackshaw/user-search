@@ -2,7 +2,9 @@
 
 ## Overview
 
-The pipeline consists of seven **line** ETL services and one application service, all coordinated via Docker Compose. Each line service handles both its primary data source and its associated activity/sync log table within a single container, sharing one SBERT model instance and one Postgres connection pool. The claims line is isolated for the planned Member Benefits Bot and is not queried by the existing user-search app.
+The pipeline consists of six **line** ETL services and one application service, all coordinated via Docker Compose. Each line service handles both its primary data source and its associated activity/sync log table within a single container, sharing one SBERT model instance and one Postgres connection pool.
+
+> The isolated claims ETL line (formerly `etl-claims-line`, feeding the Member Benefits Bot) has moved to the `document-search` repository.
 
 Each line service follows this pattern on startup (and then cron, hourly):
 
@@ -259,53 +261,6 @@ Unique constraint on `(user_email, site)`.
 
 ---
 
-### 7. etl-claims-line — Member Benefits Claims line
-
-| Item | Value |
-|---|---|
-| Service dir | `services/etl-claims-line/` |
-| Compose file | `docker-compose.etl-claims-line.yml` |
-| Primary table | `claims` |
-| Log table | `claims_logs` |
-| Primary data | `services/etl-claims-line/data/primary.json` |
-| Log data | `services/etl-claims-line/data/logs.json` |
-
-**Primary schema — `claims`**
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `SERIAL` | Primary key |
-| `member_id` | `TEXT NOT NULL` | Stable ID derived from netForum source records |
-| `member_email` | `TEXT NOT NULL` | netForum member email |
-| `claim_id` | `TEXT UNIQUE NOT NULL` | |
-| `claim_type` | `TEXT NOT NULL` | `medical`, `dental`, `vision`, `rx`, or `mental_health` |
-| `service_date` | `DATE NOT NULL` | |
-| `provider` | `TEXT` | |
-| `amount_billed` | `NUMERIC(10,2)` | |
-| `amount_paid` | `NUMERIC(10,2)` | |
-| `plan_year` | `INT NOT NULL` | |
-| `status` | `TEXT NOT NULL` | `processed`, `pending`, `denied`, or `appealed` |
-| `embedding` | `vector(384)` | SBERT embedding |
-
-**Embedding text** — `"<claim_type> <provider> <status>"`
-
-**Log schema — `claims_logs`**
-
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `SERIAL` | Primary key |
-| `log_timestamp` | `TIMESTAMPTZ NOT NULL` | |
-| `member_id` | `TEXT NOT NULL` | |
-| `member_email` | `TEXT NOT NULL` | |
-| `claim_id` | `TEXT NOT NULL` | |
-| `event_type` | `TEXT NOT NULL` | |
-| `notes` | `TEXT` | |
-| `embedding` | `vector(384)` | |
-
-**Embedding text** — `"<event_type> <claim_id> <notes>"`
-
----
-
 ## Database initialisation
 
 Init scripts in `infra/db/init/` are executed once by Postgres on first startup, in filename order:
@@ -327,8 +282,6 @@ Init scripts in `infra/db/init/` are executed once by Postgres on first startup,
 | `13_index_sharepoint_permissions.sql` | `sharepoint_permissions` + `sharepoint_permission_change_logs` tables + HNSW indexes |
 | `14_index_m365_group_memberships.sql` | `m365_group_memberships` + `m365_membership_change_logs` tables + HNSW indexes |
 | `15_agent_tickets.sql` | `agent_tickets` table |
-| `16_claims.sql` | `claims` table + HNSW index + claims ETL procedures |
-| `17_claims_logs.sql` | `claims_logs` table + HNSW index + claims log ETL procedures |
 
 All HNSW indexes use `vector_cosine_ops` with `m=16, ef_construction=64`. Activity-log and change-log tables additionally carry indexes on `email`/`user_email`, `log_timestamp DESC`, and `changed_by`.
 
@@ -367,19 +320,17 @@ services/etl-eu-line/data/primary.json        (1 000 external users; 100 sampled
 services/etl-dg-line/data/primary.json        (500 distribution groups)
 services/etl-m365-line/data/primary.json      (M365 group memberships)
 services/etl-sp-line/data/primary.json        (SharePoint user permissions)
-services/etl-claims-line/data/primary.json    (Member benefits claims)
         │
-       ▼  (generate_synthetic.py and generate_synthetic_claims.py seed data files)
+       ▼  (generate_synthetic.py seeds all primary/log data files)
 services/etl-ad-line/data/logs.json          (3 000 AD activity logs)
 services/etl-netforum-line/data/logs.json    (2 000 netForum activity logs)
 services/etl-eu-line/data/logs.json          (2 000 external user activity logs)
 services/etl-dg-line/data/logs.json          (1 500 DG sync logs)
 services/etl-m365-line/data/logs.json        (M365 membership change logs)
 services/etl-sp-line/data/logs.json          (SharePoint permission change logs)
-services/etl-claims-line/data/logs.json      (Member benefits claims logs)
                 │
                 ▼  (vectorize.js — runPrimary() then runLogs(), on startup + cron hourly)
-        Postgres / pgvector  (14 ETL tables + etl_job_logs + chat_messages + agent_tickets)
+        Postgres / pgvector  (12 ETL tables + etl_job_logs + chat_messages + agent_tickets)
                 │
                 ▼
          services/app  ──► http://localhost:3000

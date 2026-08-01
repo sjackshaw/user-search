@@ -34,9 +34,7 @@ COMPOSE_FILES=(
   docker-compose.etl-dg-line.yml
   docker-compose.etl-m365-line.yml
   docker-compose.etl-sp-line.yml
-  docker-compose.etl-claims-line.yml
   docker-compose.genai.yml
-  docker-compose.member-benefits-app.yml
 )
 
 compose_cmd() {
