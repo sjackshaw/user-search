@@ -1,6 +1,6 @@
 # Entity Relationship Diagram
 
-15 tables total: 6 primary sources, 6 activity/sync/change log tables, 3 supporting tables (ETL logs, change logs, chat), and 1 agent tickets table.
+16 tables total: 6 primary sources, 6 activity/sync/change log tables, 3 supporting tables (ETL logs, change logs, chat), 1 agent tickets table, and 1 access requests table.
 
 ```mermaid
 erDiagram
@@ -189,6 +189,20 @@ erDiagram
         text title
         text description
         text status "open / closed"
+        uuid session_id
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    ACCESS_REQUESTS {
+        serial id PK
+        text requested_for
+        text requested_by
+        text resource_type "distribution_group / license / sharepoint / m365_group"
+        text resource_name
+        text reason
+        text status "pending / approved / rejected"
+        text approver_note
         uuid session_id
         timestamptz created_at
         timestamptz updated_at

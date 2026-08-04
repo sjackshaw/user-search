@@ -1,7 +1,7 @@
 # Next Steps: SAML-Based Access Management
 
 **Date:** February 25, 2026
-**Updated:** June 16, 2026
+**Updated:** August 3, 2026
 
 ---
 
@@ -20,8 +20,10 @@ Implement a **SAML 2.0 Single Sign-On (SSO)** integration to authenticate users 
 | Area | Status |
 |---|---|
 | Authentication | **None** — the application is unauthenticated; all endpoints are open |
-| Authorisation | **None** — all users have equal access to search, lookup, chat, and ETL status |
+| Authorisation | **None** — all users have equal access to search, lookup, chat, ETL status, and all 37 agent tools |
 | User identity | Not tracked — GenAI chat sessions use client-generated UUIDs with no user binding |
+| Agent tickets | `agent_tickets` table records write actions but without a `performed_by` user column |
+| Access requests | `access_requests` table records self-service requests with a `requested_by` column (nullable, not authenticated) |
 | Role definitions | **Not implemented and not available from IdP** — no role attributes exist in Active Directory or Entra ID for this application; a role management system must be built to assign roles to AD users |
 
 ---
@@ -33,9 +35,9 @@ Implement a **SAML 2.0 Single Sign-On (SSO)** integration to authenticate users 
 | Role | Permissions | Description | Default |
 |---|---|---|---|
 | `viewer` | Search, lookup, view change history | Read-only access to all data | **Yes — all AD users** |
-| `analyst` | All `viewer` permissions + ETL status, GenAI agent (read-only queries) | Can use the assistant for analytical questions | No — must be assigned |
-| `operator` | All `analyst` permissions + GenAI agentic actions (provision, disable, reset, update, group management) | Can instruct the AI to make changes | No — must be assigned |
-| `admin` | All `operator` permissions + role assignment, system configuration | Full access including assigning roles to other users | No — must be assigned |
+| `analyst` | All `viewer` permissions + ETL status, GenAI agent (read-only queries: inactive licenses, stale guests, app consents, device compliance, MFA status, out-of-office, Conditional Access, access templates, ticket/request listing) | Can use the assistant for analytical questions | No — must be assigned |
+| `operator` | All `analyst` permissions + GenAI agentic write actions (provision, reset password, update attribute, group management, M365 service desk actions, onboarding, access request approval, access templates) | Can instruct the AI to make changes; cannot disable/offboard or access sensitive governance tools | No — must be assigned |
+| `admin` | All `operator` permissions + destructive actions (disable, offboard, deprovision cascade, bulk operations, governance write actions, BitLocker key retrieval, risky user dismissal) + role assignment, system configuration | Full access including assigning roles to other users | No — must be assigned |
 
 ### 3.1 Role Hierarchy
 
@@ -207,7 +209,9 @@ Apply to existing routes:
 | `GET /api/lookup` | `viewer` |
 | `GET /api/etl-jobs` | `analyst` |
 | `POST /api/chat` (proxy to genai) | `analyst` |
-| GenAI agentic actions (add/remove) | `operator` |
+| GenAI read-only agent queries | `analyst` |
+| GenAI write actions (provision, reset, update, group, M365, onboard, access request) | `operator` |
+| GenAI destructive actions (disable, offboard, deprovision, bulk disable, governance writes) | `admin` |
 
 ---
 
@@ -232,35 +236,34 @@ const payload = {
 
 #### Step 7: Enforce Permissions in GenAI Tool Execution
 
-In the GenAI service, gate tool execution on the user's role:
+In the GenAI service, gate tool execution on the user's role. Use the full `ROLE_TOOL_ALLOWLIST` defined in `docs/next-steps/agentic-ai-expansion.md` (Section 2.2) as the authoritative server-side permission map across all 37 tools:
 
 ```js
-const TOOL_PERMISSIONS = {
-  add_user_to_group:      'operator',
-  remove_user_from_group: 'operator',
-};
+const ROLE_HIERARCHY = { admin: 4, operator: 3, analyst: 2, viewer: 1 };
 
 function canExecuteTool(toolName, userRole) {
-  const HIERARCHY = { admin: 4, operator: 3, analyst: 2, viewer: 1 };
-  const required = TOOL_PERMISSIONS[toolName] || 'admin';
-  return (HIERARCHY[userRole] || 0) >= (HIERARCHY[required] || 99);
+  const allowlist = ROLE_TOOL_ALLOWLIST[userRole];
+  if (allowlist === null) return true;           // admin: unrestricted
+  if (!allowlist) return false;                  // viewer: no agent access
+  return allowlist.includes(toolName);
 }
 ```
 
-If a `viewer` or `analyst` asks to add a user to a group, the assistant responds:
+If a `viewer` or `analyst` asks to perform a write action, the assistant responds:
 
-> *"You don't have permission to modify distribution groups. This action requires the **operator** role. Please contact your administrator."*
+> *"You don't have permission to perform this action. This requires the **operator** role. Please contact your administrator."*
 
 #### Step 8: Audit User Identity in Logs
 
-Extend `source_change_logs` and `chat_messages` to include the authenticated user:
+Extend `agent_tickets`, `access_requests`, and `chat_messages` to include the authenticated user:
 
 ```sql
-ALTER TABLE source_change_logs ADD COLUMN IF NOT EXISTS performed_by TEXT;
-ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS user_email TEXT;
+ALTER TABLE agent_tickets    ADD COLUMN IF NOT EXISTS performed_by TEXT;
+ALTER TABLE access_requests  ADD COLUMN IF NOT EXISTS performed_by TEXT;
+ALTER TABLE chat_messages    ADD COLUMN IF NOT EXISTS user_email    TEXT;
 ```
 
-All agent-executed changes record `performed_by` = the authenticated user's email for full traceability.
+All agent-executed changes record `performed_by` = the authenticated user's email for full traceability. The `access_requests` table already has a nullable `requested_by` column which maps to `performed_by` once authentication is in place.
 
 ---
 
@@ -268,12 +271,14 @@ All agent-executed changes record `performed_by` = the authenticated user's emai
 
 Since no role source exists in the IdP or any upstream system, a role management capability must be built into the application. An `admin`-role user must be able to view all AD accounts and assign application roles to them.
 
+> **Note:** The `access_requests` table (`infra/db/init/16_access_requests.sql`) is already implemented as part of the agent's self-service access request capability. This is a separate concern from RBAC — it tracks requests for resources (groups, licenses, SharePoint sites) rather than application-level role assignments. The `user_roles` table described below is still required and has not yet been created.
+
 #### Step 9: Role Storage — `user_roles` Table
 
 Create a dedicated table to store application role assignments. This is separate from `active_directory` so that role changes do not require an ETL re-run and the audit trail is independent:
 
 ```sql
--- Add to infra/db/init/14_user_roles.sql
+-- Add to infra/db/init/17_user_roles.sql
 CREATE TABLE IF NOT EXISTS user_roles (
   email       TEXT        PRIMARY KEY,
   role        TEXT        NOT NULL DEFAULT 'viewer'

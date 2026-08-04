@@ -3,12 +3,14 @@
 ## Overview
 
 In the current proof of concept, all agent "actions" (provision account, disable account,
-update attribute, etc.) execute **directly against the local Postgres database**. This is
-useful for demonstrating the concept but has no real-world effect on upstream systems.
+update attribute, lifecycle workflows, access request approvals, etc.) execute **directly
+against the local Postgres database**. This is useful for demonstrating the concept but has
+no real-world effect on upstream systems.
 
-In production, each action must translate into **authenticated API calls** to the actual
-source systems: Azure AD (Entra ID), NetForum, Exchange/M365, SharePoint, and Distribution
-Groups.
+In production, each write action must translate into **authenticated API calls** to the
+actual source systems: Azure AD (Entra ID), NetForum, Exchange/M365, SharePoint, and
+Distribution Groups. Ticket and access request management should route to ServiceNow or
+Jira rather than the local `agent_tickets` and `access_requests` Postgres tables.
 
 ---
 
@@ -19,9 +21,19 @@ Groups.
 | `provision_account` | INSERT into local Postgres | POST to target system's user-creation API |
 | `disable_account` | UPDATE local Postgres row | PATCH/PUT to target system's disable endpoint |
 | `update_attribute` | UPDATE local Postgres column | PATCH to target system's attribute endpoint |
+| `reset_password` | UPDATE local Postgres column | PATCH to Entra ID Graph API (`/users/{id}/resetPassword`) |
+| `add_to_group` / `add_to_m365_group` | INSERT into local memberships table | POST to Graph API group membership endpoint |
+| `reset_mfa` / `assign_license` / M365 actions | Simulated via Graph mock client | Graph API calls via `services/genai/graph-client.js` (already wired; needs real credentials) |
+| `onboard_user` | Orchestrates multiple local Postgres inserts | Orchestrates real API calls: provision AD + NetForum, assign license, add to groups — in sequence |
+| `offboard_user` | Orchestrates multiple local Postgres updates | Orchestrates real API calls: disable all accounts, remove groups, revoke SharePoint, reclaim license |
+| `deprovision_cascade` | Multiple local Postgres updates | Remove from all groups + revoke SharePoint via Graph API; reclaim license |
+| `bulk_action` | Loop of local Postgres operations | Loop of real API calls per target user; batch where Graph API supports it |
+| `submit_access_request` | INSERT into local `access_requests` table | POST to ITSM (ServiceNow/Jira) to create approval request |
+| `approve_access_request` | UPDATE `access_requests` + execute Postgres action | ITSM approval callback → execute provisioning API call |
 | `create_ticket` | INSERT into `agent_tickets` | POST to ticketing system API (ServiceNow, Jira, etc.) |
 | `compare_sources` | SELECT from local tables | No change (read-only, local data is fine) |
 | `lookup_user` | SELECT from local tables | No change (read-only, local data is fine) |
+| Governance reads (e.g. `list_inactive_licenses`, `get_device_compliance`) | SELECT from local Postgres + Graph mock | Graph API calls for live data (already wired via `graph-client.js`) |
 
 > **Read actions** (search, lookup, compare) can remain as-is — they query the ETL-synced
 > local data which is the whole point of the search platform. Only **write actions** need
@@ -34,8 +46,8 @@ Groups.
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌────────────────────┐
 │   Agent      │────▶│  Action Router    │────▶│  Action Executors  │
-│  (Bedrock)   │     │  (validates +     │     │  (per-system API   │
-│              │     │   authorises)     │     │   clients)         │
+│  (Bedrock /  │     │  (validates +     │     │  (per-system API   │
+│   Ollama)    │     │   authorises)     │     │   clients)         │
 └─────────────┘     └──────────────────┘     └────────┬───────────┘
                                                        │
                     ┌──────────────────────────────────┤
@@ -46,6 +58,12 @@ Groups.
               │ Graph API│ │   REST    │ │ Exchange│ │  Now     │
               └──────────┘ └───────────┘ └─────────┘ └──────────┘
 ```
+
+> **Note:** Microsoft Graph integration is already centralised in
+> `services/genai/graph-client.js`. When `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`,
+> and `ENTRA_CLIENT_SECRET` are set, the service switches from the safe mock client
+> to the real Graph SDK automatically. The remaining work is replacing the Postgres
+> write operations with real API calls for account lifecycle actions.
 
 ---
 
@@ -696,12 +714,14 @@ DRY_RUN=false                         # Log actions without executing
 - [ ] Store credentials in AWS Secrets Manager / Azure Key Vault
 - [ ] Implement `credentials/secretsManager.js` for your vault provider
 - [ ] Build per-system API clients (`actions/entra/client.js`, etc.)
-- [ ] Refactor each action executor to call real APIs
-- [ ] Add approval workflow (pending → approved → executed)
-- [ ] Add `agent_audit_log` table migration
+- [ ] Refactor each account/lifecycle action executor to call real APIs (Graph, NetForum, Exchange)
+- [ ] Confirm Microsoft Graph tools (`reset_mfa`, `assign_license`, M365 group, governance) already use `graph-client.js` — validate with live credentials
+- [ ] Add approval workflow for `submit_access_request` / `approve_access_request` via ITSM API
+- [ ] Replace `agent_tickets` Postgres table with ServiceNow/Jira ticket API in `createAndCloseTicket()`
+- [ ] Add `agent_audit_log` table migration for full compliance trail
 - [ ] Implement retry + circuit breaker for each external API
 - [ ] Add rate limiting per target system (Graph API: 10,000 req/10min)
-- [ ] Add dry-run mode for initial testing
+- [ ] Add dry-run mode for `bulk_action` and destructive lifecycle tools
 - [ ] Write integration tests with mocked API responses
 - [ ] Load test with realistic concurrent agent sessions
 - [ ] Security review of all credential flows
