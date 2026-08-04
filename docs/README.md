@@ -2,7 +2,7 @@
 
 ## Overview
 
-User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six user/search sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered user-card agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) exposes 28 tool-calling actions for account operations, Microsoft 365 service desk workflows, and governance checks.
+User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six user/search sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered user-card agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) exposes **37 tool-calling actions** across account operations, Microsoft 365 service desk workflows, governance checks, lifecycle management (onboard/offboard), bulk operations, self-service access requests, and department access templates.
 
 > The former member-benefits experience and its dedicated ETL line were removed from this repository. Any related work now lives in the `document-search` repository.
 
@@ -91,8 +91,12 @@ docker exec user-search-ollama-1 ollama pull qwen2.5:3b
 
 The browser UI is available at `http://localhost:3000`. Search for a user and open a detail card to use the embedded User Card Agent. Agent buttons are grouped by scope:
 
-- **Current User Options** — user-scoped service desk actions such as MFA reset/status, license assignment/removal, mailbox access, aliases, out-of-office, Teams channel membership, and OneDrive access.
-- **General use** — tenant/governance actions such as inactive licenses, stale guests, app consents, Conditional Access blocks, device compliance, BitLocker recovery, and risk dismissal.
+- **Account Operations** — provision/disable accounts, reset password, update attributes, add to distribution or M365 groups.
+- **Current User Options** — user-scoped M365 service desk actions: MFA reset/status, license assignment/removal, mailbox access, email aliases, out-of-office, Teams channel membership, and OneDrive access.
+- **Lifecycle Management** — onboard (new hire), offboard (departure), deprovision cascade (post-disable cleanup), and bulk operations across multiple users.
+- **Access Requests** — submit a self-service access request, view pending requests, approve requests (operator/admin only).
+- **Department Templates** — apply a pre-defined department access bundle (license + groups) in one action.
+- **General / Governance** — tenant-wide checks: inactive licenses, stale guests, app consents, Conditional Access blocks, device compliance, BitLocker recovery, and risk dismissal.
 
 The GenAI service powers the user-card agent at `http://localhost:3001/api/agent`; health is available at `http://localhost:3001/health`.
 

@@ -31,6 +31,8 @@ A complete inventory of every technology, framework, library, model, and tool us
 | **vector(384)** | — | Column type storing 384-dimension embeddings |
 | **HNSW indexes** | — | Approximate nearest-neighbour index (cosine distance) on 12 ETL tables plus agent/search tables where applicable |
 | **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `12_stored_procedures.sql` |
+| **`agent_tickets` table** | — | PoC ticketing for agent write actions (`infra/db/init/15_agent_tickets.sql`) |
+| **`access_requests` table** | — | Self-service access request queue with `pending → approved → rejected` lifecycle (`infra/db/init/16_access_requests.sql`) |
 
 ### Database Client
 
@@ -69,13 +71,17 @@ Ollama runs as a sidecar Docker container (`ollama/ollama`) for local developmen
 
 ### GenAI Agent Tools
 
-The user-card GenAI agent exposes 28 tool-calling capabilities grouped by scope:
+The user-card GenAI agent exposes **37 tool-calling capabilities** grouped by scope:
 
-| Group | Examples | Audit behavior |
-|---|---|---|
-| Account operations | Provision account, disable account, reset password, update attributes, add distribution or M365 group membership | Write actions create and auto-close `agent_tickets` on success |
-| Microsoft 365 service desk | MFA reset/status, license assignment/removal, mailbox access, aliases, out-of-office, Teams channel membership, OneDrive access | Read-only checks skip tickets; write actions create audit tickets |
-| Governance | Inactive licenses, stale guests, guest revocation, risky-user dismissal, app consents, Conditional Access explanation, device compliance, BitLocker recovery | Read-only checks skip tickets except BitLocker key retrieval, which is always ticketed |
+| Group | Count | Tools | Audit behaviour |
+|---|---|---|---|
+| Account Operations | 6 | `provision_account`, `disable_account`, `reset_password`, `update_attribute`, `add_to_group`, `add_to_m365_group` | All write actions create and auto-close `agent_tickets` on success |
+| Microsoft 365 Service Desk | 10 | `reset_mfa`, `get_mfa_status`, `assign_license`, `remove_license`, `grant_mailbox_access`, `add_email_alias`, `get_out_of_office`, `set_out_of_office`, `add_to_teams_channel`, `grant_onedrive_access` | Read-only checks skip tickets; write actions create audit tickets |
+| Governance | 9 | `list_inactive_licenses`, `list_stale_guests`, `revoke_guest_access`, `dismiss_risky_user`, `list_app_consents`, `revoke_app_consent`, `explain_ca_block`, `get_device_compliance`, `get_bitlocker_key` | Read-only checks skip tickets except `get_bitlocker_key`, which is always ticketed |
+| General / Ticketing | 3 | `create_ticket`, `list_open_tickets`, `describe_capabilities` | Informational; no additional tickets created |
+| Lifecycle Management | 4 | `onboard_user`, `offboard_user`, `deprovision_cascade`, `bulk_action` | All lifecycle actions create audit tickets; `bulk_action` creates one ticket per affected user |
+| Access Requests | 3 | `submit_access_request`, `list_access_requests`, `approve_access_request` | Requests stored in `access_requests` table; approvals trigger provisioning and close the request |
+| Department Access Templates | 2 | `apply_access_template`, `list_access_templates` | `apply_access_template` creates an audit ticket; list is read-only |
 
 Microsoft Graph integration is centralized in `services/genai/graph-client.js`. Local development uses a safe mock client unless `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, and `ENTRA_CLIENT_SECRET` are configured.
 
@@ -181,7 +187,8 @@ Source JSON → ETL service → SBERT (all-MiniLM-L6-v2) → 384-dim vector
 
 ```text
 User prompt → Express API → Ollama (qwen2.5:3b) → Tool call decision
-  → Tool executor → PostgreSQL action or Graph mock → Ticket when required
+  → Tool executor → PostgreSQL action, Graph mock (graph-client.js), or access_requests table
+  → Ticket / access request when required
   → Tool result → Ollama (follow-up) → Natural-language reply → Browser
 ```
 
@@ -189,7 +196,7 @@ User prompt → Express API → Ollama (qwen2.5:3b) → Tool call decision
 
 ```text
 User prompt → Express API (EKS pod) → Bedrock converse API → Tool call decision
-  → Tool executor → RDS action (via RDS Proxy), Microsoft Graph, or ITSM API
-  → Ticket when required
+  → Tool executor → RDS action (via RDS Proxy), Microsoft Graph API, NetForum REST, or ITSM API
+  → ServiceNow ticket / access request when required
   → Tool result → Bedrock (follow-up) → Natural-language reply → Browser
 ```
