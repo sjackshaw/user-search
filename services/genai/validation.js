@@ -31,6 +31,53 @@ function validateTargetSystem(target_system) {
   }
 }
 
+// Required name prefix per group type — applies to distribution_groups (type
+// "Distribution") and m365_group_memberships (Microsoft365 | Security | Distribution).
+const GROUP_NAME_PREFIXES = {
+  Distribution: 'DL-',
+  Security:     'SG-',
+  Microsoft365: 'M365-',
+};
+
+// Minimum number of role:"owner" members an M365 group must retain.
+const MIN_GROUP_OWNERS = 1;
+
+/**
+ * Check a group name against the naming convention for its type.
+ * Returns { compliant, expectedPrefix } — does not throw.
+ */
+function checkGroupNamingConvention(groupName, groupType) {
+  const expectedPrefix = GROUP_NAME_PREFIXES[groupType] || null;
+  if (!expectedPrefix) return { compliant: true, expectedPrefix: null };
+  const compliant = groupName.toUpperCase().startsWith(expectedPrefix.toUpperCase());
+  return { compliant, expectedPrefix };
+}
+
+// Default severity assigned to each detected violation type.
+const VIOLATION_SEVERITY = {
+  naming_convention: 'low',
+  missing_owners:    'medium',
+  orphaned_resource: 'high',
+  oversharing_risk:  'critical',
+  stale_guest:       'medium',
+};
+
+// Points deducted from the compliance score per open violation, by severity.
+const SEVERITY_WEIGHT = { critical: 15, high: 8, medium: 4, low: 1 };
+
+/**
+ * Compute a 0-100 compliance score from open-violation counts by severity.
+ * Returns { score, deduction } — does not throw.
+ */
+function computeComplianceScore(countsBySeverity) {
+  const deduction = Object.entries(SEVERITY_WEIGHT).reduce(
+    (sum, [severity, weight]) => sum + weight * (countsBySeverity[severity] || 0),
+    0
+  );
+  const score = Math.max(0, Math.min(100, 100 - deduction));
+  return { score, deduction };
+}
+
 function escapeLike(value) {
   return value.replace(/[%_]/g, '\\$&');
 }
@@ -58,8 +105,14 @@ module.exports = {
   SYSTEM_LABELS,
   SAFE_TABLES,
   SAFE_COLUMNS,
+  GROUP_NAME_PREFIXES,
+  MIN_GROUP_OWNERS,
+  VIOLATION_SEVERITY,
+  SEVERITY_WEIGHT,
   validateTargetSystem,
   escapeLike,
   safeTable,
   safeColumn,
+  checkGroupNamingConvention,
+  computeComplianceScore,
 };

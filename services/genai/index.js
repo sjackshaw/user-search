@@ -2,8 +2,10 @@
 
 const express   = require('express');
 const rateLimit = require('express-rate-limit');
+const cron      = require('node-cron');
 const { Pool }  = require('pg');
 const graphClient = require('./graph-client');
+const { toCsv } = require('./csv');
 
 const app     = express();
 const PORT    = parseInt(process.env.PORT || '3001', 10);
@@ -715,6 +717,244 @@ const AGENT_TOOLS = [
       },
     },
   },
+
+  // ── Naming & Ownership Governance ─────────────────────────────────────────
+  {
+    type: 'function',
+    function: {
+      name: 'list_naming_violations',
+      description:
+        'List distribution groups and Microsoft 365 groups whose name does not follow the ' +
+        'required naming convention (DL- for distribution groups, SG- for Security groups, ' +
+        'M365- for Microsoft365 groups). ' +
+        'Use when the user asks about naming standards, naming convention compliance, or which groups are misnamed.',
+      parameters: {
+        type: 'object',
+        properties: {
+          group_type: {
+            type: 'string',
+            enum: ['Distribution', 'Security', 'Microsoft365'],
+            description: 'Restrict the check to one group type. Defaults to all types.',
+          },
+          limit: { type: 'integer', description: 'Maximum number of violations to return. Defaults to 25.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_groups_missing_owners',
+      description:
+        'List Microsoft 365 groups that have fewer than the required minimum number of owners. ' +
+        'Use when the user asks about groups without owners, orphaned groups, or minimum-owner compliance.',
+      parameters: {
+        type: 'object',
+        properties: {
+          min_owners: { type: 'integer', description: 'Minimum number of owners required per group. Defaults to 1.' },
+          limit: { type: 'integer', description: 'Maximum number of groups to return. Defaults to 25.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_orphaned_resources',
+      description:
+        'List M365 groups with no owner (no member with role "owner") and/or SharePoint sites with no owner ' +
+        '(no user with role "FullControl"). ' +
+        'Use when the user asks about orphaned groups/sites, resources with no owner, or ownerless resources.',
+      parameters: {
+        type: 'object',
+        properties: {
+          resource_type: {
+            type: 'string',
+            enum: ['m365_group', 'sharepoint_site', 'all'],
+            description: 'Restrict the check to one resource type. Defaults to all.',
+          },
+          limit: { type: 'integer', description: 'Maximum number of orphaned resources to return. Defaults to 25.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'reassign_resource_owner',
+      description:
+        'Assign a new owner to an orphaned M365 group (sets their role to "owner") or SharePoint site (grants them ' +
+        'FullControl). Use after list_orphaned_resources identifies a resource with no owner, or when the user asks ' +
+        'to reassign/assign an owner to a group or site.',
+      parameters: {
+        type: 'object',
+        properties: {
+          resource_type:    { type: 'string', enum: ['m365_group', 'sharepoint_site'], description: 'The type of resource to reassign.' },
+          resource_name:    { type: 'string', description: 'Name (or partial name) of the group or site.' },
+          new_owner_email:  { type: 'string', description: 'Email address of the user to make the new owner.' },
+          reason:           { type: 'string', description: 'Reason for the ownership reassignment.' },
+        },
+        required: ['resource_type', 'resource_name', 'new_owner_email'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_oversharing_risks',
+      description:
+        'List SharePoint permissions where an external/guest user (from the External Users data source) holds ' +
+        'elevated Edit or FullControl access to an internal site. This is the closest available signal for ' +
+        'oversharing risk in this on-prem-style permission model, which has no "Everyone"/anonymous-link sharing ' +
+        'concept. Use when the user asks about oversharing, overshared sites, external users with too much access, ' +
+        'or SharePoint exposure risk.',
+      parameters: {
+        type: 'object',
+        properties: {
+          role: { type: 'string', enum: ['Edit', 'FullControl'], description: 'Restrict to one elevated role. Defaults to both.' },
+          limit: { type: 'integer', description: 'Maximum number of results to return. Defaults to 25.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'scan_governance_violations',
+      description:
+        'Run all governance checks (naming convention, missing/orphaned owners, oversharing risk, stale guests) ' +
+        'and persist any findings as tracked violations. Previously open violations no longer detected are ' +
+        'automatically resolved. Use when the user asks to run a governance scan or refresh violation tracking.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_violations',
+      description:
+        'List tracked governance violations, with age in days since detection. Filter by status, severity, ' +
+        'violation type, or assignee. Use when the user asks about open violations, violation backlog, or who a ' +
+        'violation is assigned to.',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['open', 'acknowledged', 'resolved', 'all'], description: 'Filter by status. Defaults to open.' },
+          severity: { type: 'string', enum: ['low', 'medium', 'high', 'critical'], description: 'Filter by severity.' },
+          violation_type: {
+            type: 'string',
+            enum: ['naming_convention', 'missing_owners', 'orphaned_resource', 'oversharing_risk', 'stale_guest'],
+            description: 'Filter by violation type.',
+          },
+          assigned_to: { type: 'string', description: 'Filter by assignee email.' },
+          limit: { type: 'integer', description: 'Maximum number of violations to return. Defaults to 25.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'assign_violation',
+      description:
+        'Assign a tracked governance violation to an owner for remediation. Marks the violation "acknowledged" ' +
+        'if it was still open. Use when the user asks to assign a violation to someone.',
+      parameters: {
+        type: 'object',
+        properties: {
+          violation_id: { type: 'integer', description: 'ID of the violation to assign.' },
+          assigned_to:  { type: 'string', description: 'Email of the person to assign the violation to.' },
+        },
+        required: ['violation_id', 'assigned_to'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'resolve_violation',
+      description:
+        'Mark a tracked governance violation as resolved. Use when the user confirms a violation has been fixed.',
+      parameters: {
+        type: 'object',
+        properties: {
+          violation_id:    { type: 'integer', description: 'ID of the violation to resolve.' },
+          resolution_note: { type: 'string', description: 'Note describing how the violation was resolved.' },
+        },
+        required: ['violation_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_compliance_score',
+      description:
+        'Run a fresh governance scan and compute an overall compliance posture score (0-100), with a breakdown ' +
+        'of open violations by severity and type. Use when the user asks for the compliance score, governance ' +
+        'posture, or overall compliance health.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_trend_analytics',
+      description:
+        'Get historical trend analytics over a trailing window: daily source data change volume ' +
+        '(created/updated/deleted), ETL job success/failure counts, and governance violations detected/resolved. ' +
+        'Use when the user asks about trends, historical activity, or how something has changed over time.',
+      parameters: {
+        type: 'object',
+        properties: {
+          days: { type: 'integer', description: 'Number of trailing days to include. Defaults to 30 (max 90).' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_report',
+      description:
+        'Generate and persist a CSV export of governance violations or source data change logs. Returns a ' +
+        'download URL. Use when the user asks to export, download, or generate a report/CSV.',
+      parameters: {
+        type: 'object',
+        properties: {
+          report_type: {
+            type: 'string',
+            enum: ['violations', 'change_logs'],
+            description: 'Which dataset to export.',
+          },
+          days: { type: 'integer', description: 'For change_logs only — trailing days to include. Defaults to 30.' },
+        },
+        required: ['report_type'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_reports',
+      description:
+        'List previously generated report snapshots (scheduled daily or agent-triggered), with row counts and ' +
+        'download URLs. Use when the user asks what reports are available or to see report history.',
+      parameters: {
+        type: 'object',
+        properties: {
+          report_type: { type: 'string', enum: ['violations', 'change_logs'], description: 'Restrict to one report type.' },
+          limit: { type: 'integer', description: 'Maximum number of reports to return. Defaults to 20.' },
+        },
+      },
+    },
+  },
 ];
 
 // ── Agent: action executors ───────────────────────────────────────────────────
@@ -761,8 +1001,13 @@ const {
   SYSTEM_LABELS,
   SAFE_TABLES,
   SAFE_COLUMNS,
+  GROUP_NAME_PREFIXES,
+  MIN_GROUP_OWNERS,
+  VIOLATION_SEVERITY,
   validateTargetSystem,
   escapeLike,
+  checkGroupNamingConvention,
+  computeComplianceScore,
 } = require('./validation');
 
 // ── Department access templates ───────────────────────────────────────────────
@@ -1389,6 +1634,639 @@ async function executeListStaleGuests(pool, fnArgs) {
       sponsor: row.sponsor,
       enabled: row.enabled,
       lastSeen: row.created_at,
+    })),
+  };
+}
+
+async function executeListNamingViolations(pool, fnArgs) {
+  const groupType = fnArgs.group_type;
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
+  const violations = [];
+
+  if (!groupType || groupType === 'Distribution') {
+    const { rows } = await pool.query('SELECT name, email FROM distribution_groups ORDER BY name ASC');
+    for (const row of rows) {
+      const { compliant, expectedPrefix } = checkGroupNamingConvention(row.name, 'Distribution');
+      if (!compliant) {
+        violations.push({ groupName: row.name, groupEmail: row.email, groupType: 'Distribution', expectedPrefix, source: 'distribution_groups' });
+      }
+    }
+  }
+
+  const { rows: m365Rows } = await pool.query(
+    `SELECT group_name, group_email, group_type FROM m365_group_memberships
+     WHERE $1::text IS NULL OR group_type = $1
+     ORDER BY group_name ASC`,
+    [groupType || null]
+  );
+  for (const row of m365Rows) {
+    const { compliant, expectedPrefix } = checkGroupNamingConvention(row.group_name, row.group_type);
+    if (!compliant) {
+      violations.push({ groupName: row.group_name, groupEmail: row.group_email, groupType: row.group_type, expectedPrefix, source: 'm365_group_memberships' });
+    }
+  }
+
+  return {
+    conventions: GROUP_NAME_PREFIXES,
+    totalViolations: violations.length,
+    count: Math.min(violations.length, limit),
+    violations: violations.slice(0, limit),
+  };
+}
+
+async function executeListGroupsMissingOwners(pool, fnArgs) {
+  const minOwners = Number.isInteger(fnArgs.min_owners) ? Math.max(fnArgs.min_owners, 0) : MIN_GROUP_OWNERS;
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
+
+  const { rows } = await pool.query(
+    `SELECT group_name, group_email, group_type,
+            (SELECT count(*) FROM jsonb_array_elements(users) u WHERE u->>'role' = 'owner') AS owner_count
+     FROM m365_group_memberships
+     ORDER BY owner_count ASC, group_name ASC`
+  );
+
+  const violations = rows
+    .filter(row => Number(row.owner_count) < minOwners)
+    .map(row => ({
+      groupName: row.group_name,
+      groupEmail: row.group_email,
+      groupType: row.group_type,
+      ownerCount: Number(row.owner_count),
+      minOwners,
+    }));
+
+  return {
+    minOwners,
+    totalViolations: violations.length,
+    count: Math.min(violations.length, limit),
+    violations: violations.slice(0, limit),
+  };
+}
+
+async function executeListOrphanedResources(pool, fnArgs) {
+  const resourceType = fnArgs.resource_type || 'all';
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
+  const orphans = [];
+
+  if (resourceType === 'all' || resourceType === 'm365_group') {
+    const { rows } = await pool.query(
+      `SELECT group_name, group_email, group_type,
+              (SELECT count(*) FROM jsonb_array_elements(users) u WHERE u->>'role' = 'owner') AS owner_count
+       FROM m365_group_memberships
+       ORDER BY group_name ASC`
+    );
+    for (const row of rows) {
+      if (Number(row.owner_count) === 0) {
+        orphans.push({
+          resourceType: 'm365_group',
+          name: row.group_name,
+          identifier: row.group_email,
+          groupType: row.group_type,
+        });
+      }
+    }
+  }
+
+  if (resourceType === 'all' || resourceType === 'sharepoint_site') {
+    const { rows } = await pool.query(
+      `SELECT site, site_url,
+              count(*) FILTER (WHERE role = 'FullControl') AS owner_count,
+              count(*) AS total_permissions
+       FROM sharepoint_permissions
+       GROUP BY site, site_url
+       ORDER BY site ASC`
+    );
+    for (const row of rows) {
+      if (Number(row.owner_count) === 0) {
+        orphans.push({
+          resourceType: 'sharepoint_site',
+          name: row.site,
+          identifier: row.site_url,
+          totalPermissions: Number(row.total_permissions),
+        });
+      }
+    }
+  }
+
+  return {
+    note: 'Orphaned = no member with role "owner" (M365 groups) or no user with role "FullControl" (SharePoint sites).',
+    totalOrphaned: orphans.length,
+    count: Math.min(orphans.length, limit),
+    orphans: orphans.slice(0, limit),
+  };
+}
+
+async function executeReassignResourceOwner(pool, email, fnArgs, sessionId) {
+  const resourceType = fnArgs.resource_type;
+  const resourceName = fnArgs.resource_name;
+  const newOwnerEmail = fnArgs.new_owner_email;
+  const reason = fnArgs.reason || 'Orphaned resource ownership reassignment.';
+
+  if (!['m365_group', 'sharepoint_site'].includes(resourceType)) {
+    throw new Error('resource_type must be "m365_group" or "sharepoint_site"');
+  }
+  if (!resourceName) throw new Error('resource_name is required.');
+  if (!newOwnerEmail) throw new Error('new_owner_email is required.');
+
+  const title = `Reassign ${resourceType === 'm365_group' ? 'group' : 'site'} owner — ${resourceName}`;
+  const description = `Assign ${newOwnerEmail} as owner of "${resourceName}" (${resourceType}). Reason: ${reason}`;
+
+  return createAndCloseTicket(pool, newOwnerEmail, title, description, sessionId, async () => {
+    if (resourceType === 'm365_group') {
+      const { rows: groups } = await pool.query(
+        `SELECT id, group_name, users FROM m365_group_memberships WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
+        [`%${escapeLike(resourceName)}%`]
+      );
+      if (groups.length === 0) throw new Error(`M365 group matching "${resourceName}" not found`);
+
+      const group = groups[0];
+      const users = group.users || [];
+      const existingMember = users.find(u => u.email?.toLowerCase() === newOwnerEmail.toLowerCase());
+
+      if (existingMember) {
+        existingMember.role = 'owner';
+      } else {
+        users.push({ role: 'owner', email: newOwnerEmail, source: 'reassignment', joined_at: new Date().toISOString() });
+      }
+
+      await pool.query(
+        `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+        [JSON.stringify(users), group.id]
+      );
+
+      return { reassigned: true, resourceType, resource: group.group_name, newOwnerEmail };
+    }
+
+    const { rows: sites } = await pool.query(
+      `SELECT DISTINCT site, site_url FROM sharepoint_permissions WHERE LOWER(site) LIKE LOWER($1) LIMIT 1`,
+      [`%${escapeLike(resourceName)}%`]
+    );
+    if (sites.length === 0) throw new Error(`SharePoint site matching "${resourceName}" not found`);
+
+    const site = sites[0];
+    await pool.query(
+      `INSERT INTO sharepoint_permissions (user_email, site, site_url, role, permission_type, granted_by, granted_at)
+       VALUES ($1, $2, $3, 'FullControl', 'Direct', $4, now())
+       ON CONFLICT (user_email, site) DO UPDATE SET
+         role = 'FullControl', permission_type = 'Direct', granted_by = $4, granted_at = now()`,
+      [newOwnerEmail, site.site, site.site_url, email]
+    );
+
+    return { reassigned: true, resourceType, resource: site.site, newOwnerEmail };
+  });
+}
+
+async function executeListOversharingRisks(pool, fnArgs) {
+  const role = fnArgs.role || null;
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
+
+  const { rows } = await pool.query(
+    `SELECT sp.user_email, sp.site, sp.site_url, sp.role, sp.permission_type, sp.granted_by, sp.granted_at
+     FROM sharepoint_permissions sp
+     JOIN external_users eu ON eu.email = sp.user_email
+     WHERE sp.role IN ('Edit', 'FullControl')
+       AND ($1::text IS NULL OR sp.role = $1)
+     ORDER BY sp.granted_at DESC NULLS LAST
+     LIMIT $2`,
+    [role, limit]
+  );
+
+  return {
+    note: 'External/guest user (External Users source) with Edit or FullControl on an internal SharePoint site — ' +
+      'the closest available proxy for "Everyone"/anonymous-link oversharing in this on-prem-style permission model.',
+    count: rows.length,
+    risks: rows.map(row => ({
+      userEmail: row.user_email,
+      site: row.site,
+      siteUrl: row.site_url,
+      role: row.role,
+      permissionType: row.permission_type,
+      grantedBy: row.granted_by,
+      grantedAt: row.granted_at,
+    })),
+  };
+}
+
+// ── Violation tracking & compliance score ─────────────────────────────────────
+// Upserts keep detected_at stable across rescans (age tracking) and reopen a
+// previously resolved violation if the same issue is detected again.
+
+async function upsertViolation(client, v) {
+  await client.query(
+    `INSERT INTO governance_violations
+       (violation_type, resource_type, resource_name, resource_id, severity, details)
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+     ON CONFLICT (violation_type, resource_type, resource_name) DO UPDATE SET
+       resource_id = EXCLUDED.resource_id,
+       severity    = EXCLUDED.severity,
+       details     = EXCLUDED.details,
+       status      = CASE WHEN governance_violations.status = 'resolved' THEN 'open' ELSE governance_violations.status END,
+       resolved_at = CASE WHEN governance_violations.status = 'resolved' THEN NULL ELSE governance_violations.resolved_at END,
+       updated_at  = now()`,
+    [v.violationType, v.resourceType, v.resourceName, v.resourceId || null, v.severity, JSON.stringify(v.details || {})]
+  );
+}
+
+async function runGovernanceScan(pool) {
+  const found = [];
+
+  const namingResult = await executeListNamingViolations(pool, {});
+  for (const v of namingResult.violations) {
+    found.push({
+      violationType: 'naming_convention',
+      resourceType: v.source === 'distribution_groups' ? 'distribution_group' : 'm365_group',
+      resourceName: v.groupName,
+      resourceId: v.groupEmail,
+      severity: VIOLATION_SEVERITY.naming_convention,
+      details: { expectedPrefix: v.expectedPrefix, groupType: v.groupType },
+    });
+  }
+
+  const orphanedResult = await executeListOrphanedResources(pool, { resource_type: 'all', limit: 1000 });
+  for (const o of orphanedResult.orphans) {
+    found.push({
+      violationType: 'orphaned_resource',
+      resourceType: o.resourceType,
+      resourceName: o.name,
+      resourceId: o.identifier,
+      severity: VIOLATION_SEVERITY.orphaned_resource,
+      details: o,
+    });
+  }
+
+  const missingOwnersResult = await executeListGroupsMissingOwners(pool, { min_owners: MIN_GROUP_OWNERS, limit: 1000 });
+  for (const g of missingOwnersResult.violations) {
+    if (g.ownerCount > 0) { // owner_count === 0 is already captured as orphaned_resource above
+      found.push({
+        violationType: 'missing_owners',
+        resourceType: 'm365_group',
+        resourceName: g.groupName,
+        resourceId: g.groupEmail,
+        severity: VIOLATION_SEVERITY.missing_owners,
+        details: g,
+      });
+    }
+  }
+
+  const oversharingResult = await executeListOversharingRisks(pool, { limit: 1000 });
+  for (const r of oversharingResult.risks) {
+    found.push({
+      violationType: 'oversharing_risk',
+      resourceType: 'sharepoint_site',
+      resourceName: r.site,
+      resourceId: r.userEmail,
+      severity: VIOLATION_SEVERITY.oversharing_risk,
+      details: r,
+    });
+  }
+
+  if (graphClient.mode !== 'graph') {
+    const staleGuestsResult = await executeListStaleGuests(pool, { limit: 1000 });
+    for (const g of staleGuestsResult.guests || []) {
+      if (!g.email) continue;
+      found.push({
+        violationType: 'stale_guest',
+        resourceType: 'external_user',
+        resourceName: g.name || g.email,
+        resourceId: g.email,
+        severity: VIOLATION_SEVERITY.stale_guest,
+        details: g,
+      });
+    }
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    for (const v of found) {
+      await upsertViolation(client, v);
+    }
+
+    const openKeys = new Set(found.map(v => `${v.violationType}|||${v.resourceType}|||${v.resourceName}`));
+    const { rows: openRows } = await client.query(
+      `SELECT id, violation_type, resource_type, resource_name FROM governance_violations WHERE status IN ('open', 'acknowledged')`
+    );
+    for (const row of openRows) {
+      const key = `${row.violation_type}|||${row.resource_type}|||${row.resource_name}`;
+      if (!openKeys.has(key)) {
+        await client.query(
+          `UPDATE governance_violations
+           SET status = 'resolved', resolved_at = now(),
+               resolution_note = 'Auto-resolved: no longer detected on rescan', updated_at = now()
+           WHERE id = $1`,
+          [row.id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  return found;
+}
+
+async function executeScanGovernanceViolations(pool) {
+  const found = await runGovernanceScan(pool);
+  const bySeverity = found.reduce((acc, v) => {
+    acc[v.severity] = (acc[v.severity] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    scannedAt: new Date().toISOString(),
+    totalFound: found.length,
+    bySeverity,
+  };
+}
+
+async function executeListViolations(pool, fnArgs) {
+  const status = fnArgs.status || 'open';
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
+
+  const conditions = [];
+  const params = [];
+  if (status !== 'all') {
+    params.push(status);
+    conditions.push(`status = $${params.length}`);
+  }
+  if (fnArgs.severity) {
+    params.push(fnArgs.severity);
+    conditions.push(`severity = $${params.length}`);
+  }
+  if (fnArgs.violation_type) {
+    params.push(fnArgs.violation_type);
+    conditions.push(`violation_type = $${params.length}`);
+  }
+  if (fnArgs.assigned_to) {
+    params.push(fnArgs.assigned_to);
+    conditions.push(`assigned_to = $${params.length}`);
+  }
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  params.push(limit);
+
+  const { rows } = await pool.query(
+    `SELECT id, violation_type, resource_type, resource_name, resource_id, severity, status,
+            assigned_to, details, detected_at, resolved_at, resolution_note,
+            EXTRACT(DAY FROM now() - detected_at)::int AS age_days
+     FROM governance_violations
+     ${whereClause}
+     ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
+              detected_at ASC
+     LIMIT $${params.length}`,
+    params
+  );
+
+  return {
+    count: rows.length,
+    violations: rows.map(row => ({
+      id: row.id,
+      violationType: row.violation_type,
+      resourceType: row.resource_type,
+      resourceName: row.resource_name,
+      resourceId: row.resource_id,
+      severity: row.severity,
+      status: row.status,
+      assignedTo: row.assigned_to,
+      details: row.details,
+      detectedAt: row.detected_at,
+      resolvedAt: row.resolved_at,
+      resolutionNote: row.resolution_note,
+      ageDays: row.age_days,
+    })),
+  };
+}
+
+async function executeAssignViolation(pool, fnArgs) {
+  const violationId = fnArgs.violation_id;
+  const assignedTo = fnArgs.assigned_to;
+  if (!Number.isInteger(violationId)) throw new Error('violation_id is required.');
+  if (!assignedTo) throw new Error('assigned_to is required.');
+
+  const { rows } = await pool.query(
+    `UPDATE governance_violations
+     SET assigned_to = $1, status = CASE WHEN status = 'open' THEN 'acknowledged' ELSE status END, updated_at = now()
+     WHERE id = $2
+     RETURNING id, violation_type, resource_name, status, assigned_to`,
+    [assignedTo, violationId]
+  );
+  if (rows.length === 0) throw new Error(`No violation found with id ${violationId}`);
+
+  return { assigned: true, violation: rows[0] };
+}
+
+async function executeResolveViolation(pool, fnArgs) {
+  const violationId = fnArgs.violation_id;
+  const resolutionNote = fnArgs.resolution_note || 'Resolved by agent.';
+  if (!Number.isInteger(violationId)) throw new Error('violation_id is required.');
+
+  const { rows } = await pool.query(
+    `UPDATE governance_violations
+     SET status = 'resolved', resolved_at = now(), resolution_note = $1, updated_at = now()
+     WHERE id = $2
+     RETURNING id, violation_type, resource_name, status, resolved_at`,
+    [resolutionNote, violationId]
+  );
+  if (rows.length === 0) throw new Error(`No violation found with id ${violationId}`);
+
+  return { resolved: true, violation: rows[0] };
+}
+
+async function executeGetComplianceScore(pool) {
+  await runGovernanceScan(pool);
+
+  const { rows: severityRows } = await pool.query(
+    `SELECT severity, count(*)::int AS count
+     FROM governance_violations
+     WHERE status IN ('open', 'acknowledged')
+     GROUP BY severity`
+  );
+  const countsBySeverity = { low: 0, medium: 0, high: 0, critical: 0 };
+  for (const row of severityRows) countsBySeverity[row.severity] = row.count;
+
+  const { score, deduction } = computeComplianceScore(countsBySeverity);
+
+  const { rows: typeRows } = await pool.query(
+    `SELECT violation_type, count(*)::int AS count
+     FROM governance_violations
+     WHERE status IN ('open', 'acknowledged')
+     GROUP BY violation_type
+     ORDER BY count DESC`
+  );
+
+  return {
+    score,
+    deduction,
+    countsBySeverity,
+    countsByType: typeRows.map(row => ({ violationType: row.violation_type, count: row.count })),
+    totalOpenViolations: Object.values(countsBySeverity).reduce((a, b) => a + b, 0),
+  };
+}
+
+// ── Trend analytics ────────────────────────────────────────────────────────────
+
+async function executeGetTrendAnalytics(pool, fnArgs) {
+  const days = Number.isInteger(fnArgs.days) ? Math.min(Math.max(fnArgs.days, 1), 90) : 30;
+
+  const toIntRow = row => Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k, k === 'day' ? v : Number(v)])
+  );
+
+  const { rows: changeRows } = await pool.query(
+    `WITH days AS (
+       SELECT generate_series(current_date - ($1::int - 1), current_date, interval '1 day')::date AS day
+     )
+     SELECT d.day,
+            (SELECT count(*) FROM source_change_logs WHERE detected_at::date = d.day AND change_type = 'created') AS created,
+            (SELECT count(*) FROM source_change_logs WHERE detected_at::date = d.day AND change_type = 'updated') AS updated,
+            (SELECT count(*) FROM source_change_logs WHERE detected_at::date = d.day AND change_type = 'deleted') AS deleted
+     FROM days d
+     ORDER BY d.day`,
+    [days]
+  );
+
+  const { rows: etlRows } = await pool.query(
+    `WITH days AS (
+       SELECT generate_series(current_date - ($1::int - 1), current_date, interval '1 day')::date AS day
+     )
+     SELECT d.day,
+            (SELECT count(*) FROM etl_job_logs WHERE started_at::date = d.day AND status = 'completed') AS completed,
+            (SELECT count(*) FROM etl_job_logs WHERE started_at::date = d.day AND status = 'failed') AS failed
+     FROM days d
+     ORDER BY d.day`,
+    [days]
+  );
+
+  const { rows: violationRows } = await pool.query(
+    `WITH days AS (
+       SELECT generate_series(current_date - ($1::int - 1), current_date, interval '1 day')::date AS day
+     )
+     SELECT d.day,
+            (SELECT count(*) FROM governance_violations WHERE detected_at::date = d.day) AS detected,
+            (SELECT count(*) FROM governance_violations WHERE resolved_at::date = d.day) AS resolved
+     FROM days d
+     ORDER BY d.day`,
+    [days]
+  );
+
+  return {
+    days,
+    changeLogTrend: changeRows.map(toIntRow),
+    etlJobTrend: etlRows.map(toIntRow),
+    violationTrend: violationRows.map(toIntRow),
+  };
+}
+
+// ── Reports (CSV export, on-demand + scheduled) ───────────────────────────────
+
+async function fetchViolationsForReport(pool) {
+  const { rows } = await pool.query(
+    `SELECT id, violation_type, resource_type, resource_name, resource_id, severity, status,
+            assigned_to, detected_at, resolved_at, resolution_note
+     FROM governance_violations
+     ORDER BY detected_at DESC
+     LIMIT 5000`
+  );
+  return rows;
+}
+
+async function fetchChangeLogsForReport(pool, days) {
+  const { rows } = await pool.query(
+    `SELECT id, source_table, email, change_type, field_name, old_value, new_value, detected_at
+     FROM source_change_logs
+     WHERE detected_at > now() - ($1::int * interval '1 day')
+     ORDER BY detected_at DESC
+     LIMIT 5000`,
+    [days]
+  );
+  return rows;
+}
+
+const REPORT_BUILDERS = {
+  violations: (pool) => fetchViolationsForReport(pool),
+  change_logs: (pool, fnArgs) => fetchChangeLogsForReport(pool, Number.isInteger(fnArgs.days) ? fnArgs.days : 30),
+};
+
+const REPORT_RETENTION_PER_TYPE = 30;
+
+async function buildAndStoreReport(pool, reportType, fnArgs, generatedBy) {
+  const builder = REPORT_BUILDERS[reportType];
+  if (!builder) throw new Error(`report_type must be one of: ${Object.keys(REPORT_BUILDERS).join(', ')}`);
+
+  const rows = await builder(pool, fnArgs || {});
+  const csv = toCsv(rows);
+
+  const { rows: [report] } = await pool.query(
+    `INSERT INTO scheduled_reports (report_type, format, row_count, content, generated_by)
+     VALUES ($1, 'csv', $2, $3, $4)
+     RETURNING id, report_type, format, row_count, generated_by, generated_at`,
+    [reportType, rows.length, csv, generatedBy]
+  );
+
+  await pool.query(
+    `DELETE FROM scheduled_reports
+     WHERE report_type = $1
+       AND id NOT IN (
+         SELECT id FROM scheduled_reports WHERE report_type = $1 ORDER BY generated_at DESC LIMIT $2
+       )`,
+    [reportType, REPORT_RETENTION_PER_TYPE]
+  );
+
+  return report;
+}
+
+async function runScheduledReports(pool) {
+  for (const reportType of Object.keys(REPORT_BUILDERS)) {
+    try {
+      await buildAndStoreReport(pool, reportType, {}, 'schedule');
+    } catch (err) {
+      console.error(`[scheduled-reports] failed to generate "${reportType}":`, err);
+    }
+  }
+}
+
+async function executeGenerateReport(pool, fnArgs) {
+  const reportType = fnArgs.report_type;
+  const report = await buildAndStoreReport(pool, reportType, fnArgs, 'agent');
+
+  return {
+    generated: true,
+    reportId: report.id,
+    reportType: report.report_type,
+    rowCount: report.row_count,
+    generatedAt: report.generated_at,
+    downloadUrl: `/api/reports/${report.id}/download`,
+  };
+}
+
+async function executeListReports(pool, fnArgs) {
+  const reportType = fnArgs.report_type || null;
+  const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 20;
+
+  const { rows } = await pool.query(
+    `SELECT id, report_type, format, row_count, generated_by, generated_at
+     FROM scheduled_reports
+     WHERE $1::text IS NULL OR report_type = $1
+     ORDER BY generated_at DESC
+     LIMIT $2`,
+    [reportType, limit]
+  );
+
+  return {
+    count: rows.length,
+    reports: rows.map(row => ({
+      id: row.id,
+      reportType: row.report_type,
+      format: row.format,
+      rowCount: row.row_count,
+      generatedBy: row.generated_by,
+      generatedAt: row.generated_at,
+      downloadUrl: `/api/reports/${row.id}/download`,
     })),
   };
 }
@@ -2247,6 +3125,19 @@ You can perform real actions on user accounts. When the user asks you to take an
 - **grant_onedrive_access**: Grant another user access to this user's OneDrive.
 - **list_inactive_licenses**: Find likely unused Microsoft 365 licenses and estimate monthly savings. Read-only; no ticket is created.
 - **list_stale_guests**: Find stale guest/external accounts. Read-only; no ticket is created.
+- **list_naming_violations**: Find distribution/M365 groups whose name breaks the required naming convention (DL-/SG-/M365- prefixes). Read-only; no ticket is created.
+- **list_groups_missing_owners**: Find M365 groups with fewer than the minimum required owners. Read-only; no ticket is created.
+- **list_orphaned_resources**: Find M365 groups or SharePoint sites with no owner at all. Read-only; no ticket is created.
+- **reassign_resource_owner**: Assign a new owner to an orphaned M365 group or SharePoint site.
+- **list_oversharing_risks**: Find external/guest users with Edit or FullControl access to SharePoint sites. Read-only; no ticket is created.
+- **scan_governance_violations**: Run all governance checks and persist findings as tracked violations, auto-resolving ones no longer detected.
+- **list_violations**: List tracked governance violations with age, severity, and assignee. Read-only; no ticket is created.
+- **assign_violation**: Assign a tracked violation to an owner for remediation.
+- **resolve_violation**: Mark a tracked violation as resolved.
+- **get_compliance_score**: Run a fresh governance scan and compute an overall compliance posture score (0-100). Read-only; no ticket is created.
+- **get_trend_analytics**: Get historical trends for data changes, ETL job outcomes, and violations. Read-only; no ticket is created.
+- **generate_report**: Generate and persist a CSV export of violations or change logs, returning a download URL.
+- **list_reports**: List previously generated report snapshots. Read-only; no ticket is created.
 - **revoke_guest_access**: Revoke a stale guest/external user's access. Creates and auto-closes a ticket on success.
 - **dismiss_risky_user**: Dismiss a Microsoft Entra risky-user flag after investigation.
 - **list_app_consents**: List OAuth app consent grants for a user. Read-only; no ticket is created.
@@ -2559,6 +3450,139 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
       break;
     }
 
+    case 'list_naming_violations': {
+      const actionResult = await executeListNamingViolations(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_naming_violations',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_groups_missing_owners': {
+      const actionResult = await executeListGroupsMissingOwners(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_groups_missing_owners',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_orphaned_resources': {
+      const actionResult = await executeListOrphanedResources(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_orphaned_resources',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'reassign_resource_owner': {
+      const { ticket: t, actionResult } = await executeReassignResourceOwner(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.reassigned || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'reassign_resource_owner',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_oversharing_risks': {
+      const actionResult = await executeListOversharingRisks(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_oversharing_risks',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'scan_governance_violations': {
+      const actionResult = await executeScanGovernanceViolations(pool);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'scan_governance_violations',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_violations': {
+      const actionResult = await executeListViolations(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_violations',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'assign_violation': {
+      const actionResult = await executeAssignViolation(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: actionResult.assigned || false,
+        action: 'assign_violation',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'resolve_violation': {
+      const actionResult = await executeResolveViolation(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: actionResult.resolved || false,
+        action: 'resolve_violation',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'get_compliance_score': {
+      const actionResult = await executeGetComplianceScore(pool);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'get_compliance_score',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'get_trend_analytics': {
+      const actionResult = await executeGetTrendAnalytics(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'get_trend_analytics',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'generate_report': {
+      const actionResult = await executeGenerateReport(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: actionResult.generated || false,
+        action: 'generate_report',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_reports': {
+      const actionResult = await executeListReports(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_reports',
+        ...actionResult,
+      });
+      break;
+    }
+
     case 'revoke_guest_access': {
       const { ticket: t, actionResult } = await executeRevokeGuestAccess(pool, email, fnArgs, sessionId);
       ticket = t;
@@ -2847,6 +3871,15 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
             capabilities: [
               'List inactive Microsoft 365 licenses with estimated monthly savings — read-only.',
               'List stale guest/external accounts — read-only.',
+              'List groups whose name breaks the required naming convention (DL-/SG-/M365- prefixes) — read-only.',
+              'List Microsoft 365 groups with fewer than the minimum required owners — read-only.',
+              'List M365 groups or SharePoint sites with no owner at all — read-only.',
+              'Reassign an orphaned M365 group or SharePoint site to a new owner.',
+              'List external/guest users with elevated (Edit/FullControl) SharePoint access — read-only.',
+              'Scan for governance violations and track them (severity, assignee, age, resolution) over time.',
+              'Get an overall compliance posture score (0-100) with a breakdown by severity and violation type.',
+              'Get historical trend analytics for data changes, ETL jobs, and violations.',
+              'Generate and download a CSV report of violations or change logs, and list past report snapshots.',
               'Revoke stale guest access.',
               'Dismiss Microsoft Entra risky-user flags.',
               'List and revoke OAuth app consents.',
@@ -3018,6 +4051,112 @@ app.patch('/api/tickets/:id', async (req, res) => {
   }
 });
 
+// ── GET /api/violations ───────────────────────────────────────────────────────
+// Returns tracked governance violations, optionally filtered by status.
+
+app.get('/api/violations', async (req, res) => {
+  try {
+    const actionResult = await executeListViolations(pool, {
+      status: req.query.status,
+      severity: req.query.severity,
+      violation_type: req.query.violation_type,
+      assigned_to: req.query.assigned_to,
+      limit: req.query.limit ? parseInt(req.query.limit, 10) : undefined,
+    });
+    res.json(actionResult);
+  } catch (err) {
+    console.error('[violations] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// ── GET /api/compliance-score ─────────────────────────────────────────────────
+// Runs a fresh governance scan and returns the overall compliance posture score.
+
+app.get('/api/compliance-score', async (_req, res) => {
+  try {
+    const actionResult = await executeGetComplianceScore(pool);
+    res.json(actionResult);
+  } catch (err) {
+    console.error('[compliance-score] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// ── GET /api/trends ────────────────────────────────────────────────────────────
+// Historical trend analytics over a trailing window of days.
+
+app.get('/api/trends', async (req, res) => {
+  try {
+    const actionResult = await executeGetTrendAnalytics(pool, {
+      days: req.query.days ? parseInt(req.query.days, 10) : undefined,
+    });
+    res.json(actionResult);
+  } catch (err) {
+    console.error('[trends] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// ── GET /api/reports ───────────────────────────────────────────────────────────
+// Lists previously generated report snapshots (scheduled or agent-triggered).
+
+app.get('/api/reports', async (req, res) => {
+  try {
+    const actionResult = await executeListReports(pool, {
+      report_type: req.query.report_type,
+      limit: req.query.limit ? parseInt(req.query.limit, 10) : undefined,
+    });
+    res.json(actionResult);
+  } catch (err) {
+    console.error('[reports] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// ── GET /api/reports/:id/download ─────────────────────────────────────────────
+// Downloads a previously generated report snapshot by ID.
+
+app.get('/api/reports/:id/download', async (req, res) => {
+  try {
+    const reportId = parseInt(req.params.id, 10);
+    if (isNaN(reportId)) return res.status(400).json({ error: 'Invalid report ID.' });
+
+    const { rows } = await pool.query(
+      `SELECT report_type, format, content FROM scheduled_reports WHERE id = $1`,
+      [reportId]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Report not found.' });
+
+    const report = rows[0];
+    res.set('Content-Type', 'text/csv');
+    res.set('Content-Disposition', `attachment; filename="${report.report_type}-${reportId}.${report.format}"`);
+    res.send(report.content);
+  } catch (err) {
+    console.error('[reports:download] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// ── GET /api/reports/:type.csv ────────────────────────────────────────────────
+// Ad-hoc, unpersisted CSV download of the current dataset (no history retained).
+
+app.get('/api/reports/:type.csv', async (req, res) => {
+  try {
+    const reportType = req.params.type;
+    const builder = REPORT_BUILDERS[reportType];
+    if (!builder) return res.status(400).json({ error: `Unknown report type: ${reportType}` });
+
+    const rows = await builder(pool, { days: req.query.days ? parseInt(req.query.days, 10) : undefined });
+    res.set('Content-Type', 'text/csv');
+    res.set('Content-Disposition', `attachment; filename="${reportType}.csv"`);
+    res.send(toCsv(rows));
+  } catch (err) {
+    console.error('[reports:csv] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
   try {
@@ -3029,8 +4168,17 @@ app.get('/health', async (_req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
+const REPORT_CRON_SCHEDULE = process.env.REPORT_CRON_SCHEDULE || '0 6 * * *';
+
 app.listen(PORT, () => {
   console.log(`GenAI service listening on :${PORT}`);
   console.log(`  Ollama URL:   ${OLLAMA_URL}`);
   console.log(`  Ollama Model: ${OLLAMA_MODEL}`);
+});
+
+// Generate an initial report snapshot at startup, then on the configured schedule.
+runScheduledReports(pool).catch(err => console.error('[scheduled-reports] initial run failed:', err));
+console.log(`Scheduled reports: "${REPORT_CRON_SCHEDULE}"`);
+cron.schedule(REPORT_CRON_SCHEDULE, () => {
+  runScheduledReports(pool).catch(err => console.error('[scheduled-reports] cron run failed:', err));
 });

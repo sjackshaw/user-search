@@ -41,6 +41,42 @@
     .parsed-banner strong{font-weight:700}
     .badge-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
     .badge-row .badge{font-size:.68rem;padding:1px 6px}
+    /* ── Compliance posture dashboard ─────────────────────────────────── */
+    .compliance-panel{width:100%;max-width:620px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:14px 18px;margin-bottom:20px}
+    .compliance-header{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.95rem;color:#1a1a1a;margin-bottom:10px}
+    .compliance-refresh-btn{background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:.78rem;cursor:pointer;color:#555}
+    .compliance-refresh-btn:hover:not(:disabled){border-color:#3b82f6;color:#3b82f6}
+    .compliance-refresh-btn:disabled{opacity:.5;cursor:default}
+    .compliance-score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+    .compliance-score{font-size:2rem;font-weight:800}
+    .compliance-score.good{color:#166534}
+    .compliance-score.warn{color:#92400e}
+    .compliance-score.bad{color:#991b1b}
+    .compliance-score-label{font-size:.8rem;color:#888}
+    .compliance-breakdown{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .compliance-sev{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;text-transform:uppercase}
+    .compliance-sev.critical{background:#fee2e2;color:#991b1b}
+    .compliance-sev.high{background:#ffedd5;color:#9a3412}
+    .compliance-sev.medium{background:#fef9c3;color:#854d0e}
+    .compliance-sev.low{background:#f3f4f6;color:#4b5563}
+    .compliance-type-row{display:flex;justify-content:space-between;font-size:.82rem;color:#555;padding:3px 0;border-bottom:1px solid #f3f4f6}
+    .compliance-type-row:last-child{border-bottom:none}
+    .compliance-loading,.compliance-error{color:#aaa;font-size:.84rem;font-style:italic}
+    /* ── Activity trends ──────────────────────────────────────────────── */
+    .trend-series{margin-bottom:14px}
+    .trend-series:last-child{margin-bottom:0}
+    .trend-series-label{font-size:.8rem;font-weight:600;color:#555;margin-bottom:4px}
+    .trend-series-totals{font-weight:400;color:#999}
+    .trend-bars{display:flex;align-items:flex-end;gap:2px;height:40px}
+    .trend-bar{flex:1;display:flex;flex-direction:column-reverse;height:100%;background:#f3f4f6;border-radius:2px;overflow:hidden}
+    .trend-bar-seg{width:100%}
+    .trend-created,.trend-completed,.trend-resolved{background:#86efac}
+    .trend-updated{background:#93c5fd}
+    .trend-deleted,.trend-failed,.trend-detected{background:#fca5a5}
+    /* ── Reports ───────────────────────────────────────────────────────── */
+    .reports-downloads{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .report-download-btn,.report-history-download{background:none;border:1px solid #ccc;border-radius:6px;padding:5px 10px;font-size:.78rem;cursor:pointer;color:#555}
+    .report-download-btn:hover,.report-history-download:hover{border-color:#3b82f6;color:#3b82f6}
     /* ── Detail overlay ──────────────────────────────────────────────── */
     .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;justify-content:center;align-items:flex-start;padding:60px 16px}
     .overlay.open{display:flex}
@@ -141,6 +177,38 @@
 </head>
 <body>
   <h1>Total User Search</h1>
+
+  <div class="compliance-panel" id="compliance-panel">
+    <div class="compliance-header">
+      <span>Compliance Posture</span>
+      <button id="compliance-refresh" class="compliance-refresh-btn">Rescan</button>
+    </div>
+    <div id="compliance-body">
+      <p class="compliance-loading">Loading…</p>
+    </div>
+  </div>
+
+  <div class="compliance-panel" id="trends-panel">
+    <div class="compliance-header">
+      <span>Activity Trends (14 days)</span>
+    </div>
+    <div id="trends-body">
+      <p class="compliance-loading">Loading…</p>
+    </div>
+  </div>
+
+  <div class="compliance-panel" id="reports-panel">
+    <div class="compliance-header">
+      <span>Reports</span>
+    </div>
+    <div class="reports-downloads">
+      <button class="report-download-btn" data-report-type="violations">Download Violations CSV</button>
+      <button class="report-download-btn" data-report-type="change_logs">Download Change Logs CSV</button>
+    </div>
+    <div id="reports-history">
+      <p class="compliance-loading">Loading…</p>
+    </div>
+  </div>
 
   <div class="search-box">
     <label for="query">Semantic Search</label>
@@ -1015,6 +1083,157 @@
         console.error('Tickets error:', err);
       }
     }
+
+    // ── Compliance posture dashboard ─────────────────────────────────────────
+    async function loadComplianceScore() {
+      const btn = document.getElementById('compliance-refresh');
+      const body = document.getElementById('compliance-body');
+      if (btn) btn.disabled = true;
+      body.innerHTML = '<p class="compliance-loading">Scanning…</p>';
+
+      try {
+        const res = await fetch('/api/compliance-score', { headers: apiHeaders() });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load compliance score');
+
+        const scoreClass = data.score >= 80 ? 'good' : data.score >= 50 ? 'warn' : 'bad';
+        const bySeverity = data.countsBySeverity || {};
+        const byType = data.countsByType || [];
+
+        const severityBadges = ['critical', 'high', 'medium', 'low']
+          .filter(sev => bySeverity[sev] > 0)
+          .map(sev => `<span class="compliance-sev ${sev}">${sev}: ${bySeverity[sev]}</span>`)
+          .join('');
+
+        const typeList = byType.length
+          ? byType.map(t => `<div class="compliance-type-row"><span>${esc(t.violationType.replace(/_/g, ' '))}</span><span>${t.count}</span></div>`).join('')
+          : '<p class="compliance-loading">No open violations.</p>';
+
+        body.innerHTML = `
+          <div class="compliance-score-row">
+            <span class="compliance-score ${scoreClass}">${data.score}</span>
+            <span class="compliance-score-label">/ 100 · ${data.totalOpenViolations} open violation${data.totalOpenViolations !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="compliance-breakdown">${severityBadges}</div>
+          <div class="compliance-type-list">${typeList}</div>
+        `;
+      } catch (err) {
+        body.innerHTML = '<p class="compliance-error">Could not load compliance score.</p>';
+        console.error('Compliance score error:', err);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    document.getElementById('compliance-refresh').addEventListener('click', loadComplianceScore);
+    loadComplianceScore();
+
+    // ── Activity trends ───────────────────────────────────────────────────────
+    function renderTrendSeries(label, series, keys) {
+      const totals = keys.map(k => series.reduce((sum, day) => sum + (day[k] || 0), 0));
+      const max = Math.max(1, ...series.flatMap(day => keys.map(k => day[k] || 0)));
+      const bars = series.map(day => {
+        const stacked = keys
+          .map(k => `<span class="trend-bar-seg trend-${k}" style="height:${Math.round((day[k] || 0) / max * 100)}%"></span>`)
+          .join('');
+        return `<div class="trend-bar" title="${esc(day.day)}">${stacked}</div>`;
+      }).join('');
+      const totalsText = keys.map((k, i) => `${k}: ${totals[i]}`).join(' · ');
+
+      return `
+        <div class="trend-series">
+          <div class="trend-series-label">${esc(label)} <span class="trend-series-totals">(${totalsText})</span></div>
+          <div class="trend-bars">${bars}</div>
+        </div>
+      `;
+    }
+
+    async function loadTrends() {
+      const body = document.getElementById('trends-body');
+      try {
+        const res = await fetch('/api/trends?days=14', { headers: apiHeaders() });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load trends');
+
+        body.innerHTML = [
+          renderTrendSeries('Source Data Changes', data.changeLogTrend, ['created', 'updated', 'deleted']),
+          renderTrendSeries('ETL Job Outcomes', data.etlJobTrend, ['completed', 'failed']),
+          renderTrendSeries('Violations', data.violationTrend, ['detected', 'resolved']),
+        ].join('');
+      } catch (err) {
+        body.innerHTML = '<p class="compliance-error">Could not load trend analytics.</p>';
+        console.error('Trends error:', err);
+      }
+    }
+
+    loadTrends();
+
+    // ── Reports (CSV export) ─────────────────────────────────────────────────
+    async function downloadBlob(url, filename) {
+      const res = await fetch(url, { headers: apiHeaders() });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    }
+
+    document.querySelectorAll('.report-download-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const reportType = btn.dataset.reportType;
+        try {
+          await downloadBlob(`/api/reports/${reportType}.csv`, `${reportType}.csv`);
+        } catch (err) {
+          console.error('Report download error:', err);
+          alert('Could not download report.');
+        }
+      });
+    });
+
+    async function loadReportHistory() {
+      const el = document.getElementById('reports-history');
+      try {
+        const res = await fetch('/api/reports?limit=10', { headers: apiHeaders() });
+        const data = await res.json();
+        const reports = data.reports || [];
+
+        if (reports.length === 0) {
+          el.innerHTML = '<p class="compliance-loading">No reports generated yet.</p>';
+          return;
+        }
+
+        el.innerHTML = reports.map(r => `
+          <div class="compliance-type-row">
+            <span>${esc(r.reportType.replace(/_/g, ' '))} · ${r.rowCount} rows · ${esc(r.generatedBy)}</span>
+            <button class="report-history-download" data-id="${r.id}">Download</button>
+          </div>
+        `).join('');
+
+        el.querySelectorAll('.report-history-download').forEach(historyBtn => {
+          historyBtn.addEventListener('click', async () => {
+            const id = historyBtn.dataset.id;
+            try {
+              await downloadBlob(`/api/reports/${id}/download`, `report-${id}.csv`);
+            } catch (err) {
+              console.error('Report download error:', err);
+              alert('Could not download report.');
+            }
+          });
+        });
+      } catch (err) {
+        el.innerHTML = '<p class="compliance-error">Could not load report history.</p>';
+        console.error('Report history error:', err);
+      }
+    }
+
+    loadReportHistory();
   </script>
 </body>
 </html>
+
+
