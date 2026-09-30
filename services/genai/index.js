@@ -760,10 +760,28 @@ const AGENT_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'enforce_minimum_owners',
+      description:
+        'Bulk-remediate M365 groups below the minimum owner count by promoting their earliest-joined existing ' +
+        'member to owner. Groups with zero owners (orphaned) are not touched here — use reassign_resource_owner ' +
+        'for those. Use when the user asks to fix, enforce, or remediate minimum-owner violations in bulk.',
+      parameters: {
+        type: 'object',
+        properties: {
+          min_owners: { type: 'integer', description: 'Minimum number of owners required per group. Defaults to 1.' },
+          dry_run: { type: 'boolean', description: 'If true, report what would change without writing. Defaults to false.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'list_orphaned_resources',
       description:
         'List M365 groups with no owner (no member with role "owner") and/or SharePoint sites with no owner ' +
-        '(no user with role "FullControl"). ' +
+        '(no user with role "FullControl"). Each result includes a suggestedOwner (earliest-joined member, or most ' +
+        'frequent SharePoint grantor) that reassign_resource_owner can use automatically. ' +
         'Use when the user asks about orphaned groups/sites, resources with no owner, or ownerless resources.',
       parameters: {
         type: 'object',
@@ -785,16 +803,17 @@ const AGENT_TOOLS = [
       description:
         'Assign a new owner to an orphaned M365 group (sets their role to "owner") or SharePoint site (grants them ' +
         'FullControl). Use after list_orphaned_resources identifies a resource with no owner, or when the user asks ' +
-        'to reassign/assign an owner to a group or site.',
+        'to reassign/assign an owner to a group or site. If new_owner_email is omitted, the same suggestedOwner ' +
+        'heuristic from list_orphaned_resources is used automatically.',
       parameters: {
         type: 'object',
         properties: {
           resource_type:    { type: 'string', enum: ['m365_group', 'sharepoint_site'], description: 'The type of resource to reassign.' },
           resource_name:    { type: 'string', description: 'Name (or partial name) of the group or site.' },
-          new_owner_email:  { type: 'string', description: 'Email address of the user to make the new owner.' },
+          new_owner_email:  { type: 'string', description: 'Email address of the user to make the new owner. Optional — auto-suggested if omitted.' },
           reason:           { type: 'string', description: 'Reason for the ownership reassignment.' },
         },
-        required: ['resource_type', 'resource_name', 'new_owner_email'],
+        required: ['resource_type', 'resource_name'],
       },
     },
   },
@@ -803,11 +822,11 @@ const AGENT_TOOLS = [
     function: {
       name: 'list_oversharing_risks',
       description:
-        'List SharePoint permissions where an external/guest user (from the External Users data source) holds ' +
-        'elevated Edit or FullControl access to an internal site. This is the closest available signal for ' +
-        'oversharing risk in this on-prem-style permission model, which has no "Everyone"/anonymous-link sharing ' +
-        'concept. Use when the user asks about oversharing, overshared sites, external users with too much access, ' +
-        'or SharePoint exposure risk.',
+        'List SharePoint oversharing risks: literal "Everyone"/"Everyone except external users"/anonymous-link ' +
+        'grants (share_scope column), plus external/guest users (from the External Users data source) holding ' +
+        'elevated Edit or FullControl access as a secondary signal. ' +
+        'Use when the user asks about oversharing, overshared sites, broad sharing links, external users with too ' +
+        'much access, or SharePoint exposure risk.',
       parameters: {
         type: 'object',
         properties: {
@@ -1703,6 +1722,62 @@ async function executeListGroupsMissingOwners(pool, fnArgs) {
   };
 }
 
+async function executeEnforceMinimumOwners(pool, fnArgs) {
+  const minOwners = Number.isInteger(fnArgs.min_owners) ? Math.max(fnArgs.min_owners, 1) : MIN_GROUP_OWNERS;
+  const dryRun = fnArgs.dry_run === true;
+
+  const { rows } = await pool.query(
+    `SELECT id, group_name, group_email, users,
+            (SELECT count(*) FROM jsonb_array_elements(users) u WHERE u->>'role' = 'owner') AS owner_count
+     FROM m365_group_memberships
+     ORDER BY group_name ASC`
+  );
+
+  const promotions = [];
+  const skipped = [];
+
+  for (const row of rows) {
+    const ownerCount = Number(row.owner_count);
+    if (ownerCount === 0 || ownerCount >= minOwners) continue; // 0 owners = orphaned_resource, use reassign_resource_owner instead
+
+    const users = row.users || [];
+    const nonOwners = users
+      .filter(u => u.role !== 'owner')
+      .sort((a, b) => new Date(a.joined_at || 0) - new Date(b.joined_at || 0));
+
+    if (nonOwners.length === 0) {
+      skipped.push({ groupName: row.group_name, groupEmail: row.group_email, ownerCount, reason: 'No eligible non-owner member to promote.' });
+      continue;
+    }
+
+    const promoted = nonOwners[0];
+    promotions.push({
+      groupName: row.group_name,
+      groupEmail: row.group_email,
+      promotedEmail: promoted.email,
+      previousOwnerCount: ownerCount,
+      newOwnerCount: ownerCount + 1,
+    });
+
+    if (!dryRun) {
+      const updatedUsers = users.map(u => (u.email === promoted.email ? { ...u, role: 'owner' } : u));
+      await pool.query(
+        `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+        [JSON.stringify(updatedUsers), row.id]
+      );
+    }
+  }
+
+  return {
+    minOwners,
+    dryRun,
+    promotedCount: promotions.length,
+    promotions,
+    skippedCount: skipped.length,
+    skipped,
+  };
+}
+
 async function executeListOrphanedResources(pool, fnArgs) {
   const resourceType = fnArgs.resource_type || 'all';
   const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
@@ -1710,18 +1785,21 @@ async function executeListOrphanedResources(pool, fnArgs) {
 
   if (resourceType === 'all' || resourceType === 'm365_group') {
     const { rows } = await pool.query(
-      `SELECT group_name, group_email, group_type,
+      `SELECT group_name, group_email, group_type, users,
               (SELECT count(*) FROM jsonb_array_elements(users) u WHERE u->>'role' = 'owner') AS owner_count
        FROM m365_group_memberships
        ORDER BY group_name ASC`
     );
     for (const row of rows) {
       if (Number(row.owner_count) === 0) {
+        const members = row.users || [];
+        const earliest = [...members].sort((a, b) => new Date(a.joined_at || 0) - new Date(b.joined_at || 0))[0];
         orphans.push({
           resourceType: 'm365_group',
           name: row.group_name,
           identifier: row.group_email,
           groupType: row.group_type,
+          suggestedOwner: earliest?.email || null,
         });
       }
     }
@@ -1731,7 +1809,8 @@ async function executeListOrphanedResources(pool, fnArgs) {
     const { rows } = await pool.query(
       `SELECT site, site_url,
               count(*) FILTER (WHERE role = 'FullControl') AS owner_count,
-              count(*) AS total_permissions
+              count(*) AS total_permissions,
+              mode() WITHIN GROUP (ORDER BY granted_by) AS suggested_owner
        FROM sharepoint_permissions
        GROUP BY site, site_url
        ORDER BY site ASC`
@@ -1743,13 +1822,16 @@ async function executeListOrphanedResources(pool, fnArgs) {
           name: row.site,
           identifier: row.site_url,
           totalPermissions: Number(row.total_permissions),
+          suggestedOwner: row.suggested_owner || null,
         });
       }
     }
   }
 
   return {
-    note: 'Orphaned = no member with role "owner" (M365 groups) or no user with role "FullControl" (SharePoint sites).',
+    note: 'Orphaned = no member with role "owner" (M365 groups) or no user with role "FullControl" (SharePoint sites). ' +
+      'suggestedOwner is a heuristic (earliest-joined member / most frequent grantor) — pass it to reassign_resource_owner, ' +
+      'or omit new_owner_email there to use it automatically.',
     totalOrphaned: orphans.length,
     count: Math.min(orphans.length, limit),
     orphans: orphans.slice(0, limit),
@@ -1759,27 +1841,55 @@ async function executeListOrphanedResources(pool, fnArgs) {
 async function executeReassignResourceOwner(pool, email, fnArgs, sessionId) {
   const resourceType = fnArgs.resource_type;
   const resourceName = fnArgs.resource_name;
-  const newOwnerEmail = fnArgs.new_owner_email;
+  let newOwnerEmail = fnArgs.new_owner_email || null;
   const reason = fnArgs.reason || 'Orphaned resource ownership reassignment.';
 
   if (!['m365_group', 'sharepoint_site'].includes(resourceType)) {
     throw new Error('resource_type must be "m365_group" or "sharepoint_site"');
   }
   if (!resourceName) throw new Error('resource_name is required.');
-  if (!newOwnerEmail) throw new Error('new_owner_email is required.');
+
+  let group = null;
+  let site = null;
+
+  if (resourceType === 'm365_group') {
+    const { rows: groups } = await pool.query(
+      `SELECT id, group_name, users FROM m365_group_memberships WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
+      [`%${escapeLike(resourceName)}%`]
+    );
+    if (groups.length === 0) throw new Error(`M365 group matching "${resourceName}" not found`);
+    group = groups[0];
+
+    if (!newOwnerEmail) {
+      const members = group.users || [];
+      const earliest = [...members].sort((a, b) => new Date(a.joined_at || 0) - new Date(b.joined_at || 0))[0];
+      newOwnerEmail = earliest?.email || null;
+      if (!newOwnerEmail) throw new Error(`No new_owner_email supplied and no existing member to suggest for "${resourceName}"`);
+    }
+  } else {
+    const { rows: sites } = await pool.query(
+      `SELECT DISTINCT site, site_url FROM sharepoint_permissions WHERE LOWER(site) LIKE LOWER($1) LIMIT 1`,
+      [`%${escapeLike(resourceName)}%`]
+    );
+    if (sites.length === 0) throw new Error(`SharePoint site matching "${resourceName}" not found`);
+    site = sites[0];
+
+    if (!newOwnerEmail) {
+      const { rows: modeRows } = await pool.query(
+        `SELECT mode() WITHIN GROUP (ORDER BY granted_by) AS suggested_owner
+         FROM sharepoint_permissions WHERE site = $1`,
+        [site.site]
+      );
+      newOwnerEmail = modeRows[0]?.suggested_owner || null;
+      if (!newOwnerEmail) throw new Error(`No new_owner_email supplied and no existing grantor to suggest for "${resourceName}"`);
+    }
+  }
 
   const title = `Reassign ${resourceType === 'm365_group' ? 'group' : 'site'} owner — ${resourceName}`;
   const description = `Assign ${newOwnerEmail} as owner of "${resourceName}" (${resourceType}). Reason: ${reason}`;
 
   return createAndCloseTicket(pool, newOwnerEmail, title, description, sessionId, async () => {
     if (resourceType === 'm365_group') {
-      const { rows: groups } = await pool.query(
-        `SELECT id, group_name, users FROM m365_group_memberships WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
-        [`%${escapeLike(resourceName)}%`]
-      );
-      if (groups.length === 0) throw new Error(`M365 group matching "${resourceName}" not found`);
-
-      const group = groups[0];
       const users = group.users || [];
       const existingMember = users.find(u => u.email?.toLowerCase() === newOwnerEmail.toLowerCase());
 
@@ -1797,13 +1907,6 @@ async function executeReassignResourceOwner(pool, email, fnArgs, sessionId) {
       return { reassigned: true, resourceType, resource: group.group_name, newOwnerEmail };
     }
 
-    const { rows: sites } = await pool.query(
-      `SELECT DISTINCT site, site_url FROM sharepoint_permissions WHERE LOWER(site) LIKE LOWER($1) LIMIT 1`,
-      [`%${escapeLike(resourceName)}%`]
-    );
-    if (sites.length === 0) throw new Error(`SharePoint site matching "${resourceName}" not found`);
-
-    const site = sites[0];
     await pool.query(
       `INSERT INTO sharepoint_permissions (user_email, site, site_url, role, permission_type, granted_by, granted_at)
        VALUES ($1, $2, $3, 'FullControl', 'Direct', $4, now())
@@ -1820,8 +1923,19 @@ async function executeListOversharingRisks(pool, fnArgs) {
   const role = fnArgs.role || null;
   const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
 
-  const { rows } = await pool.query(
-    `SELECT sp.user_email, sp.site, sp.site_url, sp.role, sp.permission_type, sp.granted_by, sp.granted_at
+  const { rows: broadShareRows } = await pool.query(
+    `SELECT user_email, site, site_url, role, permission_type, granted_by, granted_at, share_scope
+     FROM sharepoint_permissions
+     WHERE share_scope <> 'user'
+       AND ($1::text IS NULL OR role = $1)
+     ORDER BY CASE share_scope WHEN 'anonymous_link' THEN 0 WHEN 'everyone' THEN 1 ELSE 2 END,
+              granted_at DESC NULLS LAST
+     LIMIT $2`,
+    [role, limit]
+  );
+
+  const { rows: externalAccessRows } = await pool.query(
+    `SELECT sp.user_email, sp.site, sp.site_url, sp.role, sp.permission_type, sp.granted_by, sp.granted_at, sp.share_scope
      FROM sharepoint_permissions sp
      JOIN external_users eu ON eu.email = sp.user_email
      WHERE sp.role IN ('Edit', 'FullControl')
@@ -1831,19 +1945,29 @@ async function executeListOversharingRisks(pool, fnArgs) {
     [role, limit]
   );
 
+  const mapRow = (row, riskType) => ({
+    riskType,
+    userEmail: row.user_email,
+    site: row.site,
+    siteUrl: row.site_url,
+    role: row.role,
+    permissionType: row.permission_type,
+    grantedBy: row.granted_by,
+    grantedAt: row.granted_at,
+    shareScope: row.share_scope,
+  });
+
+  const risks = [
+    ...broadShareRows.map(row => mapRow(row, 'broad_share_scope')),
+    ...externalAccessRows.map(row => mapRow(row, 'external_elevated_access')),
+  ].slice(0, limit);
+
   return {
-    note: 'External/guest user (External Users source) with Edit or FullControl on an internal SharePoint site — ' +
-      'the closest available proxy for "Everyone"/anonymous-link oversharing in this on-prem-style permission model.',
-    count: rows.length,
-    risks: rows.map(row => ({
-      userEmail: row.user_email,
-      site: row.site,
-      siteUrl: row.site_url,
-      role: row.role,
-      permissionType: row.permission_type,
-      grantedBy: row.granted_by,
-      grantedAt: row.granted_at,
-    })),
+    note: '"broad_share_scope" = literal Everyone/EveryoneExceptExternalUsers/anonymous-link grants (share_scope column). ' +
+      '"external_elevated_access" = external/guest user (External Users source) with Edit/FullControl access — a proxy ' +
+      'for oversharing where no broad-scope grant exists.',
+    count: risks.length,
+    risks,
   };
 }
 
@@ -1912,8 +2036,8 @@ async function runGovernanceScan(pool) {
   for (const r of oversharingResult.risks) {
     found.push({
       violationType: 'oversharing_risk',
-      resourceType: 'sharepoint_site',
-      resourceName: r.site,
+      resourceType: r.riskType === 'broad_share_scope' ? 'sharepoint_site_broad_share' : 'sharepoint_site_external_access',
+      resourceName: `${r.site} — ${r.userEmail}`,
       resourceId: r.userEmail,
       severity: VIOLATION_SEVERITY.oversharing_risk,
       details: r,
@@ -1931,6 +2055,19 @@ async function runGovernanceScan(pool) {
         resourceId: g.email,
         severity: VIOLATION_SEVERITY.stale_guest,
         details: g,
+      });
+    }
+
+    const inactiveLicensesResult = await executeListInactiveLicenses(pool, {});
+    for (const u of inactiveLicensesResult.users || []) {
+      if (!u.email) continue;
+      found.push({
+        violationType: 'inactive_license',
+        resourceType: 'active_directory_account',
+        resourceName: u.name || u.email,
+        resourceId: u.email,
+        severity: VIOLATION_SEVERITY.inactive_license,
+        details: u,
       });
     }
   }
@@ -2221,6 +2358,12 @@ async function buildAndStoreReport(pool, reportType, fnArgs, generatedBy) {
 }
 
 async function runScheduledReports(pool) {
+  try {
+    await runGovernanceScan(pool);
+  } catch (err) {
+    console.error('[scheduled-reports] governance scan failed, exporting last-known violations:', err);
+  }
+
   for (const reportType of Object.keys(REPORT_BUILDERS)) {
     try {
       await buildAndStoreReport(pool, reportType, {}, 'schedule');
@@ -3127,9 +3270,10 @@ You can perform real actions on user accounts. When the user asks you to take an
 - **list_stale_guests**: Find stale guest/external accounts. Read-only; no ticket is created.
 - **list_naming_violations**: Find distribution/M365 groups whose name breaks the required naming convention (DL-/SG-/M365- prefixes). Read-only; no ticket is created.
 - **list_groups_missing_owners**: Find M365 groups with fewer than the minimum required owners. Read-only; no ticket is created.
-- **list_orphaned_resources**: Find M365 groups or SharePoint sites with no owner at all. Read-only; no ticket is created.
-- **reassign_resource_owner**: Assign a new owner to an orphaned M365 group or SharePoint site.
-- **list_oversharing_risks**: Find external/guest users with Edit or FullControl access to SharePoint sites. Read-only; no ticket is created.
+- **enforce_minimum_owners**: Bulk-promote the earliest-joined member to owner for every group below the minimum owner count.
+- **list_orphaned_resources**: Find M365 groups or SharePoint sites with no owner at all, each with a suggested replacement owner. Read-only; no ticket is created.
+- **reassign_resource_owner**: Assign a new owner to an orphaned M365 group or SharePoint site (auto-suggests one if not specified).
+- **list_oversharing_risks**: Find SharePoint oversharing risks — literal Everyone/anonymous-link grants, plus external/guest users with Edit or FullControl access. Read-only; no ticket is created.
 - **scan_governance_violations**: Run all governance checks and persist findings as tracked violations, auto-resolving ones no longer detected.
 - **list_violations**: List tracked governance violations with age, severity, and assignee. Read-only; no ticket is created.
 - **assign_violation**: Assign a tracked violation to an owner for remediation.
@@ -3465,6 +3609,16 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
       toolResultContent = JSON.stringify({
         success: true,
         action: 'list_groups_missing_owners',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'enforce_minimum_owners': {
+      const actionResult = await executeEnforceMinimumOwners(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'enforce_minimum_owners',
         ...actionResult,
       });
       break;
@@ -3873,9 +4027,10 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
               'List stale guest/external accounts — read-only.',
               'List groups whose name breaks the required naming convention (DL-/SG-/M365- prefixes) — read-only.',
               'List Microsoft 365 groups with fewer than the minimum required owners — read-only.',
-              'List M365 groups or SharePoint sites with no owner at all — read-only.',
-              'Reassign an orphaned M365 group or SharePoint site to a new owner.',
-              'List external/guest users with elevated (Edit/FullControl) SharePoint access — read-only.',
+              'Bulk-promote the earliest-joined member to owner for every group below the minimum owner count.',
+              'List M365 groups or SharePoint sites with no owner at all, with a suggested replacement owner — read-only.',
+              'Reassign an orphaned M365 group or SharePoint site to a new owner (auto-suggested if not specified).',
+              'List SharePoint oversharing risks — literal Everyone/anonymous-link grants plus external/guest users with elevated (Edit/FullControl) access — read-only.',
               'Scan for governance violations and track them (severity, assignee, age, resolution) over time.',
               'Get an overall compliance posture score (0-100) with a breakdown by severity and violation type.',
               'Get historical trend analytics for data changes, ETL jobs, and violations.',

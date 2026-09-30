@@ -278,10 +278,14 @@ Init scripts in `infra/db/init/` are executed once by Postgres on first startup,
 | `09_index_netforum_activity_logs.sql` | `netforum_activity_logs` table + HNSW + supporting indexes |
 | `10_logging_tables.sql` | `etl_job_logs` + `source_change_logs` tables |
 | `11_chat_tables.sql` | `chat_messages` table |
-| `12_stored_procedures.sql` | All stored procedures (search, lookup, intersection, ETL job management) |
 | `13_index_sharepoint_permissions.sql` | `sharepoint_permissions` + `sharepoint_permission_change_logs` tables + HNSW indexes |
 | `14_index_m365_group_memberships.sql` | `m365_group_memberships` + `m365_membership_change_logs` tables + HNSW indexes |
 | `15_agent_tickets.sql` | `agent_tickets` table |
+| `16_access_requests.sql` | `access_requests` table |
+| `17_governance_violations.sql` | `governance_violations` table |
+| `18_scheduled_reports.sql` | `scheduled_reports` table |
+| `19_stored_procedures.sql` | All stored procedures (search, lookup, intersection, ETL job management) — runs last of the schema/procedure files since several procedures reference `sharepoint_permissions`/`m365_group_memberships` |
+| `20_sharepoint_share_scope.sql` | Adds `sharepoint_permissions.share_scope`; re-creates the two procedures that touch it |
 
 All HNSW indexes use `vector_cosine_ops` with `m=16, ef_construction=64`. Activity-log and change-log tables additionally carry indexes on `email`/`user_email`, `log_timestamp DESC`, and `changed_by`.
 

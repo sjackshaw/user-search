@@ -60,6 +60,7 @@ const VIOLATION_SEVERITY = {
   orphaned_resource: 'high',
   oversharing_risk:  'critical',
   stale_guest:       'medium',
+  inactive_license:  'low',
 };
 
 // Points deducted from the compliance score per open violation, by severity.

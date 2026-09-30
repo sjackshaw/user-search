@@ -30,7 +30,7 @@ A complete inventory of every technology, framework, library, model, and tool us
 | **pgvector** | Bundled with `pgvector/pgvector:pg15` | Vector similarity search extension |
 | **vector(384)** | — | Column type storing 384-dimension embeddings |
 | **HNSW indexes** | — | Approximate nearest-neighbour index (cosine distance) on 12 ETL tables plus agent/search tables where applicable |
-| **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `12_stored_procedures.sql` |
+| **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `19_stored_procedures.sql` |
 | **`agent_tickets` table** | — | PoC ticketing for agent write actions (`infra/db/init/15_agent_tickets.sql`) |
 | **`access_requests` table** | — | Self-service access request queue with `pending → approved → rejected` lifecycle (`infra/db/init/16_access_requests.sql`) |
 

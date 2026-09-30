@@ -31,7 +31,7 @@ async function embed(text) {
 // We UNION results from every source and pick the closest overall.
 
 // ── Stored-procedure SQL calls ────────────────────────────────────────────────
-// All query logic lives in PostgreSQL stored procedures (see 12_stored_procedures.sql).
+// All query logic lives in PostgreSQL stored procedures (see 19_stored_procedures.sql).
 // App code calls them with parameterised arguments via pool.query().
 
 const SP_SEARCH_ALL   = 'SELECT * FROM sp_search_all_sources($1, $2)';
