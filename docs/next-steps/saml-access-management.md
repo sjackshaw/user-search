@@ -20,11 +20,12 @@ Implement a **SAML 2.0 Single Sign-On (SSO)** integration to authenticate users 
 | Area | Status |
 |---|---|
 | Authentication | **None** — the application is unauthenticated; all endpoints are open |
-| Authorisation | **None** — all users have equal access to search, lookup, chat, ETL status, and all 37 agent tools |
+| Authorisation | **None** — all users have equal access to search, lookup, chat, ETL status, and all 57 agent tools |
 | User identity | Not tracked — GenAI chat sessions use client-generated UUIDs with no user binding |
 | Agent tickets | `agent_tickets` table records write actions but without a `performed_by` user column |
 | Access requests | `access_requests` table records self-service requests with a `requested_by` column (nullable, not authenticated) |
 | Role definitions | **Not implemented and not available from IdP** — no role attributes exist in Active Directory or Entra ID for this application; a role management system must be built to assign roles to AD users |
+| Governance-console scope guard | A narrow, hardcoded interim control exists: the floating agent widget (no user search required) uses a fixed sentinel identity, and the GenAI service refuses the 26 user-account-specific tools when invoked under it (`services/genai/index.js`, `GOVERNANCE_CONSOLE_EMAIL`/`USER_SCOPED_TOOLS`). This prevents one specific misuse but is **not** a role system — everyone still has equal access to every governance/policy/reporting tool and to the per-user agent once a user is searched. |
 
 ---
 
@@ -236,7 +237,7 @@ const payload = {
 
 #### Step 7: Enforce Permissions in GenAI Tool Execution
 
-In the GenAI service, gate tool execution on the user's role. Use the full `ROLE_TOOL_ALLOWLIST` defined in `docs/next-steps/agentic-ai-expansion.md` (Section 2.2) as the authoritative server-side permission map across all 37 tools:
+In the GenAI service, gate tool execution on the user's role. Use the full `ROLE_TOOL_ALLOWLIST` defined in `docs/next-steps/agentic-ai-expansion.md` (Section 2.2) as the authoritative server-side permission map across all 57 tools:
 
 ```js
 const ROLE_HIERARCHY = { admin: 4, operator: 3, analyst: 2, viewer: 1 };

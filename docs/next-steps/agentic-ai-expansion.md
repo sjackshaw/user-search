@@ -7,7 +7,7 @@
 
 ## 1. Context
 
-Phases 1–6 are complete. The agent is operational with **37 tools** spanning 7 capability groups: account operations, Microsoft 365 service desk workflows, governance checks, lifecycle management (onboard/offboard), bulk operations, self-service access requests, and department access templates. The items below are the **remaining work** required to move the agent toward a production-ready state.
+Phases 1–6 are complete. The agent is operational with **57 tools** spanning 11 capability groups: account operations, Microsoft 365 service desk workflows, lifecycle management (onboard/offboard), bulk operations, self-service access requests, department access templates, governance detection & remediation, violation tracking, compliance reporting/analytics, the policy rule engine, and M365 governance actions. The items below are the **remaining work** required to move the agent toward a production-ready state.
 
 ### 1.1 Implemented Tool Groups
 
@@ -15,11 +15,28 @@ Phases 1–6 are complete. The agent is operational with **37 tools** spanning 7
 |---|---|---|
 | Account Operations | 6 | `provision_account`, `disable_account`, `reset_password`, `update_attribute`, `add_to_group`, `add_to_m365_group` |
 | Microsoft 365 Service Desk | 10 | `reset_mfa`, `get_mfa_status`, `assign_license`, `remove_license`, `grant_mailbox_access`, `add_email_alias`, `get_out_of_office`, `set_out_of_office`, `add_to_teams_channel`, `grant_onedrive_access` |
-| Governance | 9 | `list_inactive_licenses`, `list_stale_guests`, `revoke_guest_access`, `dismiss_risky_user`, `list_app_consents`, `revoke_app_consent`, `explain_ca_block`, `get_device_compliance`, `get_bitlocker_key` |
+| M365 Governance Actions | 9 | `list_inactive_licenses`, `list_stale_guests`, `revoke_guest_access`, `dismiss_risky_user`, `list_app_consents`, `revoke_app_consent`, `explain_ca_block`, `get_device_compliance`, `get_bitlocker_key` |
 | General / Ticketing | 3 | `create_ticket`, `list_open_tickets`, `describe_capabilities` |
 | Lifecycle Management | 4 | `onboard_user`, `offboard_user`, `deprovision_cascade`, `bulk_action` |
 | Access Requests | 3 | `submit_access_request`, `list_access_requests`, `approve_access_request` |
 | Department Access Templates | 2 | `apply_access_template`, `list_access_templates` |
+| Governance Detection & Remediation | 7 | `list_naming_violations`, `enforce_naming_convention`, `list_groups_missing_owners`, `enforce_minimum_owners`, `list_orphaned_resources`, `reassign_resource_owner`, `list_oversharing_risks` |
+| Violation Tracking & Remediation Workflow | 6 | `scan_governance_violations`, `list_violations`, `assign_violation`, `resolve_violation`, `approve_remediation`, `reject_remediation` |
+| Compliance Reporting & Analytics | 4 | `get_compliance_score`, `get_trend_analytics`, `generate_report`, `list_reports` |
+| Policy Rule Engine | 3 | `list_policy_rules`, `set_policy_rule`, `reset_policy_rule` |
+
+### 1.1.1 Interim compensating control (not a substitute for RBAC below)
+
+The UI now has a second agent entry point: a floating chat icon reachable from any
+page, not bound to a searched user (`services/app/src/public/index.html`,
+`GLOBAL_AGENT_EMAIL` sentinel). Since there is still no real authentication, this
+widget cannot carry a trustworthy identity — so `executeToolCall` in
+`services/genai/index.js` hard-codes a server-side refusal for the 26 tools above
+(Account Operations, M365 Service Desk, most M365 Governance Actions, lifecycle)
+whenever the session is bound to the sentinel identity, regardless of what the LLM
+decides to call. This closes one specific gap (misdirected user-account actions)
+but does **not** implement roles, audit-by-identity, or any of the RBAC described
+in §2.2 — it is a stopgap, not a replacement for SAML + `ROLE_TOOL_ALLOWLIST`.
 
 ### 1.2 Infrastructure Implemented
 
@@ -95,9 +112,9 @@ Currently the only auth guard is an API key (`x-api-key` header). Role-based acc
 | Role | Permitted agent actions |
 |---|---|
 | `viewer` | None — no agent access |
-| `analyst` | `list_open_tickets`, `list_access_requests`, `describe_capabilities` |
-| `operator` | All non-destructive tools; excludes `provision_account`, `disable_account`, `reset_password`, `update_attribute`, `offboard_user`, `deprovision_cascade`, `dismiss_risky_user`, `revoke_app_consent`, `revoke_guest_access`, `get_bitlocker_key` |
-| `admin` | All 37 tools |
+| `analyst` | `list_open_tickets`, `list_access_requests`, `describe_capabilities`, plus all read-only governance/reporting tools (`list_violations`, `list_policy_rules`, `get_compliance_score`, `get_trend_analytics`, `list_reports`, `list_naming_violations`, `list_groups_missing_owners`, `list_orphaned_resources`, `list_oversharing_risks`) |
+| `operator` | All non-destructive tools; excludes `provision_account`, `disable_account`, `reset_password`, `update_attribute`, `offboard_user`, `deprovision_cascade`, `dismiss_risky_user`, `revoke_app_consent`, `revoke_guest_access`, `get_bitlocker_key`, `set_policy_rule`, `reset_policy_rule`, `approve_remediation`, `reject_remediation` |
+| `admin` | All 57 tools |
 
 **Implementation steps:**
 
@@ -117,7 +134,10 @@ const ROLE_TOOL_ALLOWLIST = {
   analyst:  ['list_open_tickets', 'list_access_requests', 'describe_capabilities',
              'list_inactive_licenses', 'list_stale_guests', 'list_app_consents',
              'get_device_compliance', 'get_mfa_status', 'get_out_of_office',
-             'explain_ca_block', 'list_access_templates'],
+             'explain_ca_block', 'list_access_templates',
+             'list_violations', 'list_policy_rules', 'get_compliance_score',
+             'get_trend_analytics', 'list_reports', 'list_naming_violations',
+             'list_groups_missing_owners', 'list_orphaned_resources', 'list_oversharing_risks'],
   operator: [
     // Account (non-destructive)
     'provision_account', 'reset_password', 'update_attribute',
@@ -135,6 +155,14 @@ const ROLE_TOOL_ALLOWLIST = {
     'list_inactive_licenses', 'list_stale_guests', 'list_app_consents',
     'get_device_compliance', 'get_mfa_status', 'get_out_of_office', 'explain_ca_block',
     'list_access_templates',
+    // Governance detection + non-destructive bulk fixes
+    'list_naming_violations', 'enforce_naming_convention', 'list_groups_missing_owners',
+    'enforce_minimum_owners', 'list_orphaned_resources', 'reassign_resource_owner',
+    'list_oversharing_risks', 'scan_governance_violations', 'list_violations',
+    'assign_violation', 'resolve_violation',
+    // Reporting (read-only + export)
+    'get_compliance_score', 'get_trend_analytics', 'generate_report', 'list_reports',
+    'list_policy_rules',
   ],
   admin:    null, // null = unrestricted
 };
@@ -149,7 +177,7 @@ const ROLE_TOOL_ALLOWLIST = {
 | ITSM integration | API key leakage, SSRF | Store ITSM credentials in environment variables only; validate `ITSM_BASE_URL` against a domain allowlist |
 | SAML permissions | Privilege escalation via crafted prompts | Enforce tool allowlist server-side, never trust client-supplied role claims |
 | Graph API credentials | Client secret exposure, over-permissioned app | Store in Secrets Manager / managed identity; grant only permissions needed for deployed tools; rotate secrets |
-| Governance tool abuse | `revoke_app_consent`, `dismiss_risky_user`, `get_bitlocker_key`, `offboard_user` are high-risk | Gate all destructive governance/lifecycle tools behind `admin` role in `ROLE_TOOL_ALLOWLIST`; log every invocation with user identity |
+| Governance tool abuse | `revoke_app_consent`, `dismiss_risky_user`, `get_bitlocker_key`, `offboard_user`, `set_policy_rule`, `reset_policy_rule`, `approve_remediation` are high-risk | Gate all destructive governance/lifecycle/policy tools behind `admin` role in `ROLE_TOOL_ALLOWLIST`; log every invocation with user identity |
 | BitLocker key access | Key retrieval is sensitive; must be auditable | Always create a ticket (even for read operations) so there is a ServiceNow audit record; restrict to `admin` role |
 | Bulk operations | `bulk_action` with `disable_account` can offboard many users in one call | Gate behind `admin` role; add dry-run preview step before execution |
 | Access request approvals | `approve_access_request` executes provisioning immediately on approval | Require `operator` or `admin` role; log approver identity in `access_requests.approver_note` |

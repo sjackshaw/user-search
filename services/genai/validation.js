@@ -44,10 +44,11 @@ const MIN_GROUP_OWNERS = 1;
 
 /**
  * Check a group name against the naming convention for its type.
+ * `prefixes` defaults to the hardcoded map but may be overridden by policy_rules.
  * Returns { compliant, expectedPrefix } — does not throw.
  */
-function checkGroupNamingConvention(groupName, groupType) {
-  const expectedPrefix = GROUP_NAME_PREFIXES[groupType] || null;
+function checkGroupNamingConvention(groupName, groupType, prefixes = GROUP_NAME_PREFIXES) {
+  const expectedPrefix = prefixes[groupType] || null;
   if (!expectedPrefix) return { compliant: true, expectedPrefix: null };
   const compliant = groupName.toUpperCase().startsWith(expectedPrefix.toUpperCase());
   return { compliant, expectedPrefix };
@@ -68,10 +69,11 @@ const SEVERITY_WEIGHT = { critical: 15, high: 8, medium: 4, low: 1 };
 
 /**
  * Compute a 0-100 compliance score from open-violation counts by severity.
+ * `weights` defaults to the hardcoded map but may be overridden by policy_rules.
  * Returns { score, deduction } — does not throw.
  */
-function computeComplianceScore(countsBySeverity) {
-  const deduction = Object.entries(SEVERITY_WEIGHT).reduce(
+function computeComplianceScore(countsBySeverity, weights = SEVERITY_WEIGHT) {
+  const deduction = Object.entries(weights).reduce(
     (sum, [severity, weight]) => sum + weight * (countsBySeverity[severity] || 0),
     0
   );

@@ -341,6 +341,25 @@ app.get('/api/violations', async (req, res) => {
   }
 });
 
+// ── Change logs proxy ──────────────────────────────────────────────────────────
+// Forwards GET /api/change-logs → genai service.
+
+app.get('/api/change-logs', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/change-logs?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Change logs proxy error:', err);
+    res.status(502).json({ error: 'Change logs service unavailable.' });
+  }
+});
+
 // ── Compliance score proxy ────────────────────────────────────────────────────
 // Forwards GET /api/compliance-score → genai service.
 
@@ -356,6 +375,25 @@ app.get('/api/compliance-score', async (_req, res) => {
   } catch (err) {
     console.error('Compliance score proxy error:', err);
     res.status(502).json({ error: 'Compliance score service unavailable.' });
+  }
+});
+
+// ── Policy rules proxy (read-only; write access is agent-tool-only) ──────────
+// Forwards GET /api/policy-rules → genai service.
+
+app.get('/api/policy-rules', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/policy-rules?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Policy rules proxy error:', err);
+    res.status(502).json({ error: 'Policy rules service unavailable.' });
   }
 });
 

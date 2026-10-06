@@ -17,7 +17,7 @@ flowchart TB
 
         OLLAMA["🧠 ollama\nollama/ollama\nqwen2.5:3b\nPort 11434:11434"]:::genai
 
-        GENAI["🤖 genai\nNode.js 22\n37 tools\nPort 3001:3001"]:::genai
+        GENAI["🤖 genai\nNode.js 22\n57 tools\nPort 3001:3001"]:::genai
 
         subgraph etl_lines ["Line ETL containers (shared model + pool)"]
             direction LR

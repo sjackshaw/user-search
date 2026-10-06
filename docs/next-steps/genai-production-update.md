@@ -31,6 +31,11 @@ Jira rather than the local `agent_tickets` and `access_requests` Postgres tables
 | `submit_access_request` | INSERT into local `access_requests` table | POST to ITSM (ServiceNow/Jira) to create approval request |
 | `approve_access_request` | UPDATE `access_requests` + execute Postgres action | ITSM approval callback → execute provisioning API call |
 | `create_ticket` | INSERT into `agent_tickets` | POST to ticketing system API (ServiceNow, Jira, etc.) |
+| `enforce_naming_convention` / `enforce_minimum_owners` / `reassign_resource_owner` | UPDATE local `distribution_groups`/`m365_group_memberships`/`sharepoint_permissions` rows | PATCH to Graph API group/site endpoints — same pattern as `update_attribute`, just bulk-scoped |
+| `approve_remediation` | UPDATE local Postgres row, then re-runs the enforce/reassign logic above against local tables | Same real API calls as the underlying `enforce_*`/`reassign_*` action, gated by the same human-approval step |
+| `revoke_guest_access` | UPDATE local Postgres row | Same as `disable_account` — PATCH to the target system's disable endpoint |
+| `set_policy_rule` / `reset_policy_rule` | UPSERT/DELETE in local `policy_rules` table | No change — this is a control-plane setting for the agent itself, not an upstream system call |
+| `generate_report` / `scan_governance_violations` | SELECT + INSERT against local tables only | No change (reads ETL-synced local data by design; see `compare_sources`/`lookup_user` below) |
 | `compare_sources` | SELECT from local tables | No change (read-only, local data is fine) |
 | `lookup_user` | SELECT from local tables | No change (read-only, local data is fine) |
 | Governance reads (e.g. `list_inactive_licenses`, `get_device_compliance`) | SELECT from local Postgres + Graph mock | Graph API calls for live data (already wired via `graph-client.js`) |

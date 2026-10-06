@@ -286,6 +286,10 @@ Init scripts in `infra/db/init/` are executed once by Postgres on first startup,
 | `18_scheduled_reports.sql` | `scheduled_reports` table |
 | `19_stored_procedures.sql` | All stored procedures (search, lookup, intersection, ETL job management) — runs last of the schema/procedure files since several procedures reference `sharepoint_permissions`/`m365_group_memberships` |
 | `20_sharepoint_share_scope.sql` | Adds `sharepoint_permissions.share_scope`; re-creates the two procedures that touch it |
+| `21_governance_event_triggers.sql` | `trg_evaluate_group_governance()` trigger function + triggers on `m365_group_memberships`/`distribution_groups` — evaluates naming/ownership rules synchronously on every write, independent of any scan |
+| `22_active_directory_last_sign_in.sql` | Adds `active_directory.last_sign_in_at`; re-creates the upsert/read procedures with the new column |
+| `23_policy_rules.sql` | `policy_rules` table — configurable governance thresholds (empty table = use hardcoded defaults) |
+| `24_remediation_proposals.sql` | Adds `remediation_*` columns to `governance_violations` — propose → approve/reject → apply workflow |
 
 All HNSW indexes use `vector_cosine_ops` with `m=16, ef_construction=64`. Activity-log and change-log tables additionally carry indexes on `email`/`user_email`, `log_timestamp DESC`, and `changed_by`.
 
@@ -299,7 +303,7 @@ All HNSW indexes use `vector_cosine_ops` with `m=16, ef_construction=64`. Activi
 | Compose file | `docker-compose.app.yml` |
 | Port | `3000` |
 
-The app exposes two API endpoints:
+The app exposes two core search/lookup endpoints (plus a set of proxy routes to `services/genai` for the agent, tickets, violations, compliance score, trends, reports, change logs, and policy rules — see [capability-inventory.md](capability-inventory.md) §3c/§3d for those):
 
 ### `GET /api/search?q=<query>`
 

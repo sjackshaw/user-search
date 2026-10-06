@@ -26,7 +26,7 @@ flowchart TB
             end
 
             subgraph GenAISvc[EKS - GenAI Deployment]
-                GenAI["GenAI Pod\nExpress - LLM tool-calling\n37 tools\nPort 3001"]:::eks
+                GenAI["GenAI Pod\nExpress - LLM tool-calling\n57 tools\nPort 3001"]:::eks
             end
 
             subgraph ETLSvc[EKS - ETL Deployments / CronJobs]
@@ -119,7 +119,7 @@ flowchart TB
             AppLambda["App Lambda\nnodejs22.x native handler\nExpress + SBERT"]:::lambda
 
             subgraph GenAISvc[EKS - GenAI Deployment]
-                GenAI["GenAI Pod\nExpress - LLM tool-calling\n37 tools\nPort 3001"]:::eks
+                GenAI["GenAI Pod\nExpress - LLM tool-calling\n57 tools\nPort 3001"]:::eks
             end
 
             subgraph ETLFns[Lambda Functions - EventBridge Scheduled]

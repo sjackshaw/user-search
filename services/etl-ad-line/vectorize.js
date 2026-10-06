@@ -72,7 +72,7 @@ async function logChange(client, sourceTable, email, changeType, fieldName, oldV
   );
 }
 
-const PRIMARY_COMPARE_FIELDS = ['first_name', 'last_name', 'type', 'enabled', 'locked', 'passwordlastreset'];
+const PRIMARY_COMPARE_FIELDS = ['first_name', 'last_name', 'type', 'enabled', 'locked', 'passwordlastreset', 'last_sign_in_at'];
 
 function normaliseValue(v) {
   if (v === null || v === undefined) return null;
@@ -105,12 +105,13 @@ async function upsertPrimaryBatch(records, embeddings, existingByEmail, jobId) {
       const existing = existingByEmail.get(r.email);
 
       await client.query(
-        'CALL sp_upsert_active_directory($1, $2, $3, $4, $5, $6, $7, $8)',
+        'CALL sp_upsert_active_directory($1, $2, $3, $4, $5, $6, $7, $8, $9)',
         [
           r.first_name, r.last_name, r.email, r.type || 'user',
           r.enabled !== undefined ? r.enabled : true,
           r.locked  !== undefined ? r.locked  : false,
           r.passwordlastreset || null,
+          r.last_sign_in_at || null,
           emb,
         ],
       );
@@ -127,6 +128,7 @@ async function upsertPrimaryBatch(records, embeddings, existingByEmail, jobId) {
           enabled: String(r.enabled !== undefined ? r.enabled : true),
           locked: String(r.locked !== undefined ? r.locked : false),
           passwordlastreset: r.passwordlastreset || null,
+          last_sign_in_at: r.last_sign_in_at || null,
         };
         let changed = false;
         for (const field of PRIMARY_COMPARE_FIELDS) {
@@ -174,6 +176,7 @@ async function runPrimary() {
         `enabled=${r.enabled !== undefined ? r.enabled : true}`,
         `locked=${r.locked !== undefined ? r.locked : false}`,
         r.passwordlastreset ? `passwordLastReset=${r.passwordlastreset}` : '',
+        r.last_sign_in_at ? `lastSignIn=${r.last_sign_in_at}` : '',
       ].filter(Boolean).join(' '));
       const embeddings = await vectorizeBatch(texts);
       const batchStats = await upsertPrimaryBatch(batch, embeddings, existingByEmail, jobId);

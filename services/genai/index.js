@@ -329,6 +329,7 @@ const AGENT_TOOLS = [
       name: 'list_inactive_licenses',
       description:
         'List Microsoft 365 users who appear to have unused or inactive licenses, including an estimated monthly savings figure. ' +
+        'Staleness is based on last_sign_in_at (falling back to passwordlastreset if unavailable). ' +
         'Use when the user asks about unused E3 licenses, inactive licenses, license waste, or license cost savings.',
       parameters: {
         type: 'object',
@@ -744,6 +745,27 @@ const AGENT_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'enforce_naming_convention',
+      description:
+        'Bulk-remediate distribution groups and M365 groups whose name breaks the required naming convention by ' +
+        'prepending the correct prefix (DL-/SG-/M365-). Use when the user asks to fix, rename, or enforce naming ' +
+        'standards in bulk.',
+      parameters: {
+        type: 'object',
+        properties: {
+          group_type: {
+            type: 'string',
+            enum: ['Distribution', 'Security', 'Microsoft365'],
+            description: 'Restrict the fix to one group type. Defaults to all types.',
+          },
+          dry_run: { type: 'boolean', description: 'If true, report what would be renamed without writing. Defaults to false.' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'list_groups_missing_owners',
       description:
         'List Microsoft 365 groups that have fewer than the required minimum number of owners. ' +
@@ -856,8 +878,8 @@ const AGENT_TOOLS = [
       name: 'list_violations',
       description:
         'List tracked governance violations, with age in days since detection. Filter by status, severity, ' +
-        'violation type, or assignee. Use when the user asks about open violations, violation backlog, or who a ' +
-        'violation is assigned to.',
+        'violation type, assignee, or remediation_status. Use when the user asks about open violations, violation ' +
+        'backlog, who a violation is assigned to, or pending remediation proposals awaiting approval.',
       parameters: {
         type: 'object',
         properties: {
@@ -869,6 +891,11 @@ const AGENT_TOOLS = [
             description: 'Filter by violation type.',
           },
           assigned_to: { type: 'string', description: 'Filter by assignee email.' },
+          remediation_status: {
+            type: 'string',
+            enum: ['none', 'proposed', 'approved', 'rejected', 'applied', 'failed'],
+            description: 'Filter by remediation proposal status. Use "proposed" to find fixes awaiting approval.',
+          },
           limit: { type: 'integer', description: 'Maximum number of violations to return. Defaults to 25.' },
         },
       },
@@ -902,6 +929,41 @@ const AGENT_TOOLS = [
         properties: {
           violation_id:    { type: 'integer', description: 'ID of the violation to resolve.' },
           resolution_note: { type: 'string', description: 'Note describing how the violation was resolved.' },
+        },
+        required: ['violation_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'approve_remediation',
+      description:
+        'Approve and immediately apply an automatically-proposed remediation (renaming a group to fix naming ' +
+        'convention, promoting a member to owner, or reassigning an orphaned resource\'s owner). Nothing is ever ' +
+        'applied without this explicit approval — use list_violations with remediation_status "proposed" to see ' +
+        'what is pending. Use when the user approves, accepts, or confirms a suggested automated fix.',
+      parameters: {
+        type: 'object',
+        properties: {
+          violation_id: { type: 'integer', description: 'ID of the violation whose proposed remediation should be applied.' },
+        },
+        required: ['violation_id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'reject_remediation',
+      description:
+        'Reject a proposed automated remediation without applying it. The violation stays open for manual ' +
+        'handling. Use when the user declines or dismisses a suggested automated fix.',
+      parameters: {
+        type: 'object',
+        properties: {
+          violation_id: { type: 'integer', description: 'ID of the violation whose proposed remediation should be rejected.' },
+          note: { type: 'string', description: 'Optional reason for rejecting the proposal.' },
         },
         required: ['violation_id'],
       },
@@ -974,6 +1036,64 @@ const AGENT_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'list_policy_rules',
+      description:
+        'List every governance policy rule (naming prefixes, minimum owners, violation severities, compliance-score ' +
+        'weights, inactivity thresholds, which checks are enabled), its effective value, and whether it has been ' +
+        'overridden from the default. Use when the user asks what the current governance policy/rules/thresholds are.',
+      parameters: {
+        type: 'object',
+        properties: {
+          category: {
+            type: 'string',
+            enum: ['naming_prefix', 'ownership', 'severity', 'scoring', 'thresholds', 'check_enabled'],
+            description: 'Restrict to one rule category.',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'set_policy_rule',
+      description:
+        'Set (override) a governance policy rule — e.g. change a naming prefix, the minimum owner count, a ' +
+        'violation severity, a compliance-score weight, an inactivity threshold, or enable/disable a check. ' +
+        'Takes effect immediately on the next scan, with no code change or redeploy. ' +
+        'Use when the user (an admin) asks to change, configure, or tune a governance threshold or rule.',
+      parameters: {
+        type: 'object',
+        properties: {
+          rule_key: {
+            type: 'string',
+            description: 'The rule to set, e.g. "min_group_owners", "naming_prefix.Security", "severity.oversharing_risk", "severity_weight.critical", "inactive_days.license", "check_enabled.stale_guest". Call list_policy_rules first if unsure of valid keys.',
+          },
+          value: { type: 'string', description: 'The new value (as a string — integers/booleans are parsed automatically).' },
+        },
+        required: ['rule_key', 'value'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'reset_policy_rule',
+      description:
+        'Remove an override for a governance policy rule, reverting it to its hardcoded default. ' +
+        'Use when the user asks to reset, clear, or revert a policy rule.',
+      parameters: {
+        type: 'object',
+        properties: {
+          rule_key: { type: 'string', description: 'The rule to reset, e.g. "min_group_owners".' },
+        },
+        required: ['rule_key'],
+      },
+    },
+  },
 ];
 
 // ── Agent: action executors ───────────────────────────────────────────────────
@@ -1020,14 +1140,19 @@ const {
   SYSTEM_LABELS,
   SAFE_TABLES,
   SAFE_COLUMNS,
-  GROUP_NAME_PREFIXES,
-  MIN_GROUP_OWNERS,
-  VIOLATION_SEVERITY,
   validateTargetSystem,
   escapeLike,
   checkGroupNamingConvention,
   computeComplianceScore,
 } = require('./validation');
+
+// ── Configurable policy/rule engine ───────────────────────────────────────────
+const {
+  loadPolicyRules,
+  listPolicyRules,
+  setPolicyRule,
+  resetPolicyRule,
+} = require('./policy');
 
 // ── Department access templates ───────────────────────────────────────────────
 // Each entry defines the standard license, distribution groups, and M365 groups
@@ -1573,7 +1698,9 @@ async function executeGrantOneDriveAccess(pool, email, fnArgs, sessionId) {
 
 async function executeListInactiveLicenses(pool, fnArgs) {
   const licenseSku = fnArgs.license_sku || 'E3';
-  const inactiveDays = Number.isInteger(fnArgs.inactive_days) ? fnArgs.inactive_days : 90;
+  const inactiveDays = Number.isInteger(fnArgs.inactive_days)
+    ? fnArgs.inactive_days
+    : (await loadPolicyRules(pool)).inactiveDays.license;
   const monthlyCost = typeof fnArgs.monthly_cost === 'number'
     ? fnArgs.monthly_cost
     : parseFloat(process.env.M365_E3_MONTHLY_COST || '36');
@@ -1592,11 +1719,12 @@ async function executeListInactiveLicenses(pool, fnArgs) {
   }
 
   const { rows } = await pool.query(
-    `SELECT first_name, last_name, email, type, passwordlastreset, created_at
+    `SELECT first_name, last_name, email, type, last_sign_in_at, passwordlastreset, created_at
      FROM active_directory
      WHERE enabled = true
-       AND (passwordlastreset IS NULL OR passwordlastreset < now() - ($1::int * interval '1 day'))
-     ORDER BY passwordlastreset NULLS FIRST, created_at ASC
+       AND (COALESCE(last_sign_in_at, passwordlastreset) IS NULL
+            OR COALESCE(last_sign_in_at, passwordlastreset) < now() - ($1::int * interval '1 day'))
+     ORDER BY COALESCE(last_sign_in_at, passwordlastreset) NULLS FIRST, created_at ASC
      LIMIT 25`,
     [inactiveDays]
   );
@@ -1605,7 +1733,8 @@ async function executeListInactiveLicenses(pool, fnArgs) {
     name: `${row.first_name} ${row.last_name}`,
     email: row.email,
     type: row.type,
-    lastActivity: row.passwordlastreset || row.created_at,
+    lastActivity: row.last_sign_in_at || row.passwordlastreset || row.created_at,
+    lastSignInAt: row.last_sign_in_at,
     licenseSku,
     estimatedMonthlySavings: monthlyCost,
   }));
@@ -1621,7 +1750,9 @@ async function executeListInactiveLicenses(pool, fnArgs) {
 }
 
 async function executeListStaleGuests(pool, fnArgs) {
-  const inactiveDays = Number.isInteger(fnArgs.inactive_days) ? fnArgs.inactive_days : 90;
+  const inactiveDays = Number.isInteger(fnArgs.inactive_days)
+    ? fnArgs.inactive_days
+    : (await loadPolicyRules(pool)).inactiveDays.guest;
   const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 50) : 10;
 
   if (graphClient.mode === 'graph') {
@@ -1660,45 +1791,99 @@ async function executeListStaleGuests(pool, fnArgs) {
 async function executeListNamingViolations(pool, fnArgs) {
   const groupType = fnArgs.group_type;
   const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
+  const { namingPrefixes } = await loadPolicyRules(pool);
   const violations = [];
 
   if (!groupType || groupType === 'Distribution') {
     const { rows } = await pool.query('SELECT name, email FROM distribution_groups ORDER BY name ASC');
     for (const row of rows) {
-      const { compliant, expectedPrefix } = checkGroupNamingConvention(row.name, 'Distribution');
+      const { compliant, expectedPrefix } = checkGroupNamingConvention(row.name, 'Distribution', namingPrefixes);
       if (!compliant) {
-        violations.push({ groupName: row.name, groupEmail: row.email, groupType: 'Distribution', expectedPrefix, source: 'distribution_groups' });
+        violations.push({ groupName: row.name, groupEmail: row.email, groupType: 'Distribution', expectedPrefix, source: 'distribution_groups', ownerEmail: null });
       }
     }
   }
 
   const { rows: m365Rows } = await pool.query(
-    `SELECT group_name, group_email, group_type FROM m365_group_memberships
+    `SELECT group_name, group_email, group_type, users FROM m365_group_memberships
      WHERE $1::text IS NULL OR group_type = $1
      ORDER BY group_name ASC`,
     [groupType || null]
   );
   for (const row of m365Rows) {
-    const { compliant, expectedPrefix } = checkGroupNamingConvention(row.group_name, row.group_type);
+    const { compliant, expectedPrefix } = checkGroupNamingConvention(row.group_name, row.group_type, namingPrefixes);
     if (!compliant) {
-      violations.push({ groupName: row.group_name, groupEmail: row.group_email, groupType: row.group_type, expectedPrefix, source: 'm365_group_memberships' });
+      const owner = (row.users || []).find(u => u.role === 'owner');
+      violations.push({
+        groupName: row.group_name,
+        groupEmail: row.group_email,
+        groupType: row.group_type,
+        expectedPrefix,
+        source: 'm365_group_memberships',
+        ownerEmail: owner?.email || null,
+      });
     }
   }
 
   return {
-    conventions: GROUP_NAME_PREFIXES,
+    conventions: namingPrefixes,
     totalViolations: violations.length,
     count: Math.min(violations.length, limit),
     violations: violations.slice(0, limit),
   };
 }
 
+async function executeEnforceNamingConvention(pool, fnArgs) {
+  const groupType = fnArgs.group_type || null;
+  const dryRun = fnArgs.dry_run === true;
+  const { namingPrefixes } = await loadPolicyRules(pool);
+  const renamed = [];
+
+  if (!groupType || groupType === 'Distribution') {
+    const { rows } = await pool.query('SELECT id, name FROM distribution_groups ORDER BY name ASC');
+    for (const row of rows) {
+      const { compliant, expectedPrefix } = checkGroupNamingConvention(row.name, 'Distribution', namingPrefixes);
+      if (!compliant) {
+        const newName = `${expectedPrefix}${row.name}`;
+        renamed.push({ groupName: row.name, newName, groupType: 'Distribution', source: 'distribution_groups' });
+        if (!dryRun) {
+          await pool.query('UPDATE distribution_groups SET name = $1 WHERE id = $2', [newName, row.id]);
+        }
+      }
+    }
+  }
+
+  const { rows: m365Rows } = await pool.query(
+    `SELECT id, group_name, group_type FROM m365_group_memberships
+     WHERE $1::text IS NULL OR group_type = $1
+     ORDER BY group_name ASC`,
+    [groupType]
+  );
+  for (const row of m365Rows) {
+    const { compliant, expectedPrefix } = checkGroupNamingConvention(row.group_name, row.group_type, namingPrefixes);
+    if (!compliant) {
+      const newName = `${expectedPrefix}${row.group_name}`;
+      renamed.push({ groupName: row.group_name, newName, groupType: row.group_type, source: 'm365_group_memberships' });
+      if (!dryRun) {
+        await pool.query('UPDATE m365_group_memberships SET group_name = $1 WHERE id = $2', [newName, row.id]);
+      }
+    }
+  }
+
+  return {
+    dryRun,
+    renamedCount: renamed.length,
+    renamed,
+  };
+}
+
 async function executeListGroupsMissingOwners(pool, fnArgs) {
-  const minOwners = Number.isInteger(fnArgs.min_owners) ? Math.max(fnArgs.min_owners, 0) : MIN_GROUP_OWNERS;
+  const policyMinOwners = (await loadPolicyRules(pool)).minGroupOwners;
+  const minOwners = Number.isInteger(fnArgs.min_owners) ? Math.max(fnArgs.min_owners, 0) : policyMinOwners;
   const limit = Number.isInteger(fnArgs.limit) ? Math.min(Math.max(fnArgs.limit, 1), 100) : 25;
 
   const { rows } = await pool.query(
-    `SELECT group_name, group_email, group_type,
+    `SELECT group_name, group_email, group_type, users,
             (SELECT count(*) FROM jsonb_array_elements(users) u WHERE u->>'role' = 'owner') AS owner_count
      FROM m365_group_memberships
      ORDER BY owner_count ASC, group_name ASC`
@@ -1706,13 +1891,22 @@ async function executeListGroupsMissingOwners(pool, fnArgs) {
 
   const violations = rows
     .filter(row => Number(row.owner_count) < minOwners)
-    .map(row => ({
-      groupName: row.group_name,
-      groupEmail: row.group_email,
-      groupType: row.group_type,
-      ownerCount: Number(row.owner_count),
-      minOwners,
-    }));
+    .map(row => {
+      const users = row.users || [];
+      const owner = users.find(u => u.role === 'owner');
+      const nonOwners = users
+        .filter(u => u.role !== 'owner')
+        .sort((a, b) => new Date(a.joined_at || 0) - new Date(b.joined_at || 0));
+      return {
+        groupName: row.group_name,
+        groupEmail: row.group_email,
+        groupType: row.group_type,
+        ownerCount: Number(row.owner_count),
+        minOwners,
+        existingOwnerEmail: owner?.email || null,
+        promotionCandidateEmail: nonOwners[0]?.email || null,
+      };
+    });
 
   return {
     minOwners,
@@ -1723,7 +1917,8 @@ async function executeListGroupsMissingOwners(pool, fnArgs) {
 }
 
 async function executeEnforceMinimumOwners(pool, fnArgs) {
-  const minOwners = Number.isInteger(fnArgs.min_owners) ? Math.max(fnArgs.min_owners, 1) : MIN_GROUP_OWNERS;
+  const policyMinOwners = (await loadPolicyRules(pool)).minGroupOwners;
+  const minOwners = Number.isInteger(fnArgs.min_owners) ? Math.max(fnArgs.min_owners, 1) : policyMinOwners;
   const dryRun = fnArgs.dry_run === true;
 
   const { rows } = await pool.query(
@@ -1976,99 +2171,153 @@ async function executeListOversharingRisks(pool, fnArgs) {
 // previously resolved violation if the same issue is detected again.
 
 async function upsertViolation(client, v) {
+  const { rows: existingRows } = await client.query(
+    `SELECT status, remediation_status FROM governance_violations
+     WHERE violation_type = $1 AND resource_type = $2 AND resource_name = $3`,
+    [v.violationType, v.resourceType, v.resourceName]
+  );
+  const existing = existingRows[0];
+
+  // Only (re)propose a fix on first detection, or when a resolved violation reopens —
+  // never overwrite a human's existing approve/reject/applied decision on rescan.
+  const shouldPropose = Boolean(v.remediationAction) && (
+    !existing ||
+    existing.status === 'resolved' ||
+    !existing.remediation_status || existing.remediation_status === 'none'
+  );
+
   await client.query(
     `INSERT INTO governance_violations
-       (violation_type, resource_type, resource_name, resource_id, severity, details)
-     VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+       (violation_type, resource_type, resource_name, resource_id, severity, details, assigned_to,
+        remediation_action, remediation_params, remediation_status, remediation_requested_at)
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9::jsonb, $10, $11)
      ON CONFLICT (violation_type, resource_type, resource_name) DO UPDATE SET
        resource_id = EXCLUDED.resource_id,
        severity    = EXCLUDED.severity,
        details     = EXCLUDED.details,
+       assigned_to = COALESCE(governance_violations.assigned_to, EXCLUDED.assigned_to),
        status      = CASE WHEN governance_violations.status = 'resolved' THEN 'open' ELSE governance_violations.status END,
        resolved_at = CASE WHEN governance_violations.status = 'resolved' THEN NULL ELSE governance_violations.resolved_at END,
+       remediation_action       = CASE WHEN $12 THEN EXCLUDED.remediation_action ELSE governance_violations.remediation_action END,
+       remediation_params       = CASE WHEN $12 THEN EXCLUDED.remediation_params ELSE governance_violations.remediation_params END,
+       remediation_status       = CASE WHEN $12 THEN EXCLUDED.remediation_status ELSE governance_violations.remediation_status END,
+       remediation_requested_at = CASE WHEN $12 THEN EXCLUDED.remediation_requested_at ELSE governance_violations.remediation_requested_at END,
        updated_at  = now()`,
-    [v.violationType, v.resourceType, v.resourceName, v.resourceId || null, v.severity, JSON.stringify(v.details || {})]
+    [
+      v.violationType, v.resourceType, v.resourceName, v.resourceId || null, v.severity, JSON.stringify(v.details || {}), v.assignedTo || null,
+      v.remediationAction || null,
+      v.remediationParams ? JSON.stringify(v.remediationParams) : null,
+      shouldPropose ? 'proposed' : 'none',
+      shouldPropose ? new Date().toISOString() : null,
+      shouldPropose,
+    ]
   );
 }
 
 async function runGovernanceScan(pool) {
   const found = [];
+  const policy = await loadPolicyRules(pool);
 
-  const namingResult = await executeListNamingViolations(pool, {});
-  for (const v of namingResult.violations) {
-    found.push({
-      violationType: 'naming_convention',
-      resourceType: v.source === 'distribution_groups' ? 'distribution_group' : 'm365_group',
-      resourceName: v.groupName,
-      resourceId: v.groupEmail,
-      severity: VIOLATION_SEVERITY.naming_convention,
-      details: { expectedPrefix: v.expectedPrefix, groupType: v.groupType },
-    });
-  }
-
-  const orphanedResult = await executeListOrphanedResources(pool, { resource_type: 'all', limit: 1000 });
-  for (const o of orphanedResult.orphans) {
-    found.push({
-      violationType: 'orphaned_resource',
-      resourceType: o.resourceType,
-      resourceName: o.name,
-      resourceId: o.identifier,
-      severity: VIOLATION_SEVERITY.orphaned_resource,
-      details: o,
-    });
-  }
-
-  const missingOwnersResult = await executeListGroupsMissingOwners(pool, { min_owners: MIN_GROUP_OWNERS, limit: 1000 });
-  for (const g of missingOwnersResult.violations) {
-    if (g.ownerCount > 0) { // owner_count === 0 is already captured as orphaned_resource above
+  if (policy.checkEnabled.naming_convention) {
+    const namingResult = await executeListNamingViolations(pool, {});
+    for (const v of namingResult.violations) {
       found.push({
-        violationType: 'missing_owners',
-        resourceType: 'm365_group',
-        resourceName: g.groupName,
-        resourceId: g.groupEmail,
-        severity: VIOLATION_SEVERITY.missing_owners,
-        details: g,
+        violationType: 'naming_convention',
+        resourceType: v.source === 'distribution_groups' ? 'distribution_group' : 'm365_group',
+        resourceName: v.groupName,
+        resourceId: v.groupEmail,
+        severity: policy.violationSeverity.naming_convention,
+        details: { expectedPrefix: v.expectedPrefix, groupType: v.groupType },
+        assignedTo: v.ownerEmail, // route to the group's existing owner, when one exists
+        // Safe, reversible fix: prepend the required prefix — propose it automatically.
+        remediationAction: v.groupEmail ? 'rename_group' : null,
+        remediationParams: v.groupEmail ? { newName: `${v.expectedPrefix}${v.groupName}` } : null,
       });
     }
   }
 
-  const oversharingResult = await executeListOversharingRisks(pool, { limit: 1000 });
-  for (const r of oversharingResult.risks) {
-    found.push({
-      violationType: 'oversharing_risk',
-      resourceType: r.riskType === 'broad_share_scope' ? 'sharepoint_site_broad_share' : 'sharepoint_site_external_access',
-      resourceName: `${r.site} — ${r.userEmail}`,
-      resourceId: r.userEmail,
-      severity: VIOLATION_SEVERITY.oversharing_risk,
-      details: r,
-    });
+  if (policy.checkEnabled.orphaned_resource) {
+    const orphanedResult = await executeListOrphanedResources(pool, { resource_type: 'all', limit: 1000 });
+    for (const o of orphanedResult.orphans) {
+      found.push({
+        violationType: 'orphaned_resource',
+        resourceType: o.resourceType,
+        resourceName: o.name,
+        resourceId: o.identifier,
+        severity: policy.violationSeverity.orphaned_resource,
+        details: o,
+        assignedTo: o.suggestedOwner, // no real owner exists yet — route to the suggested replacement
+        // Only propose a fix when there's a real candidate to assign — never invent an owner.
+        remediationAction: o.suggestedOwner ? 'reassign_owner' : null,
+        remediationParams: o.suggestedOwner ? { resourceType: o.resourceType, suggestedOwner: o.suggestedOwner } : null,
+      });
+    }
+  }
+
+  if (policy.checkEnabled.missing_owners) {
+    const missingOwnersResult = await executeListGroupsMissingOwners(pool, { min_owners: policy.minGroupOwners, limit: 1000 });
+    for (const g of missingOwnersResult.violations) {
+      if (g.ownerCount > 0) { // owner_count === 0 is already captured as orphaned_resource above
+        found.push({
+          violationType: 'missing_owners',
+          resourceType: 'm365_group',
+          resourceName: g.groupName,
+          resourceId: g.groupEmail,
+          severity: policy.violationSeverity.missing_owners,
+          details: g,
+          assignedTo: g.existingOwnerEmail, // route to an existing owner for visibility
+          remediationAction: g.promotionCandidateEmail ? 'promote_owner' : null,
+          remediationParams: g.promotionCandidateEmail ? { promotedEmail: g.promotionCandidateEmail } : null,
+        });
+      }
+    }
+  }
+
+  if (policy.checkEnabled.oversharing_risk) {
+    const oversharingResult = await executeListOversharingRisks(pool, { limit: 1000 });
+    for (const r of oversharingResult.risks) {
+      found.push({
+        violationType: 'oversharing_risk',
+        resourceType: r.riskType === 'broad_share_scope' ? 'sharepoint_site_broad_share' : 'sharepoint_site_external_access',
+        resourceName: `${r.site} — ${r.userEmail}`,
+        resourceId: r.userEmail,
+        severity: policy.violationSeverity.oversharing_risk,
+        details: r,
+        assignedTo: r.grantedBy, // route to whoever granted the permission
+      });
+    }
   }
 
   if (graphClient.mode !== 'graph') {
-    const staleGuestsResult = await executeListStaleGuests(pool, { limit: 1000 });
-    for (const g of staleGuestsResult.guests || []) {
-      if (!g.email) continue;
-      found.push({
-        violationType: 'stale_guest',
-        resourceType: 'external_user',
-        resourceName: g.name || g.email,
-        resourceId: g.email,
-        severity: VIOLATION_SEVERITY.stale_guest,
-        details: g,
-      });
+    if (policy.checkEnabled.stale_guest) {
+      const staleGuestsResult = await executeListStaleGuests(pool, { limit: 1000, inactive_days: policy.inactiveDays.guest });
+      for (const g of staleGuestsResult.guests || []) {
+        if (!g.email) continue;
+        found.push({
+          violationType: 'stale_guest',
+          resourceType: 'external_user',
+          resourceName: g.name || g.email,
+          resourceId: g.email,
+          severity: policy.violationSeverity.stale_guest,
+          details: g,
+          assignedTo: g.sponsor, // route to the guest's sponsor
+        });
+      }
     }
 
-    const inactiveLicensesResult = await executeListInactiveLicenses(pool, {});
-    for (const u of inactiveLicensesResult.users || []) {
-      if (!u.email) continue;
-      found.push({
-        violationType: 'inactive_license',
-        resourceType: 'active_directory_account',
-        resourceName: u.name || u.email,
-        resourceId: u.email,
-        severity: VIOLATION_SEVERITY.inactive_license,
-        details: u,
-      });
+    if (policy.checkEnabled.inactive_license) {
+      const inactiveLicensesResult = await executeListInactiveLicenses(pool, { inactive_days: policy.inactiveDays.license });
+      for (const u of inactiveLicensesResult.users || []) {
+        if (!u.email) continue;
+        found.push({
+          violationType: 'inactive_license',
+          resourceType: 'active_directory_account',
+          resourceName: u.name || u.email,
+          resourceId: u.email,
+          severity: policy.violationSeverity.inactive_license,
+          details: u,
+        });
+      }
     }
   }
 
@@ -2144,12 +2393,18 @@ async function executeListViolations(pool, fnArgs) {
     params.push(fnArgs.assigned_to);
     conditions.push(`assigned_to = $${params.length}`);
   }
+  if (fnArgs.remediation_status) {
+    params.push(fnArgs.remediation_status);
+    conditions.push(`remediation_status = $${params.length}`);
+  }
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   params.push(limit);
 
   const { rows } = await pool.query(
     `SELECT id, violation_type, resource_type, resource_name, resource_id, severity, status,
             assigned_to, details, detected_at, resolved_at, resolution_note,
+            remediation_action, remediation_params, remediation_status, remediation_requested_at,
+            remediation_decided_by, remediation_decided_at, remediation_applied_at, remediation_error,
             EXTRACT(DAY FROM now() - detected_at)::int AS age_days
      FROM governance_violations
      ${whereClause}
@@ -2175,6 +2430,14 @@ async function executeListViolations(pool, fnArgs) {
       resolvedAt: row.resolved_at,
       resolutionNote: row.resolution_note,
       ageDays: row.age_days,
+      remediationAction: row.remediation_action,
+      remediationParams: row.remediation_params,
+      remediationStatus: row.remediation_status,
+      remediationRequestedAt: row.remediation_requested_at,
+      remediationDecidedBy: row.remediation_decided_by,
+      remediationDecidedAt: row.remediation_decided_at,
+      remediationAppliedAt: row.remediation_applied_at,
+      remediationError: row.remediation_error,
     })),
   };
 }
@@ -2214,8 +2477,111 @@ async function executeResolveViolation(pool, fnArgs) {
   return { resolved: true, violation: rows[0] };
 }
 
+// ── Automated remediation (propose → human approval → apply) ─────────────────
+// runGovernanceScan() auto-proposes a fix for violation types with a known safe
+// remediation (naming_convention, missing_owners, orphaned_resource with a real
+// candidate owner). Nothing is ever applied to a system without an explicit
+// approve_remediation call — mirrors "propose, then accept" agentic UX.
+
+async function applyRemediation(pool, email, sessionId, violation) {
+  const params = violation.remediation_params || {};
+
+  switch (violation.remediation_action) {
+    case 'rename_group': {
+      if (violation.resource_type === 'distribution_group') {
+        const { rowCount } = await pool.query('UPDATE distribution_groups SET name = $1 WHERE email = $2', [params.newName, violation.resource_id]);
+        if (rowCount === 0) throw new Error(`Distribution group ${violation.resource_id} not found`);
+      } else {
+        const { rowCount } = await pool.query('UPDATE m365_group_memberships SET group_name = $1 WHERE group_email = $2', [params.newName, violation.resource_id]);
+        if (rowCount === 0) throw new Error(`M365 group ${violation.resource_id} not found`);
+      }
+      return { renamed: true, newName: params.newName };
+    }
+
+    case 'promote_owner': {
+      const { rows } = await pool.query('SELECT id, users FROM m365_group_memberships WHERE group_email = $1', [violation.resource_id]);
+      if (rows.length === 0) throw new Error(`M365 group ${violation.resource_id} not found`);
+      const group = rows[0];
+      const updatedUsers = (group.users || []).map(u => (u.email === params.promotedEmail ? { ...u, role: 'owner' } : u));
+      await pool.query('UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2', [JSON.stringify(updatedUsers), group.id]);
+      return { promoted: true, promotedEmail: params.promotedEmail };
+    }
+
+    case 'reassign_owner': {
+      const { actionResult } = await executeReassignResourceOwner(pool, email, {
+        resource_type: params.resourceType,
+        resource_name: violation.resource_name,
+        new_owner_email: params.suggestedOwner,
+        reason: 'Approved automated remediation.',
+      }, sessionId);
+      return actionResult;
+    }
+
+    default:
+      throw new Error(`Unknown remediation_action: ${violation.remediation_action}`);
+  }
+}
+
+async function executeApproveRemediation(pool, email, fnArgs, sessionId) {
+  const violationId = fnArgs.violation_id;
+  if (!Number.isInteger(violationId)) throw new Error('violation_id is required.');
+
+  const { rows } = await pool.query('SELECT * FROM governance_violations WHERE id = $1', [violationId]);
+  if (rows.length === 0) throw new Error(`No violation found with id ${violationId}`);
+  const violation = rows[0];
+
+  if (violation.remediation_status !== 'proposed') {
+    throw new Error(`Violation ${violationId} has no pending remediation proposal (status: ${violation.remediation_status || 'none'}).`);
+  }
+
+  const title = `Approve automated remediation — ${violation.resource_name}`;
+  const description = `Apply proposed fix "${violation.remediation_action}" for ${violation.violation_type} violation on "${violation.resource_name}".`;
+
+  const result = await createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const applyResult = await applyRemediation(pool, email, sessionId, violation);
+    await pool.query(
+      `UPDATE governance_violations
+       SET remediation_status = 'applied', remediation_decided_by = $1, remediation_decided_at = now(),
+           remediation_applied_at = now(), status = 'resolved', resolved_at = now(),
+           resolution_note = 'Approved automated remediation applied', updated_at = now()
+       WHERE id = $2`,
+      [email, violationId]
+    );
+    return { approved: true, violationId, remediationAction: violation.remediation_action, ...applyResult };
+  });
+
+  if (!result.actionResult.approved) {
+    await pool.query(
+      `UPDATE governance_violations
+       SET remediation_status = 'failed', remediation_error = $1, remediation_decided_by = $2, remediation_decided_at = now(), updated_at = now()
+       WHERE id = $3`,
+      [result.actionResult.error || 'Unknown error', email, violationId]
+    );
+  }
+
+  return result;
+}
+
+async function executeRejectRemediation(pool, fnArgs, rejectedBy) {
+  const violationId = fnArgs.violation_id;
+  const note = fnArgs.note || 'Remediation proposal rejected.';
+  if (!Number.isInteger(violationId)) throw new Error('violation_id is required.');
+
+  const { rows } = await pool.query(
+    `UPDATE governance_violations
+     SET remediation_status = 'rejected', remediation_decided_by = $1, remediation_decided_at = now(), updated_at = now()
+     WHERE id = $2 AND remediation_status = 'proposed'
+     RETURNING id, violation_type, resource_name, remediation_status`,
+    [rejectedBy, violationId]
+  );
+  if (rows.length === 0) throw new Error(`No pending remediation proposal found for violation ${violationId}`);
+
+  return { rejected: true, violation: rows[0], note };
+}
+
 async function executeGetComplianceScore(pool) {
   await runGovernanceScan(pool);
+  const { severityWeight } = await loadPolicyRules(pool);
 
   const { rows: severityRows } = await pool.query(
     `SELECT severity, count(*)::int AS count
@@ -2226,7 +2592,7 @@ async function executeGetComplianceScore(pool) {
   const countsBySeverity = { low: 0, medium: 0, high: 0, critical: 0 };
   for (const row of severityRows) countsBySeverity[row.severity] = row.count;
 
-  const { score, deduction } = computeComplianceScore(countsBySeverity);
+  const { score, deduction } = computeComplianceScore(countsBySeverity, severityWeight);
 
   const { rows: typeRows } = await pool.query(
     `SELECT violation_type, count(*)::int AS count
@@ -2236,12 +2602,17 @@ async function executeGetComplianceScore(pool) {
      ORDER BY count DESC`
   );
 
+  const { rows: pendingRows } = await pool.query(
+    `SELECT count(*)::int AS count FROM governance_violations WHERE remediation_status = 'proposed'`
+  );
+
   return {
     score,
     deduction,
     countsBySeverity,
     countsByType: typeRows.map(row => ({ violationType: row.violation_type, count: row.count })),
     totalOpenViolations: Object.values(countsBySeverity).reduce((a, b) => a + b, 0),
+    pendingRemediationCount: pendingRows[0].count,
   };
 }
 
@@ -2412,6 +2783,24 @@ async function executeListReports(pool, fnArgs) {
       downloadUrl: `/api/reports/${row.id}/download`,
     })),
   };
+}
+
+// ── Policy/rule engine ─────────────────────────────────────────────────────────
+
+async function executeListPolicyRules(pool, fnArgs) {
+  const rules = await listPolicyRules(pool);
+  const filtered = fnArgs.category ? rules.filter(r => r.category === fnArgs.category) : rules;
+  return { count: filtered.length, rules: filtered };
+}
+
+async function executeSetPolicyRule(pool, fnArgs, updatedBy) {
+  const rule = await setPolicyRule(pool, fnArgs.rule_key, fnArgs.value, updatedBy);
+  return { set: true, rule };
+}
+
+async function executeResetPolicyRule(pool, fnArgs) {
+  const rule = await resetPolicyRule(pool, fnArgs.rule_key);
+  return { reset: true, rule };
 }
 
 async function executeRevokeGuestAccess(pool, email, fnArgs, sessionId) {
@@ -3269,6 +3658,7 @@ You can perform real actions on user accounts. When the user asks you to take an
 - **list_inactive_licenses**: Find likely unused Microsoft 365 licenses and estimate monthly savings. Read-only; no ticket is created.
 - **list_stale_guests**: Find stale guest/external accounts. Read-only; no ticket is created.
 - **list_naming_violations**: Find distribution/M365 groups whose name breaks the required naming convention (DL-/SG-/M365- prefixes). Read-only; no ticket is created.
+- **enforce_naming_convention**: Bulk-rename distribution/M365 groups to add the required naming prefix.
 - **list_groups_missing_owners**: Find M365 groups with fewer than the minimum required owners. Read-only; no ticket is created.
 - **enforce_minimum_owners**: Bulk-promote the earliest-joined member to owner for every group below the minimum owner count.
 - **list_orphaned_resources**: Find M365 groups or SharePoint sites with no owner at all, each with a suggested replacement owner. Read-only; no ticket is created.
@@ -3278,10 +3668,15 @@ You can perform real actions on user accounts. When the user asks you to take an
 - **list_violations**: List tracked governance violations with age, severity, and assignee. Read-only; no ticket is created.
 - **assign_violation**: Assign a tracked violation to an owner for remediation.
 - **resolve_violation**: Mark a tracked violation as resolved.
+- **approve_remediation**: Approve and immediately apply an automatically-proposed fix (rename, promote owner, reassign owner). Nothing is ever applied without this.
+- **reject_remediation**: Decline a proposed automated fix without applying it.
 - **get_compliance_score**: Run a fresh governance scan and compute an overall compliance posture score (0-100). Read-only; no ticket is created.
 - **get_trend_analytics**: Get historical trends for data changes, ETL job outcomes, and violations. Read-only; no ticket is created.
 - **generate_report**: Generate and persist a CSV export of violations or change logs, returning a download URL.
 - **list_reports**: List previously generated report snapshots. Read-only; no ticket is created.
+- **list_policy_rules**: List every governance policy rule, its effective value, and whether it's overridden. Read-only; no ticket is created.
+- **set_policy_rule**: Override a governance policy rule (naming prefix, min owners, severity, score weight, inactivity threshold, check on/off) — takes effect immediately.
+- **reset_policy_rule**: Revert a policy rule override back to its default.
 - **revoke_guest_access**: Revoke a stale guest/external user's access. Creates and auto-closes a ticket on success.
 - **dismiss_risky_user**: Dismiss a Microsoft Entra risky-user flag after investigation.
 - **list_app_consents**: List OAuth app consent grants for a user. Read-only; no ticket is created.
@@ -3365,11 +3760,39 @@ async function chatWithOllamaTools(messages, tools) {
 // Executes a single LLM tool call and returns { toolResultContent, ticket }.
 // Extracted so the multi-step agent loop can call it on each iteration.
 
+// Sentinel identity used by the floating "governance agent" widget (no specific
+// user is loaded there — see services/app/src/public/index.html GLOBAL_AGENT_EMAIL).
+const GOVERNANCE_CONSOLE_EMAIL = 'admin-console@system.local';
+
+// Tools that act on whatever email is bound to the session (no per-call target
+// override) — unsafe to run from the governance console since there's no real
+// user loaded. Governance/reporting/policy tools are not in this set.
+const USER_SCOPED_TOOLS = new Set([
+  'provision_account', 'disable_account', 'reset_password', 'update_attribute',
+  'add_to_group', 'add_to_m365_group', 'reset_mfa', 'get_mfa_status',
+  'assign_license', 'remove_license', 'grant_mailbox_access', 'add_email_alias',
+  'get_out_of_office', 'set_out_of_office', 'add_to_teams_channel', 'grant_onedrive_access',
+  'revoke_guest_access', 'dismiss_risky_user', 'list_app_consents', 'revoke_app_consent',
+  'explain_ca_block', 'get_device_compliance', 'get_bitlocker_key',
+  'onboard_user', 'offboard_user', 'deprovision_cascade',
+]);
+
 async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
   const fnName = toolCall.function?.name;
   const fnArgs = toolCall.function?.arguments || {};
   let toolResultContent;
   let ticket;
+
+  if (email === GOVERNANCE_CONSOLE_EMAIL && USER_SCOPED_TOOLS.has(fnName)) {
+    return {
+      toolResultContent: JSON.stringify({
+        success: false,
+        error: 'This action targets a specific user account and cannot be run from the governance console. ' +
+          'Ask the user to search for that person on the main page, open their user card, and request the action from the agent there.',
+      }),
+      ticket: undefined,
+    };
+  }
 
   switch (fnName) {
     case 'provision_account': {
@@ -3604,6 +4027,16 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
       break;
     }
 
+    case 'enforce_naming_convention': {
+      const actionResult = await executeEnforceNamingConvention(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'enforce_naming_convention',
+        ...actionResult,
+      });
+      break;
+    }
+
     case 'list_groups_missing_owners': {
       const actionResult = await executeListGroupsMissingOwners(pool, fnArgs);
       toolResultContent = JSON.stringify({
@@ -3697,6 +4130,29 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
       break;
     }
 
+    case 'approve_remediation': {
+      const { ticket: t, actionResult } = await executeApproveRemediation(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.approved || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'approve_remediation',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'reject_remediation': {
+      const actionResult = await executeRejectRemediation(pool, fnArgs, email);
+      toolResultContent = JSON.stringify({
+        success: actionResult.rejected || false,
+        action: 'reject_remediation',
+        ...actionResult,
+      });
+      break;
+    }
+
     case 'get_compliance_score': {
       const actionResult = await executeGetComplianceScore(pool);
       toolResultContent = JSON.stringify({
@@ -3732,6 +4188,36 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
       toolResultContent = JSON.stringify({
         success: true,
         action: 'list_reports',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'list_policy_rules': {
+      const actionResult = await executeListPolicyRules(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: true,
+        action: 'list_policy_rules',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'set_policy_rule': {
+      const actionResult = await executeSetPolicyRule(pool, fnArgs, email);
+      toolResultContent = JSON.stringify({
+        success: actionResult.set || false,
+        action: 'set_policy_rule',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'reset_policy_rule': {
+      const actionResult = await executeResetPolicyRule(pool, fnArgs);
+      toolResultContent = JSON.stringify({
+        success: actionResult.reset || false,
+        action: 'reset_policy_rule',
         ...actionResult,
       });
       break;
@@ -4026,15 +4512,18 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
               'List inactive Microsoft 365 licenses with estimated monthly savings — read-only.',
               'List stale guest/external accounts — read-only.',
               'List groups whose name breaks the required naming convention (DL-/SG-/M365- prefixes) — read-only.',
+              'Bulk-rename groups to fix naming convention violations.',
               'List Microsoft 365 groups with fewer than the minimum required owners — read-only.',
               'Bulk-promote the earliest-joined member to owner for every group below the minimum owner count.',
               'List M365 groups or SharePoint sites with no owner at all, with a suggested replacement owner — read-only.',
               'Reassign an orphaned M365 group or SharePoint site to a new owner (auto-suggested if not specified).',
               'List SharePoint oversharing risks — literal Everyone/anonymous-link grants plus external/guest users with elevated (Edit/FullControl) access — read-only.',
               'Scan for governance violations and track them (severity, assignee, age, resolution) over time.',
+              'Automatically propose safe fixes (rename, promote owner, reassign owner) during each scan, then approve or reject them — nothing is applied without explicit approval.',
               'Get an overall compliance posture score (0-100) with a breakdown by severity and violation type.',
               'Get historical trend analytics for data changes, ETL jobs, and violations.',
               'Generate and download a CSV report of violations or change logs, and list past report snapshots.',
+              'View and change governance policy rules (naming prefixes, min owners, severities, score weights, inactivity thresholds, check on/off) at runtime — no redeploy needed.',
               'Revoke stale guest access.',
               'Dismiss Microsoft Entra risky-user flags.',
               'List and revoke OAuth app consents.',
@@ -4088,7 +4577,17 @@ app.post('/api/agent', async (req, res) => {
       `Source: ${r.source} — ${JSON.stringify(r)}`
     ).join('\n');
 
-    const systemContent = AGENT_SYSTEM_PROMPT + '\n\nUser context:\n' + contextBlock;
+    // The floating governance-console widget has no specific user loaded — warn
+    // the LLM so it redirects account-specific requests instead of guessing.
+    const consoleNotice = email === GOVERNANCE_CONSOLE_EMAIL
+      ? '\n\nNOTE: This is the governance console — no specific user account is loaded. ' +
+        'Only use governance/policy/reporting tools (violations, compliance score, trends, reports, policy rules, ' +
+        'naming/ownership/orphaned-resource/oversharing scans, remediation approval). If asked to act on a specific ' +
+        'person\'s account (disable, reset password, provision, licenses, groups, MFA, mailbox, onboarding, offboarding, etc.), ' +
+        'do not call a tool — tell the user to search for that person on the main page and open their user card instead.'
+      : '\n\nUser context:\n' + contextBlock;
+
+    const systemContent = AGENT_SYSTEM_PROMPT + consoleNotice;
 
     const messages = [
       { role: 'system', content: systemContent },
@@ -4238,6 +4737,19 @@ app.get('/api/compliance-score', async (_req, res) => {
   }
 });
 
+// ── GET /api/policy-rules ─────────────────────────────────────────────────────
+// Read-only view of effective governance policy rules (write access is agent-tool-only).
+
+app.get('/api/policy-rules', async (req, res) => {
+  try {
+    const actionResult = await executeListPolicyRules(pool, { category: req.query.category });
+    res.json(actionResult);
+  } catch (err) {
+    console.error('[policy-rules] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
 // ── GET /api/trends ────────────────────────────────────────────────────────────
 // Historical trend analytics over a trailing window of days.
 
@@ -4289,6 +4801,31 @@ app.get('/api/reports/:id/download', async (req, res) => {
     res.send(report.content);
   } catch (err) {
     console.error('[reports:download] error:', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// ── GET /api/change-logs ───────────────────────────────────────────────────────
+// JSON listing of recent source change-log entries (same data as the change_logs report).
+
+app.get('/api/change-logs', async (req, res) => {
+  try {
+    const days = req.query.days ? parseInt(req.query.days, 10) : 30;
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit, 10), 200) : 50;
+    const rows = await fetchChangeLogsForReport(pool, days);
+    const changeLogs = rows.slice(0, limit).map(row => ({
+      id: row.id,
+      sourceTable: row.source_table,
+      email: row.email,
+      changeType: row.change_type,
+      fieldName: row.field_name,
+      oldValue: row.old_value,
+      newValue: row.new_value,
+      detectedAt: row.detected_at,
+    }));
+    res.json({ count: changeLogs.length, changeLogs });
+  } catch (err) {
+    console.error('[change-logs] error:', err);
     res.status(500).json({ error: err.message || 'Internal server error' });
   }
 });

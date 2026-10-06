@@ -2,7 +2,7 @@
 
 ## Overview
 
-User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six user/search sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered user-card agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) exposes **37 tool-calling actions** across account operations, Microsoft 365 service desk workflows, governance checks, lifecycle management (onboard/offboard), bulk operations, self-service access requests, and department access templates.
+User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six user/search sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) exposes **57 tool-calling actions** across account operations, Microsoft 365 service desk workflows, lifecycle management (onboard/offboard), bulk operations, self-service access requests, department access templates, and a full governance layer — naming/ownership/orphaned-resource/oversharing detection, a configurable policy/rule engine, violation tracking, GitHub-Copilot-style propose→approve automated remediation, and scheduled compliance reporting. The agent is reachable two ways: inside a searched user's detail card (bound to that user), or via a floating 🤖 chat icon available on every page for governance/policy questions that aren't about a specific person.
 
 > The former member-benefits experience and its dedicated ETL line were removed from this repository. Any related work now lives in the `document-search` repository.
 
@@ -23,6 +23,8 @@ See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the
 | [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Remaining agent production hardening plan |
 | [next-steps/genai-production-update.md](next-steps/genai-production-update.md) | How to turn PoC agent actions into real authenticated API calls |
 | [next-steps/saml-access-management.md](next-steps/saml-access-management.md) | SAML-based access management integration plan |
+| [capability-inventory.md](capability-inventory.md) | Governance-capability audit vs. Rencore Governance, with file:line evidence |
+| [manual-test-script.md](manual-test-script.md) | Human walkthrough script covering every feature end-to-end |
 
 ## Quickstart — full dev stack
 
@@ -89,16 +91,22 @@ On first run, pull the model once:
 docker exec user-search-ollama-1 ollama pull qwen2.5:3b
 ```
 
-The browser UI is available at `http://localhost:3000`. Search for a user and open a detail card to use the embedded User Card Agent. Agent buttons are grouped by scope:
+The browser UI is available at `http://localhost:3000`. Four dashboard panels — **Compliance Posture**, **Activity Trends**, **Reports**, and **Policy Rules** — load automatically above the search box; their titles (and the Reports panel's "Violations"/"Change Logs" links) are clickable and open a card-based drill-down view of the underlying data. Search for a user and open a detail card to use the embedded user-scoped agent, or click the floating **🤖** chat icon (bottom-right, available on every page) to talk to the same agent without a specific user loaded. Agent buttons/actions are grouped by scope:
 
 - **Account Operations** — provision/disable accounts, reset password, update attributes, add to distribution or M365 groups.
 - **Current User Options** — user-scoped M365 service desk actions: MFA reset/status, license assignment/removal, mailbox access, email aliases, out-of-office, Teams channel membership, and OneDrive access.
 - **Lifecycle Management** — onboard (new hire), offboard (departure), deprovision cascade (post-disable cleanup), and bulk operations across multiple users.
 - **Access Requests** — submit a self-service access request, view pending requests, approve requests (operator/admin only).
 - **Department Templates** — apply a pre-defined department access bundle (license + groups) in one action.
-- **General / Governance** — tenant-wide checks: inactive licenses, stale guests, app consents, Conditional Access blocks, device compliance, BitLocker recovery, and risk dismissal.
+- **Governance Detection & Remediation** — naming convention, minimum-owners, orphaned-resource, and oversharing scans, each with a one-call bulk/auto fix; fixes are auto-proposed on detection but only ever applied after an explicit `approve_remediation` call.
+- **Violation Tracking** — list/assign/resolve tracked violations, approve or reject pending remediation proposals.
+- **Compliance Reporting** — compliance score, trend analytics, on-demand or scheduled CSV report generation/listing.
+- **Policy Rule Engine** — view and change governance thresholds (naming prefixes, min owners, severities, score weights, inactivity windows, per-check enable/disable) at runtime, no redeploy.
+- **General / M365 Governance** — tenant-wide checks: inactive licenses, stale guests, app consents, Conditional Access blocks, device compliance, BitLocker recovery, and risk dismissal.
 
-The GenAI service powers the user-card agent at `http://localhost:3001/api/agent`; health is available at `http://localhost:3001/health`.
+The floating widget sends a fixed placeholder identity (no real user context), so the GenAI service server-side blocks it from running any of the 26 user-account-specific tools (provision/disable/reset password/licenses/groups/etc.) — those still require opening a real user's card. Governance/policy/reporting tools work from either entry point.
+
+The GenAI service powers the agent at `http://localhost:3001/api/agent`; health is available at `http://localhost:3001/health`.
 
 Microsoft Graph integration is centralized in `services/genai/graph-client.js`. Local development runs in safe `mock` mode unless `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, and `ENTRA_CLIENT_SECRET` are configured.
 
@@ -157,7 +165,7 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `docker-compose.etl-dg-line.yml` | Distribution groups primary + sync logs ETL |
 | `docker-compose.etl-m365-line.yml` | M365 group memberships primary + change logs ETL |
 | `docker-compose.etl-sp-line.yml` | SharePoint permissions primary + change logs ETL |
-| `infra/db/init/` | Numbered SQL scripts (01–15) executed once by Postgres on first initialisation |
+| `infra/db/init/` | Numbered SQL scripts (01–24) executed once by Postgres on first initialisation |
 | `services/etl-*-line/data/primary.json` | Primary source data consumed by each line ETL |
 | `services/etl-*-line/data/logs.json` | Activity/sync log data consumed by each line ETL |
 | `data-output/` | Host-mounted output directories for debugging and DB persistence |
@@ -166,10 +174,17 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `docs/next-steps/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, EKS, and Bedrock migration plan |
 | `docs/diagrams/aws-target-architecture.md` | Mermaid diagram — AWS target architecture (VPC, ALB, Lambda, RDS) |
 | `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
-| `services/genai/` | GenAI service: 28-tool LLM agent, action executors, Graph client, ticket management |
+| `services/genai/` | GenAI service: 57-tool LLM agent, action executors, Graph client, policy engine, CSV export, ticket management |
 | `services/genai/graph-client.js` | Microsoft Graph client wrapper with local mock fallback |
+| `services/genai/policy.js` | Configurable policy/rule engine — admin-editable governance thresholds, no redeploy needed |
+| `services/genai/csv.js` | CSV serialization helper for scheduled/on-demand reports |
 | `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
 | `infra/db/init/15_agent_tickets.sql` | `agent_tickets` table schema |
+| `infra/db/init/17_governance_violations.sql` | `governance_violations` table — tracked naming/ownership/oversharing/stale-guest/inactive-license issues |
+| `infra/db/init/19_stored_procedures.sql` | All stored procedures (search/lookup/intersection/ETL job management) — runs after every table it references |
+| `infra/db/init/21_governance_event_triggers.sql` | Postgres triggers that evaluate naming/ownership rules synchronously on every group write |
+| `infra/db/init/23_policy_rules.sql` | `policy_rules` table backing the configurable policy engine |
+| `infra/db/init/24_remediation_proposals.sql` | Adds the propose→approve→apply remediation columns to `governance_violations` |
 | `docs/technology-stack.md` | Complete inventory of every technology, library, model, and tool |
 | `docs/executive-overview.md` | Business context, target users, and solution value proposition |
 | `docs/next-steps/agentic-ai-expansion.md` | Remaining agent production hardening plan |

@@ -30,9 +30,13 @@ A complete inventory of every technology, framework, library, model, and tool us
 | **pgvector** | Bundled with `pgvector/pgvector:pg15` | Vector similarity search extension |
 | **vector(384)** | — | Column type storing 384-dimension embeddings |
 | **HNSW indexes** | — | Approximate nearest-neighbour index (cosine distance) on 12 ETL tables plus agent/search tables where applicable |
-| **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `19_stored_procedures.sql` |
+| **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `19_stored_procedures.sql` — runs after every table it references |
 | **`agent_tickets` table** | — | PoC ticketing for agent write actions (`infra/db/init/15_agent_tickets.sql`) |
 | **`access_requests` table** | — | Self-service access request queue with `pending → approved → rejected` lifecycle (`infra/db/init/16_access_requests.sql`) |
+| **`governance_violations` table** | — | Tracked naming/ownership/orphaned-resource/oversharing/stale-guest/inactive-license violations, with a propose→approve→apply remediation workflow (`infra/db/init/17_governance_violations.sql`, `24_remediation_proposals.sql`) |
+| **`scheduled_reports` table** | — | Persisted CSV snapshots of violations/change-logs, generated daily via cron plus on demand (`infra/db/init/18_scheduled_reports.sql`) |
+| **`policy_rules` table** | — | Admin-editable governance thresholds (naming prefixes, min owners, severities, score weights, inactivity windows, per-check enable/disable) — empty table falls back to hardcoded defaults (`infra/db/init/23_policy_rules.sql`) |
+| **Governance event triggers** | PL/pgSQL | `trg_evaluate_group_governance()` fires on every `m365_group_memberships`/`distribution_groups` write to evaluate naming/ownership rules synchronously, independent of any scan (`infra/db/init/21_governance_event_triggers.sql`) |
 
 ### Database Client
 
@@ -71,19 +75,34 @@ Ollama runs as a sidecar Docker container (`ollama/ollama`) for local developmen
 
 ### GenAI Agent Tools
 
-The user-card GenAI agent exposes **37 tool-calling capabilities** grouped by scope:
+The GenAI agent exposes **57 tool-calling capabilities** grouped by scope, dispatched from a single `AGENT_TOOLS` array / `executeToolCall` switch in `services/genai/index.js`:
 
 | Group | Count | Tools | Audit behaviour |
 |---|---|---|---|
 | Account Operations | 6 | `provision_account`, `disable_account`, `reset_password`, `update_attribute`, `add_to_group`, `add_to_m365_group` | All write actions create and auto-close `agent_tickets` on success |
 | Microsoft 365 Service Desk | 10 | `reset_mfa`, `get_mfa_status`, `assign_license`, `remove_license`, `grant_mailbox_access`, `add_email_alias`, `get_out_of_office`, `set_out_of_office`, `add_to_teams_channel`, `grant_onedrive_access` | Read-only checks skip tickets; write actions create audit tickets |
-| Governance | 9 | `list_inactive_licenses`, `list_stale_guests`, `revoke_guest_access`, `dismiss_risky_user`, `list_app_consents`, `revoke_app_consent`, `explain_ca_block`, `get_device_compliance`, `get_bitlocker_key` | Read-only checks skip tickets except `get_bitlocker_key`, which is always ticketed |
+| M365 Governance Actions | 9 | `list_inactive_licenses`, `list_stale_guests`, `revoke_guest_access`, `dismiss_risky_user`, `list_app_consents`, `revoke_app_consent`, `explain_ca_block`, `get_device_compliance`, `get_bitlocker_key` | Read-only checks skip tickets except `get_bitlocker_key`, which is always ticketed |
 | General / Ticketing | 3 | `create_ticket`, `list_open_tickets`, `describe_capabilities` | Informational; no additional tickets created |
 | Lifecycle Management | 4 | `onboard_user`, `offboard_user`, `deprovision_cascade`, `bulk_action` | All lifecycle actions create audit tickets; `bulk_action` creates one ticket per affected user |
 | Access Requests | 3 | `submit_access_request`, `list_access_requests`, `approve_access_request` | Requests stored in `access_requests` table; approvals trigger provisioning and close the request |
 | Department Access Templates | 2 | `apply_access_template`, `list_access_templates` | `apply_access_template` creates an audit ticket; list is read-only |
+| Governance Detection & Remediation | 7 | `list_naming_violations`, `enforce_naming_convention`, `list_groups_missing_owners`, `enforce_minimum_owners`, `list_orphaned_resources`, `reassign_resource_owner`, `list_oversharing_risks` | Detection is read-only; bulk-fix tools create one ticket-free DB transaction and are also auto-proposed as remediations on the next scan |
+| Violation Tracking & Remediation Workflow | 6 | `scan_governance_violations`, `list_violations`, `assign_violation`, `resolve_violation`, `approve_remediation`, `reject_remediation` | `approve_remediation` is the only call that ever applies a proposed fix; nothing is auto-applied |
+| Compliance Reporting & Analytics | 4 | `get_compliance_score`, `get_trend_analytics`, `generate_report`, `list_reports` | Read-only; `generate_report` persists a CSV snapshot row |
+| Policy Rule Engine | 3 | `list_policy_rules`, `set_policy_rule`, `reset_policy_rule` | Changes take effect on the next scan, no redeploy; read-only list has no audit entry |
+
+Two entry points reach the same agent: the per-user detail card (bound to a real searched user) and a floating chat icon available on every page (bound to a fixed sentinel identity, no real user). The GenAI service enforces server-side which of the 57 tools each entry point may use — the 26 account-specific tools above (Account Operations, M365 Service Desk, and most M365 Governance Actions) are refused when invoked from the floating widget, since there is no real target user; the remaining groups work from either entry point.
 
 Microsoft Graph integration is centralized in `services/genai/graph-client.js`. Local development uses a safe mock client unless `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, and `ENTRA_CLIENT_SECRET` are configured.
+
+### Supporting GenAI Modules
+
+| File | Purpose |
+|---|---|
+| `services/genai/validation.js` | Naming-convention/compliance-score pure functions; accepts policy overrides, falls back to hardcoded defaults |
+| `services/genai/policy.js` | `POLICY_RULE_DEFS` — single source of truth for every admin-editable policy rule key, its category/type/default/description |
+| `services/genai/csv.js` | Serializes query result rows to CSV for scheduled and on-demand report downloads |
+| `services/genai/graph-client.js` | Microsoft Graph client wrapper with a real/mock switch |
 
 ---
 
