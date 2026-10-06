@@ -1,6 +1,6 @@
 # Entity Relationship Diagram
 
-16 tables total: 6 primary sources, 6 activity/sync/change log tables, 3 supporting tables (ETL logs, change logs, chat), 1 agent tickets table, and 1 access requests table.
+20 tables total: 6 primary sources, 6 activity/sync/change log tables, 3 supporting tables (ETL logs, change logs, chat), 1 agent tickets table, 1 access requests table, and 3 governance tables (violations, scheduled reports, policy rules).
 
 ```mermaid
 erDiagram
@@ -13,6 +13,7 @@ erDiagram
         boolean enabled
         boolean locked
         timestamptz passwordlastreset
+        timestamptz last_sign_in_at "staleness signal, decoupled from passwordlastreset"
         vector embedding "384-dim HNSW"
         timestamptz created_at
     }
@@ -140,6 +141,7 @@ erDiagram
         text site_url
         text role
         text permission_type
+        text share_scope "user / everyone / everyone_except_external / anonymous_link"
         text granted_by
         timestamptz granted_at
         vector embedding "384-dim HNSW"
@@ -206,6 +208,50 @@ erDiagram
         uuid session_id
         timestamptz created_at
         timestamptz updated_at
+    }
+
+    GOVERNANCE_VIOLATIONS {
+        serial id PK
+        text violation_type "naming_convention / missing_owners / orphaned_resource / oversharing_risk / stale_guest / inactive_license"
+        text resource_type
+        text resource_name
+        text resource_id
+        text severity "low / medium / high / critical"
+        text status "open / acknowledged / resolved"
+        text assigned_to
+        jsonb details
+        timestamptz detected_at
+        timestamptz resolved_at
+        text resolution_note
+        text remediation_action "rename_group / promote_owner / reassign_owner"
+        jsonb remediation_params
+        text remediation_status "none / proposed / approved / rejected / applied / failed"
+        timestamptz remediation_requested_at
+        text remediation_decided_by
+        timestamptz remediation_decided_at
+        timestamptz remediation_applied_at
+        text remediation_error
+    }
+
+    SCHEDULED_REPORTS {
+        serial id PK
+        text report_type "violations / change_logs"
+        text format "csv"
+        int row_count
+        text content
+        text generated_by "schedule or agent"
+        timestamptz generated_at
+    }
+
+    POLICY_RULES {
+        serial id PK
+        text rule_key UK "e.g. naming_prefix.Security, min_group_owners"
+        text category "naming_prefix / ownership / severity / scoring / thresholds / check_enabled"
+        text value
+        text description
+        text updated_by
+        timestamptz updated_at
+        timestamptz created_at
     }
 
     ACTIVE_DIRECTORY ||--o{ ACTIVE_DIRECTORY_ACTIVITY_LOGS : "email"

@@ -15,7 +15,7 @@ Mermaid diagrams documenting the user-search platform architecture, data flows, 
 | Entity Relationship | [entity-relationship.md](entity-relationship.md) | Database tables, fields, and relationships across search and agent data |
 | Docker Compose Topology | [docker-compose-topology.md](docker-compose-topology.md) | Service dependencies, volumes, and network topology (9 compose fragments) |
 | ETL Job State | [state-etl-job.md](state-etl-job.md) | State machine for a single ETL job lifecycle |
-| GenAI Architecture | [genai-target-architecture.md](genai-target-architecture.md) | C4 container diagram — local dev GenAI platform architecture, including the 37-tool agent, Microsoft Graph mock fallback, and ticketing/access-request flow |
+| GenAI Architecture | [genai-target-architecture.md](genai-target-architecture.md) | C4 container diagram — local dev GenAI platform architecture, including the 57-tool agent, Microsoft Graph mock fallback, and ticketing/access-request flow |
 
 ## Conventions
 

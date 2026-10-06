@@ -4,10 +4,10 @@
 
 | Component | Technology | Details |
 |---|---|---|
-| Database | PostgreSQL 18 + pgvector (Docker) | 12+ tables (user sources, logs, `agent_tickets`, `chat_messages`, `m365_group_memberships`), HNSW indexes, bind-mounted data dir |
+| Database | PostgreSQL 18 + pgvector (Docker) | 20 tables (user sources, logs, `agent_tickets`, `chat_messages`, `m365_group_memberships`, `governance_violations`, `scheduled_reports`, `policy_rules`), HNSW indexes, bind-mounted data dir |
 | ETL | 6 Docker line containers (node:22) | AD, NetForum, External Users, Distribution Groups, M365, SharePoint. Cron-scheduled (hourly), SBERT `Xenova/all-MiniLM-L6-v2`, shared model cache volume |
 | App | Docker container (node:22, Express) | Port 3000, SBERT at query time, cosine similarity search, proxies agent/ticket requests to GenAI service |
-| GenAI | Docker container (node:22, Express) + Ollama sidecar | Port 3001, LLM tool-calling agent (`qwen2.5:3b` — **local dev only**), 37 tools, lifecycle management, access requests, M365 Graph integration |
+| GenAI | Docker container (node:22, Express) + Ollama sidecar | Port 3001, LLM tool-calling agent (`qwen2.5:3b` — **local dev only**), 57 tools, lifecycle management, access requests, governance detection/remediation, policy rule engine, compliance reporting, M365 Graph integration |
 | Orchestration | Docker Compose (9 YAML fragments) | `npm run dev:up` brings up full stack |
 | CI | TeamCity → Artifactory push | Matrix build for images, triggered on merge |
 
@@ -42,7 +42,7 @@ See [docs/diagrams/aws-target-architecture.md](diagrams/aws-target-architecture.
 | Step | Action |
 |---|---|
 | 1.1 | Create RDS PostgreSQL 18 instance with `pgvector` extension enabled |
-| 1.2 | Run `infra/db/init/01_create_schema.sql` through `15_agent_tickets.sql` against RDS |
+| 1.2 | Run `infra/db/init/01_create_schema.sql` through `24_remediation_proposals.sql` in filename order against RDS |
 | 1.3 | Store RDS credentials in Secrets Manager (already set up for CI) |
 | 1.4 | Update app and GenAI service `DATABASE_URL` to point to RDS endpoint |
 | 1.5 | Update ETL `PGHOST`/`PGPASSWORD` env vars to use Secrets Manager |

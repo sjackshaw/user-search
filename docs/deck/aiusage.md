@@ -24,7 +24,7 @@ The User Search platform uses AI as a core functional component, not as a develo
 |---|---|
 | **Model** | `qwen2.5:3b` |
 | **Provider** | Ollama (self-hosted, local only) |
-| **Purpose** | Powers the 37-tool AI agent during local development and demonstration. Interprets natural-language instructions from the analyst and decides which tool to invoke. |
+| **Purpose** | Powers the 57-tool AI agent during local development and demonstration. Interprets natural-language instructions from the analyst and decides which tool to invoke. |
 | **Data processed** | User data context from the local Postgres database (synthetic data in the PoC) and analyst-supplied prompts |
 | **Scope** | Local development only — not used in production |
 
@@ -57,16 +57,20 @@ The following AI tools were used in the creation and update of the code and docu
 
 | Attribute | Detail |
 |---|---|
-| **Tool** | GitHub Copilot (doc-specialist agent mode) |
-| **Model** | Claude Sonnet 4.6 (Anthropic) and 5 (Anthropic), accessed via GitHub Copilot |
+| **Tool** | GitHub Copilot, used in multiple agent modes across this project's development (general coding agent and a dedicated doc-specialist mode) |
+| **Model** | Claude Sonnet 4.6 (Anthropic) and Claude Sonnet 5 (Anthropic), accessed via GitHub Copilot |
 | **Provider** | GitHub / Anthropic |
+| **What it actually did** | Autonomous, human-directed implementation work across the full stack: database schema design and migration ordering (`infra/db/init/*.sql`), backend logic in `services/genai/index.js` and `services/app/src/index.js` (governance detection, the configurable policy engine, approval-gated remediation workflow, compliance scoring, scheduled reporting), front-end UI (`services/app/src/public/index.html` — dashboard panels, drill-down overlays, the floating agent widget), Docker deployment and debugging, Jest test authoring, and the documentation set in `docs/` (including this file). |
+| **Human oversight** | Every change was driven by an explicit, iterative human prompt and reviewed before being deployed; nothing was generated and shipped unattended. Destructive or irreversible actions (data wipes, deployments) were confirmed with the human operator before execution. |
+
+This is a more complete and accurate disclosure than earlier drafts of this document, which described Copilot's role as limited to "doc-specialist agent mode" — that undersold the extent of AI-assisted code generation that produced the governance, policy, remediation, reporting, and dashboard features described in [solution.md](solution.md).
 
 ---
 
 ## 3. AI Used in Platform Development
 
-The platform codebase was developed prior to this documentation session. AI-assisted development tools may have been used during that work; this disclosure covers only what is known at the time of writing.
+The platform codebase's earliest version predates the development session(s) covered by the disclosure in Section 2. Other AI-assisted development tools may have been used during that earlier work; this disclosure covers only what is known and directly observable at the time of writing (GitHub Copilot activity on this repository, as described above).
 
 ---
 
-*Last updated: 3 August 2026*
+*Last updated: 2 October 2026*

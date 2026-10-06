@@ -1,6 +1,6 @@
 # GenAI Architecture (C4 Container — Current State)
 
-> Current local state: 6 ETL lines, 37 user-card agent tools across 7 groups (account operations, M365 service desk, governance, ticketing, lifecycle management, access requests, department templates), Microsoft Graph mock fallback for local development. See `docs/next-steps/agentic-ai-expansion.md` for the remaining production-hardening work.
+> Current local state: 6 ETL lines, 57 agent tools across 11 groups (account operations, M365 service desk, lifecycle management, access requests, department templates, governance detection & remediation, violation tracking, compliance reporting, policy rule engine, M365 governance actions, ticketing), reachable from a per-user detail card or a floating chat icon (no user context) with server-side tool scoping between the two, Microsoft Graph mock fallback for local development. See `docs/next-steps/agentic-ai-expansion.md` for the remaining production-hardening work.
 
 ```mermaid
 graph TB
@@ -15,13 +15,13 @@ graph TB
     subgraph DockerPlatform [" Docker Platform — user-search "]
         direction TB
 
-        App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + Chat UI + SBERT<br/>Chat proxy → GenAI<br/>Port 3000"]:::existing
+        App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + dashboard panels<br/>(Compliance/Trends/Reports/Policy)<br/>+ floating agent widget<br/>Chat proxy → GenAI<br/>Port 3000"]:::existing
 
-        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>37 tools across 7 groups<br/>Graph mock fallback (local dev)<br/>agent_tickets + access_requests audit<br/>Port 3001"]:::genai
+        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>57 tools across 11 groups<br/>Policy engine + CSV reports<br/>Graph mock fallback (local dev)<br/>agent_tickets + access_requests audit<br/>Port 3001"]:::genai
 
         Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>(replaced by Bedrock in production)<br/>Port 11434"]:::genai
 
-        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>Search tables<br/>HNSW vector indexes<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages<br/>+ agent_tickets<br/>+ access_requests"]:::database
+        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>Search tables<br/>HNSW vector indexes<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages<br/>+ agent_tickets<br/>+ access_requests<br/>+ governance_violations<br/>+ scheduled_reports<br/>+ policy_rules"]:::database
 
         subgraph ETLServices [" 6 ETL Line Services "]
             ETL_AD["etl-ad-line<br/>active_directory + activity_logs"]:::existing

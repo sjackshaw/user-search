@@ -54,7 +54,21 @@ The governance tools provide ongoing value beyond reactive support:
 
 These are currently manual, periodic checks — if done at all. With the platform, any analyst can run them on demand.
 
-### 5. Audit and Accountability
+### 5. Governance & Compliance Automation
+
+This goes beyond reactive support: the platform can prove — and continuously enforce — that governance policy is actually being followed, without manual spreadsheet audits.
+
+| Capability | What it does | Value |
+|---|---|---|
+| Compliance Posture dashboard | Live 0–100 score with severity breakdown, refreshed on page load | A single number a manager can watch over time, not a periodic audit project |
+| Automated violation detection | Naming convention, minimum owners, orphaned resources, SharePoint oversharing — checked on every relevant write **and** on a daily schedule | Issues are caught within minutes of occurring, not months later during an audit |
+| Configurable policy engine | Naming prefixes, minimum owners, severities, and thresholds are admin-editable at runtime | Policy changes don't require an engineering ticket or a redeploy |
+| Approval-gated auto-remediation | Fixes are proposed automatically the moment a violation is detected, but a human must explicitly approve before anything changes | Combines the speed of automation with the safety of human sign-off — the same review pattern people already trust from tools like GitHub Copilot |
+| Scheduled compliance reporting | CSV exports of violations and change history, generated daily and on demand | Removes the recurring manual-export step from a compliance reporting cycle |
+
+This directly answers a governance question that currently has no good answer today: *"are we actually following our own naming, ownership, and sharing policies, and can we prove it?"*
+
+### 6. Audit and Accountability
 
 Every agent write action and sensitive read creates an auditable record. Currently, changes made across systems are logged per system with no consolidated view.
 
@@ -77,7 +91,7 @@ Production readiness requires three workstreams. All are fully documented with i
 |---|---|---|
 | **1. Real data connections** | Replace synthetic JSON with live API feeds: Microsoft Graph (AD, M365, Exchange, Distribution Groups, SharePoint) + netForum REST. Graph integration is already wired — credentials and endpoint mapping needed. | 3–5 weeks |
 | **2. Cloud deployment** | Provision AWS infrastructure (RDS, EKS or Lambda, Secrets Manager, ALB), update CI/CD pipeline, validate all services. Full migration plan documented. | 4–6 weeks |
-| **3. Authentication and access control** | SAML SSO via Entra ID, role-based access enforcement across all 37 agent tools, role management UI for admins. Plan fully documented. | 3–4 weeks |
+| **3. Authentication and access control** | SAML SSO via Entra ID, role-based access enforcement across all 57 agent tools, role management UI for admins. Plan fully documented. | 3–4 weeks |
 
 **Total elapsed time (single engineer):** 10–15 weeks  
 **Total elapsed time (two engineers in parallel):** 6–9 weeks
@@ -110,7 +124,7 @@ Without applying a cost-per-hour figure (not available), the break-even is expre
 The engineering investment (10–15 weeks single engineer) is the substantive cost. That pays for:
 
 - A production-ready platform serving 20,000+ identities
-- 37 automated service desk actions covering the majority of routine requests
+- 57 automated service desk and governance actions covering the majority of routine requests, plus continuous policy compliance checking
 - A foundation reusable for member search and other data consolidation domains
 
 To apply a hard figure: at a blended engineering day rate of £X, the total investment is calculable from the week estimates above. That figure can be compared against the hourly cost of the staff time currently absorbed by coordination.
@@ -123,6 +137,7 @@ To apply a hard figure: at a blended engineering day rate of £X, the total inve
 |---|---|
 | **Staff hours recovered (coordination)** | ~1,075/year |
 | **Delivery focus recovered** | ~250–300 hours/year across a 5-person delivery team |
+| **Governance & compliance** | Live compliance score + continuous violation detection + approval-gated auto-remediation — already built, no additional engineering cost |
 | **Infrastructure cost** | ~$3,540/year (EKS + Bedrock) |
 | **Engineering to production** | 10–15 weeks (single engineer) · 6–9 weeks (two engineers) |
 | **Secondary benefit** | License recovery, access hygiene, consolidated audit trail |

@@ -1,8 +1,10 @@
 -- ============================================================================
--- 12_stored_procedures.sql
+-- 19_stored_procedures.sql
 -- Centralised stored procedures / functions for all application services.
 -- Shared across: app, genai, etl-ad-line, etl-dg-line, etl-eu-line,
 --                etl-netforum-line
+-- Runs after all schema files (13-18) since several procedures reference
+-- sharepoint_permissions/m365_group_memberships, created in files 13-14.
 -- ============================================================================
 
 -- ────────────────────────────────────────────────────────────────────────────

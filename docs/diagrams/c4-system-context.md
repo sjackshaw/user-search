@@ -8,7 +8,7 @@ graph TB
 
     User["👤 IT Administrator<br/><br/>Searches for users across<br/>identity systems, reviews<br/>activity logs, and chats with<br/>the GenAI assistant"]:::person
 
-    UserSearch["🔍 User Search Platform<br/><br/>Dockerized application providing semantic<br/>vector search, detail lookups, change history,<br/>ETL observability, and a 37-tool GenAI agent<br/>(Ollama locally · Bedrock in production)"]:::system
+    UserSearch["🔍 User Search Platform<br/><br/>Dockerized application providing semantic<br/>vector search, detail lookups, change history,<br/>ETL observability, and a 57-tool GenAI agent<br/>(Ollama locally · Bedrock in production)"]:::system
 
     AD["Active Directory<br/><br/>Corporate identity provider<br/>(simulated via synthetic data)"]:::external
     NF["netForum<br/><br/>Membership management system<br/>(simulated via synthetic data)"]:::external
