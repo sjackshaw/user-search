@@ -1,174 +1,252 @@
-# User Search — 10-Minute Presentation
+---
+marp: true
+theme: default
+paginate: true
+size: 16:9
+title: User Search — Identity Toolkit
+---
 
-A speaker script for a ~10-minute walkthrough (≈1,450 words at a natural
-150 wpm pace, plus time for the diagram and a live demo pause). Timing cues
-are guidance, not a stopwatch requirement — adjust to the room.
+<!--
+This file is written in Marp markdown so it can be converted directly to a
+PowerPoint deck:
 
-Deeper material backing each section: [problem.md](problem.md) ·
-[solution.md](solution.md) · [benefits.md](benefits.md) · [aiusage.md](aiusage.md)
+  npx @marp-team/marp-cli docs/deck/presentation.md -o presentation.pptx
+
+Each "---" below starts a new slide. Source content is condensed from the
+companion documents in this folder: problem.md, solution.md, benefits.md,
+and aiusage.md. Update this file whenever those source documents change materially.
+-->
+
+# User Search — Identity Toolkit
+
+Semantic search, AI-powered actions, and governance in one dashboard — built in-house, proof of concept validated
+
+**Executive & Technical Leadership Briefing**
+October 2026
 
 ---
 
-## [0:00–0:45] Open with the problem in one breath
+## Agenda
 
-> "We manage identity for thousands of people across six separate systems —
-> Active Directory, netForum, External Users, Distribution Groups, M365
-> Groups, and SharePoint permissions. None of them talk to each other. So
-> when a routine request comes in — provision an account, reset MFA, explain
-> why someone's locked out — our first-line team can't finish it alone. They
-> have to hand it to someone else, who often has to hand it to a third team.
-> That's not a training problem. That's a missing layer."
-
-(Pause. Let that land before moving on.)
+1. The problem
+2. What we built
+3. How the technology works
+4. AI usage — what's real ML vs. rule-based
+5. Cost & benefits
+6. Production path
+7. Recommendation & next steps
 
 ---
 
-## [0:45–2:00] The cost of the status quo
+## The Problem
 
-> "Here's what that actually costs us today:
->
-> - 6 to 20 cross-system requests a week
-> - 1 to 4 hours to resolve each one, end to end
-> - 2 to 3 teams looped in, on average, per issue
-> - Delivery teams interrupted multiple times a week to help with support
->   that isn't really their job
->
-> At a conservative 10 requests a week, that's roughly **1,000 hours a year**
-> just coordinating handoffs — before anyone actually fixes anything. And
-> every interruption to a delivery engineer costs 15 to 30 minutes of
-> refocus time on top of the interruption itself.
->
-> This isn't anyone's fault. Every one of those six systems is legitimate
-> and necessary. What's missing is a layer that sits across all of them."
+- Identity data fragmented across **six systems**: Active Directory, netForum, External Users, Distribution Groups, M365 Groups, SharePoint
+- No unified search — support staff check each system manually, one at a time
+- No cross-system actions — account provisioning, MFA reset, or permission changes require hand-offs across teams
+- No governance visibility — compliance gaps discovered at audit time, not continuously
+- Result: 6–20 cross-system requests per week, 1–4 hours per request, 2–3 teams involved per issue
 
 ---
 
-## [2:00–2:15] The turn
+## Impact
 
-> "So we built that layer. Not a slide deck — working code, running today,
-> against realistic synthetic data at real volume. I want to show you what
-> it does, then what it's built from, then what it would cost to put into
-> production."
-
----
-
-## [2:15–5:00] The solution — one search, one agent, one dashboard
-
-> "Three things changed for the support analyst."
-
-**1. One search, every system.**
-> "They type a name, an email fragment, or even a plain description — 'Jane
-> Smith contractor' — and get back results from all six systems in one
-> query, instantly, with a badge showing which systems each person exists
-> in. No more checking six consoles one at a time."
-
-**2. One conversation, real actions.**
-> "From that same screen, they talk to an AI agent in plain English: 'reset
-> their MFA', 'add them to the finance distribution list', 'this guest
-> account looks stale, revoke it'. The agent picks the right action out of
-> 57 available tools, executes it, and logs an auditable ticket
-> automatically. No handoff, no second tool, no waiting on another team."
-
-**3. One dashboard for governance.**
-> "And separately — without needing a specific person pulled up — there's a
-> compliance dashboard. A live 0-to-100 posture score. Violation detection
-> that runs continuously, not just at audit time: bad naming conventions,
-> groups with no owner, SharePoint shared too broadly. When something's
-> wrong, a fix is proposed automatically — but nothing is ever applied
-> without a human clicking approve. Same review model people already trust
-> from tools like GitHub Copilot."
-
-(Show the diagram below, or switch to a live demo here if the room allows.)
-
-```mermaid
-flowchart LR
-    A["Support request\narrives"] --> B["One search\nacross 6 systems"]
-    B --> C{"Enough context\nto act?"}
-    C -->|"Yes"| D["Ask the agent\nin plain English"]
-    C -->|"Need more detail"| E["Open detail card\n(cross-system history)"]
-    E --> D
-    D --> F["Agent executes +\nlogs an audit ticket"]
-    F --> G(["Resolved —\nno handoff"])
-
-    H["Policy & violations\n(always running)"] -.-> I["Compliance dashboard\n+ proposed fixes"]
-    I -.->|"human approves"| J(["Fix applied"])
-```
-
-> "Top path: a support request, resolved in one sitting, by one person.
-> Bottom path: governance running continuously in the background, surfacing
-> problems before they become an audit finding — and never fixing anything
-> without a human saying yes first."
+| Dimension | Effect |
+|---|---|
+| Support efficiency | 1,000+ hours/year lost to coordination handoffs alone |
+| Delivery team interruptions | Multiple weekly interruptions @ 15–30 min refocus cost each |
+| Mean resolution time | 1–4 hours per request; no single person can finish |
+| Compliance risk | Gaps discovered reactively; no continuous monitoring |
+| Team morale | Delivery engineers pulled into repetitive support work |
 
 ---
 
-## [5:00–6:30] This is built, not proposed
+## What We Built
 
-> "Everything I just described is running right now. Six automated ETL
-> pipelines feeding a single PostgreSQL database with vector search built
-> in — 20 tables, real semantic matching, not keyword search. The AI agent
-> runs entirely locally in this demo using a small open model — zero cloud
-> dependency to show you this today. In production that one piece swaps for
-> Amazon Bedrock; nothing else about the architecture changes.
->
-> One command brings up the whole stack: `./startup/setup.sh`. That's the
-> level of maturity we're at — this isn't a prototype held together by
-> hand, it's a system you can stand up and tear down reliably."
+Three member-facing applications over one shared, semantic search layer:
 
----
+| Application | Who | What |
+|---|---|---|
+| **User Search** | Support analysts | Semantic search across all 6 systems; unified identity view |
+| **AI Agent Chat** | Support analysts | Execute 57 actions in plain English; automatic ticket logging |
+| **Compliance Dashboard** | Governance & compliance | Live posture score, violation detection, auto-proposed fixes (human-approved) |
 
-## [6:30–8:00] What this is worth
-
-> "Translating the hours I mentioned earlier into outcomes:
->
-> - **~1,075 staff hours recovered per year** from eliminating handoff
->   coordination — time that goes back to the teams currently spending it
-> - **~250 to 300 hours a year recovered** for a five-person delivery team,
->   just from not being interrupted
-> - Governance and compliance checking that used to be a periodic audit
->   project is now continuous and already built — no extra engineering
->   cost to get it
-> - Plus the quieter wins: reclaimed unused licenses, cleaned-up stale
->   guest accounts, a consolidated audit trail instead of six separate ones
->
-> Running this in AWS production is estimated at **roughly $3,500 a year**
-> in infrastructure. If those recovered hours have any value to this
-> organisation at all, that cost is recovered in the first few weeks."
+All three are served by a single unified service — one team, one codebase, one deployable unit.
 
 ---
 
-## [8:00–9:00] What it takes to go live
+## How Semantic Search Works
 
-> "Three workstreams, fully documented, none of them architectural
-> unknowns:
->
-> 1. **Real data connections** — swap synthetic files for live Microsoft
->    Graph and netForum APIs. 3 to 5 weeks.
-> 2. **Cloud deployment** — move from Docker to AWS (RDS, EKS, Bedrock).
->    4 to 6 weeks.
-> 3. **Authentication** — SAML single sign-on through our existing Entra ID,
->    with real role-based permissions. 3 to 4 weeks.
->
-> That's 10 to 15 weeks for one engineer, or 6 to 9 weeks with two working
-> in parallel. Every one of these has a written implementation plan in the
-> repository today — this is scheduling work, not research work."
+- Keyword search fails when the query and the record use different terminology
+- **Embeddings** convert names, emails, descriptions into a 384-number vector that encodes *identity context*
+- Records and queries are embedded with the same model; the system finds matches *closest in meaning*, not spelling
+- A query like *"Jane Smith, contractor"* reliably finds the right person across all six systems without exact name match
 
 ---
 
-## [9:00–10:00] Close
+## How the AI Agent Works
 
-> "To summarise: a real, structural cost that's been accepted as normal for
-> too long; a working system, not a pitch, that eliminates it; a governance
-> layer that proves policy is being followed instead of hoping it is; and a
-> clear, scheduled path to production at a cost that pays for itself almost
-> immediately.
->
-> What I'd like from this room is a decision to schedule the three
-> production workstreams. Happy to take questions, or show you the live
-> search and agent right now if you'd like to see it work."
+1. **Retrieve** — semantic search gathers identity context (name, email, systems, current state)
+2. **Decide** — the agent examines the user's request and picks from 57 available tools (create account, reset MFA, add to group, revoke access, etc.)
+3. **Act** — the agent executes the action, logs an auditable ticket, streams confirmation back in plain English
+
+The agent cannot perform unlisted actions — it is constrained to tools that already exist in the organization.
 
 ---
 
-*Speaker tip: the demo (live search → detail card → ask the agent to do
-something → show the compliance dashboard) lands better than any slide. If
-time allows, cut the "What it takes to go live" section to one line and
-spend the saved two minutes live in the app instead.*
+## Data Pipelines
+
+Three automated ETL pipelines keep the search index current — no manual re-indexing:
+
+| Pipeline | Source | Content |
+|---|---|---|
+| Active Directory ETL | Microsoft Graph API | Users, groups, membership |
+| netForum ETL | netForum vendor API | External users, roles, status |
+| Permissions ETL | SharePoint Online | Site access, group permissions, owners |
+
+Each pipeline syncs every 6–12 hours, generates embeddings, and updates the shared vector index — idempotent and incremental.
+
+---
+
+## Safety: Action Approval & Audit
+
+Every AI action is subject to a deterministic approval workflow:
+
+- User requests an action in plain English (e.g., "reset their MFA")
+- Agent constructs the action, shows the operator the details
+- **Human clicks approve before anything runs**
+- Action executes; audit ticket is logged with full context
+
+All decisions are reviewable. No action is ever automatic.
+
+---
+
+## AI Usage — What's Really "AI" Here
+
+| Component | Type | PoC Technology | Production Technology |
+|---|---|---|---|
+| Text embedding | ML model | BGE-small (ONNX, in-process) | Cohere Embed v3 via AWS Bedrock |
+| Vector search | Algorithm (HNSW) | pgvector on PostgreSQL | OpenSearch or Aurora + pgvector |
+| Agent reasoning | LLM | Qwen 2.5 3B via Ollama | Claude Sonnet via Bedrock |
+| Action validation | Rule-based | Tool schema matching | Same pattern, extended |
+| Escalation detection | Rule-based regex | Pattern matching | Same pattern; candidate for ML at scale |
+
+Two ML models provide understanding; rule-based systems enforce safety and auditability.
+
+---
+
+## Proof of Concept vs. Production
+
+| Dimension | Proof of Concept | Production |
+|---|---|---|
+| Data | Synthetic 20,000 identities | Live Microsoft Graph, netForum, SharePoint APIs |
+| Embedding | BGE-small, CPU, in-process (384d) | Cohere Embed v3 via Bedrock (1024d) |
+| Language model | Qwen 2.5 3B, local Ollama | Claude Sonnet via Bedrock |
+| Vector store | PostgreSQL + pgvector | Aurora + pgvector or OpenSearch Serverless |
+| Compute | Docker Compose on a laptop | AWS Lambda + EKS |
+| Auth | Open in local dev; API key | SAML via Entra ID, role-based access control |
+| Cost | ~$0 (local) | ~$3,500/year |
+
+---
+
+## Cost — Direct AWS Running Cost
+
+| Configuration | Production (annual) |
+|---|---|
+| Lambda + Aurora + Claude Sonnet (recommended) | ~$3,500 |
+| Lambda + Aurora + Claude Haiku (cost-optimized) | ~$2,200 |
+
+**Fixed infrastructure cost** — scales with query volume, not user count. No per-user licensing.
+
+---
+
+## Cost — Avoided Costs
+
+| Item | Why it's not a new cost |
+|---|---|
+| Directory licensing | Active Directory, M365 already deployed |
+| Authentication infrastructure | Entra ID SSO already in place |
+| Search/AI vendor platform | No third-party product introduced |
+| External development labour | Built in-house — no contractors required |
+| System-of-record changes | All six source systems remain unchanged |
+
+---
+
+## Cost — vs. Buying a Vendor Platform
+
+| Product Category | Est. Annual Cost (org-wide) |
+|---|---|
+| Enterprise identity search (Okta, Ping, Sailpoint) | ~$120,000 – $360,000 |
+| AI agent automation (Automation Anywhere, UiPath) | ~$80,000 – $200,000 |
+| **This solution (AWS, in-house)** | **~$3,500** |
+
+**5-year total: ~$17,500 (this solution) vs. $1,000,000–$2,800,000 (vendor platforms)**
+
+---
+
+## Cost — vs. Hiring Contractors
+
+| Item | In-House | Contractor |
+|---|---|---|
+| Development labour | Existing team (already budgeted) | $150,000 – $250,000 upfront |
+| Time to start | Immediately — PoC already built | 6–12 weeks sourcing delay |
+| Year 2–3 maintenance | Existing team | $40,000 – $80,000/year |
+| Knowledge retention | Stays with the team | Leaves with the contractor |
+| **3-year total** | **~$15,000** | **$230,000 – $410,000** |
+
+---
+
+## Operational & Strategic Benefits
+
+**Operational**
+- Support analysts resolve tickets in one sitting — no handoffs
+- Delivery teams reclaim ~250–300 hours/year from interruptions
+- Full audit trail of every action (who, when, what, why)
+- Real-time compliance visibility instead of annual audit
+
+**Strategic**
+- First in-house AI agent deployment — reusable patterns for future automation
+- Demonstrates responsible AI: constrained actions, human approval, full auditability
+- Reduces dependency on vendor roadmaps for identity management
+
+---
+
+## Production Architecture
+
+- **Compute**: AWS Lambda + API Gateway (serverless); Amazon EventBridge for ETL scheduling
+- **Data**: Aurora PostgreSQL + pgvector; S3 for staging
+- **Auth**: SAML single sign-on through Entra ID via ALB OIDC — no new infrastructure
+- **Security**: Private VPC subnets, AWS WAF, Secrets Manager, CloudTrail, GuardDuty, automatic action approval
+
+---
+
+## Migration Phases
+
+| Phase | Deliverable |
+|---|---|
+| 1 | Data layer: Aurora + S3; API connectors for Microsoft Graph and netForum |
+| 2 | ETL pipelines against live sources; EventBridge orchestration |
+| 3 | Search API live on Lambda — early analyst value |
+| 4 | AI agent with action execution and audit logging |
+| 5 | Compliance dashboard with violation detection + proposed fixes |
+| 6 | Production hardening: WAF, GuardDuty, CloudTrail, CI/CD, load testing |
+
+Each phase is independently deliverable — member value starts after Phase 3.
+
+**Timeline: 10–15 weeks for one engineer; 6–9 weeks with two in parallel**
+
+---
+
+## Recommendation
+
+- The proof of concept demonstrates the technology is mature, deployable, and cost-predictable
+- Direct running cost (~$3,500/year) is a fraction of vendor platforms or a contractor build
+- No new licensing, authentication, or system-of-record investment required
+- **Recommend proceeding to Phase 1** (data layer + connector setup) to begin the production path
+- Full technical implementation plans are documented in the repository
+
+---
+
+# Questions?
+
+**Companion documents:**
+[The Problem](problem.md) · [The Solution](solution.md) · [How AI Is Used](aiusage.md) · [Benefits](benefits.md)
