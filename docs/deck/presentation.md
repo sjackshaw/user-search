@@ -11,7 +11,7 @@ Deeper material backing each section: [problem.md](problem.md) ·
 
 ## [0:00–0:45] Open with the problem in one breath
 
-> "We manage identity for 20,000+ people across six separate systems —
+> "We manage identity for thousands of people across six separate systems —
 > Active Directory, netForum, External Users, Distribution Groups, M365
 > Groups, and SharePoint permissions. None of them talk to each other. So
 > when a routine request comes in — provision an account, reset MFA, explain
