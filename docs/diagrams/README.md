@@ -7,7 +7,6 @@ Mermaid diagrams documenting the user-search platform architecture, data flows, 
 | Diagram | File | Description |
 |---|---|---|
 | Analyst Workflow | [analyst-workflow.md](analyst-workflow.md) | End-to-end flow from support request to resolution — search, detail panel, AI agent action |
-| AWS Target Architecture | [aws-target-architecture.md](aws-target-architecture.md) | Primary (EKS — App + ETL + GenAI on shared cluster + Bedrock) and Lambda fallback (native Node.js zip packages) |
 | C4 System Context | [c4-system-context.md](c4-system-context.md) | Top-level view: users, the platform, and external systems |
 | ETL Data Flow | [etl-data-flow.md](etl-data-flow.md) | End-to-end flow from synthetic JSON through transform → vectorize → pgvector (6 lines) |
 | Search Sequence | [search-sequence.md](search-sequence.md) | Step-by-step sequence for `/api/search` requests (stored-procedure based) |
@@ -20,5 +19,5 @@ Mermaid diagrams documenting the user-search platform architecture, data flows, 
 ## Conventions
 
 - **C4 standards**: System Context → Container → Component layering with color-coded stereotypes
-- **Color coding**: 🔵 Application containers · 🟣 ETL services · 🟢 Database/infra · 🟡 Volumes/sources · 🔴 New/planned · ⚪ External
+- **Color coding**: 🔵 Application containers · 🟣 ETL services · 🟢 Database/infra · 🟡 Volumes/sources · ⚪ External
 - **Rendering**: All diagrams use [Mermaid](https://mermaid.js.org/) syntax in fenced code blocks

@@ -1,6 +1,6 @@
 # GenAI Architecture (C4 Container — Current State)
 
-> Current local state: 6 ETL lines, 37 user-card agent tools across 7 groups (account operations, M365 service desk, governance, ticketing, lifecycle management, access requests, department templates), Microsoft Graph mock fallback for local development. See `docs/next-steps/agentic-ai-expansion.md` for the remaining production-hardening work.
+> Current local state: 6 ETL lines, 37 user-card agent tools across 7 groups (account operations, M365 service desk, governance, ticketing, lifecycle management, access requests, department templates), Microsoft Graph mock fallback for local development.
 
 ```mermaid
 graph TB

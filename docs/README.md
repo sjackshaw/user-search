@@ -2,14 +2,12 @@
 
 ## Overview
 
-User Search is a proof-of-concept semantic search and AI agent platform that indexes data from six user/search sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered user-card agent (Amazon Bedrock in production; Ollama + qwen2.5:3b for local development) exposes **37 tool-calling actions** across account operations, Microsoft 365 service desk workflows, governance checks, lifecycle management (onboard/offboard), bulk operations, self-service access requests, and department access templates.
+User Search is a semantic search and AI agent platform that indexes data from six user/search sources — Active Directory, netForum, External Users, Distribution Groups, SharePoint Permissions, and M365 Group Memberships (plus activity/sync logs for each) — into a pgvector-backed Postgres database. Users are found via SBERT-powered nearest-neighbour search and cross-source intersection queries. An LLM-powered user-card agent (Ollama + qwen2.5:3b, running fully locally) exposes **37 tool-calling actions** across account operations, Microsoft 365 service desk workflows, governance checks, lifecycle management (onboard/offboard), bulk operations, self-service access requests, and department access templates.
 
 > The former member-benefits experience and its dedicated ETL line were removed from this repository. Any related work now lives in the `document-search` repository.
 
 See [technology-stack.md](technology-stack.md) for a full inventory of every technology in the solution.  
-See [etl-architecture.md](etl-architecture.md) for the ETL pipeline and database schema reference.  
-See [executive-overview.md](executive-overview.md) for the business context and solution rationale.  
-See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the planned AWS production architecture (RDS, Lambda, EKS).
+See [etl-architecture.md](etl-architecture.md) for the ETL pipeline and database schema reference.
 
 ### Documentation Index
 
@@ -17,12 +15,7 @@ See [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) for the
 |---|---|
 | [technology-stack.md](technology-stack.md) | Full inventory of runtimes, libraries, models, Docker images, and tooling |
 | [etl-architecture.md](etl-architecture.md) | ETL pipeline design, database schema, and vectorisation approach |
-| [executive-overview.md](executive-overview.md) | Business context, target users, and solution value proposition |
-| [diagrams/](diagrams/README.md) | 9 Mermaid diagrams (C4, ER, sequence, state, AWS target architecture) |
-| [next-steps/aws-migration-plan.md](next-steps/aws-migration-plan.md) | AWS production architecture — RDS, Lambda, EKS, Bedrock |
-| [next-steps/agentic-ai-expansion.md](next-steps/agentic-ai-expansion.md) | Remaining agent production hardening plan |
-| [next-steps/genai-production-update.md](next-steps/genai-production-update.md) | How to turn PoC agent actions into real authenticated API calls |
-| [next-steps/saml-access-management.md](next-steps/saml-access-management.md) | SAML-based access management integration plan |
+| [diagrams/](diagrams/README.md) | Mermaid diagrams (C4, ER, sequence, state, workflow) |
 
 ## Quickstart — full dev stack
 
@@ -163,18 +156,12 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `data-output/` | Host-mounted output directories for debugging and DB persistence |
 | `eslint.config.mjs` | ESLint 9 flat config — covers all service JS |
 | `generate_synthetic.py` | Python script that generates all synthetic data for all line services |
-| `docs/next-steps/aws-migration-plan.md` | AWS production architecture: RDS, Lambda, EKS, and Bedrock migration plan |
-| `docs/diagrams/aws-target-architecture.md` | Mermaid diagram — AWS target architecture (VPC, ALB, Lambda, RDS) |
 | `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
 | `services/genai/` | GenAI service: 28-tool LLM agent, action executors, Graph client, ticket management |
 | `services/genai/graph-client.js` | Microsoft Graph client wrapper with local mock fallback |
 | `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
 | `infra/db/init/15_agent_tickets.sql` | `agent_tickets` table schema |
 | `docs/technology-stack.md` | Complete inventory of every technology, library, model, and tool |
-| `docs/executive-overview.md` | Business context, target users, and solution value proposition |
-| `docs/next-steps/agentic-ai-expansion.md` | Remaining agent production hardening plan |
-| `docs/next-steps/genai-production-update.md` | How to turn PoC agent actions into real API calls |
-| `docs/next-steps/saml-access-management.md` | SAML-based access management and RBAC plan |
 | `seed_change_logs.py` | Generates seed SQL for `source_change_logs` and `etl_job_logs` historical data |
 | `seed_change_logs.sql` | Generated seed SQL (apply once after first Postgres init) |
 
