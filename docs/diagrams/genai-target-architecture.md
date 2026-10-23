@@ -19,7 +19,7 @@ graph TB
 
         GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>37 tools across 7 groups<br/>Graph mock fallback (local dev)<br/>agent_tickets + access_requests audit<br/>Port 3001"]:::genai
 
-        Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>(replaced by Bedrock in production)<br/>Port 11434"]:::genai
+        Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>Port 11434"]:::genai
 
         Postgres["🗄️ PostgreSQL + pgvector<br/><br/>Search tables<br/>HNSW vector indexes<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages<br/>+ agent_tickets<br/>+ access_requests"]:::database
 

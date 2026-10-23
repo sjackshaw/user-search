@@ -157,7 +157,7 @@ docker exec -i <postgres-container> psql -U postgres -d appdb < infra/db/init/<s
 | `eslint.config.mjs` | ESLint 9 flat config — covers all service JS |
 | `generate_synthetic.py` | Python script that generates all synthetic data for all line services |
 | `docker-compose.genai.yml` | Ollama LLM service + GenAI Node.js service |
-| `services/genai/` | GenAI service: 28-tool LLM agent, action executors, Graph client, ticket management |
+| `services/genai/` | GenAI service: 37-tool LLM agent, action executors, Graph client, ticket management |
 | `services/genai/graph-client.js` | Microsoft Graph client wrapper with local mock fallback |
 | `infra/db/init/11_chat_tables.sql` | `chat_messages` table schema |
 | `infra/db/init/15_agent_tickets.sql` | `agent_tickets` table schema |
