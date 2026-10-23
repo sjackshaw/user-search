@@ -166,6 +166,58 @@ const AGENT_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'remove_from_group',
+      description:
+        'Remove the user from a single, specific distribution group (mailing list). ' +
+        'Use when the user asks to remove/take someone out of one named mailing list or distribution group. ' +
+        'NOT for M365/Microsoft 365/Security groups — use remove_from_m365_group for those. ' +
+        'NOT for full offboarding (every group at once) — use offboard_user or deprovision_cascade for that.',
+      parameters: {
+        type: 'object',
+        properties: {
+          group_name: { type: 'string', description: 'Name (or partial name) of the distribution group to remove the user from' },
+        },
+        required: ['group_name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'remove_from_m365_group',
+      description:
+        'Remove the user from a single, specific Microsoft 365 group (M365, Security, or Teams group). ' +
+        'Use when the user asks to remove/take someone out of one named M365 group, security group, or Teams group. ' +
+        'NOT for full offboarding (every group at once) — use offboard_user or deprovision_cascade for that.',
+      parameters: {
+        type: 'object',
+        properties: {
+          group_name: { type: 'string', description: 'Name (or partial name) of the M365 group to remove the user from' },
+        },
+        required: ['group_name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'revoke_sharepoint_access',
+      description:
+        'Revoke the user\'s access to a single, specific SharePoint site. ' +
+        'Use when the user asks to remove/revoke someone\'s access to one named SharePoint site. ' +
+        'NOT for revoking every SharePoint permission a user has — use offboard_user or deprovision_cascade for that.',
+      parameters: {
+        type: 'object',
+        properties: {
+          site_name: { type: 'string', description: 'Name (or partial name) of the SharePoint site to revoke access to' },
+        },
+        required: ['site_name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'reset_mfa',
       description:
         'Reset the displayed user\'s Microsoft 365 MFA registration so they can re-register. ' +
@@ -1428,6 +1480,94 @@ async function executeAddToM365Group(pool, email, fnArgs, sessionId, records) {
       role: memberRole,
       memberCount: users.length,
     };
+  });
+}
+
+async function executeRemoveFromGroup(pool, email, fnArgs, sessionId) {
+  const { group_name } = fnArgs;
+
+  const title = `Remove from distribution group — ${group_name}`;
+  const description = `Remove ${email} from the "${group_name}" distribution group.`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const { rows: groups } = await pool.query(
+      `SELECT id, name, contacts FROM distribution_groups WHERE LOWER(name) LIKE LOWER($1) LIMIT 1`,
+      [`%${escapeLike(group_name)}%`]
+    );
+
+    if (groups.length === 0) {
+      throw new Error(`Distribution group matching "${group_name}" not found`);
+    }
+
+    const group = groups[0];
+    const contacts = group.contacts || [];
+    const updated = contacts.filter(c => c.email?.toLowerCase() !== email.toLowerCase());
+
+    if (updated.length === contacts.length) {
+      throw new Error(`${email} is not a member of "${group.name}"`);
+    }
+
+    await pool.query(
+      `UPDATE distribution_groups SET contacts = $1::jsonb WHERE id = $2`,
+      [JSON.stringify(updated), group.id]
+    );
+
+    return { removed: true, group: group.name, memberCount: updated.length };
+  });
+}
+
+async function executeRemoveFromM365Group(pool, email, fnArgs, sessionId) {
+  const { group_name } = fnArgs;
+
+  const title = `Remove from M365 group — ${group_name}`;
+  const description = `Remove ${email} from the "${group_name}" M365 group.`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const { rows: groups } = await pool.query(
+      `SELECT id, group_name, users FROM m365_group_memberships WHERE LOWER(group_name) LIKE LOWER($1) LIMIT 1`,
+      [`%${escapeLike(group_name)}%`]
+    );
+
+    if (groups.length === 0) {
+      throw new Error(`M365 group matching "${group_name}" not found`);
+    }
+
+    const group = groups[0];
+    const users = group.users || [];
+    const updated = users.filter(u => u.email?.toLowerCase() !== email.toLowerCase());
+
+    if (updated.length === users.length) {
+      throw new Error(`${email} is not a member of "${group.group_name}"`);
+    }
+
+    await pool.query(
+      `UPDATE m365_group_memberships SET users = $1::jsonb WHERE id = $2`,
+      [JSON.stringify(updated), group.id]
+    );
+
+    return { removed: true, group: group.group_name, memberCount: updated.length };
+  });
+}
+
+async function executeRevokeSharePointAccess(pool, email, fnArgs, sessionId) {
+  const { site_name } = fnArgs;
+
+  const title = `Revoke SharePoint access — ${site_name}`;
+  const description = `Revoke ${email}'s access to the "${site_name}" SharePoint site.`;
+
+  return createAndCloseTicket(pool, email, title, description, sessionId, async () => {
+    const { rows: deleted } = await pool.query(
+      `DELETE FROM sharepoint_permissions
+       WHERE user_email = $1 AND LOWER(site) LIKE LOWER($2)
+       RETURNING site`,
+      [email, `%${escapeLike(site_name)}%`]
+    );
+
+    if (deleted.length === 0) {
+      throw new Error(`No SharePoint permission found for ${email} on a site matching "${site_name}"`);
+    }
+
+    return { revoked: true, sites: deleted.map(r => r.site) };
   });
 }
 
@@ -3645,6 +3785,9 @@ You can perform real actions on user accounts. When the user asks you to take an
 - **update_attribute**: Change a specific field (email, first_name, last_name, type, sponsor) in a specific system. Determine which system to target from the user context.
 - **add_to_group**: Add the user to a distribution group (mailing list) by name.
 - **add_to_m365_group**: Add the user to a Microsoft 365 group (M365, Security, or Teams group) by name. Optionally specify the role (member or owner).
+- **remove_from_group**: Remove the user from one specific distribution group by name (not every group — use offboard_user/deprovision_cascade for that).
+- **remove_from_m365_group**: Remove the user from one specific M365 group by name (not every group — use offboard_user/deprovision_cascade for that).
+- **revoke_sharepoint_access**: Revoke the user's access to one specific SharePoint site by name (not every site — use offboard_user/deprovision_cascade for that).
 - **reset_mfa**: Reset the user's Microsoft 365 MFA registration so they can re-register.
 - **get_mfa_status**: Check registered Microsoft 365 MFA/authentication methods. Read-only; no ticket is created.
 - **assign_license**: Assign a Microsoft 365 license to the user.
@@ -3714,9 +3857,10 @@ CROSS-SYSTEM AWARENESS:
 - Microsoft 365 governance tools may inspect tenant-level data, not just the displayed user. Clearly state when results are local demo estimates rather than live Graph data.
 
 GROUP TYPES:
-- Distribution groups = mailing lists → use add_to_group
-- M365 groups (Microsoft365, Security, Teams) → use add_to_m365_group
+- Distribution groups = mailing lists → use add_to_group / remove_from_group
+- M365 groups (Microsoft365, Security, Teams) → use add_to_m365_group / remove_from_m365_group
 - If the user just says "group" without specifying the type, ask for clarification.
+- Never say an action is done without calling the matching tool. If no tool fits the request, say so explicitly instead of reporting success, and use create_ticket as a fallback for manual follow-up.
 
 When the user asks what you can do, use the describe_capabilities tool.
 When the user asks about existing tickets, use the list_open_tickets tool.
@@ -3742,7 +3886,11 @@ async function chatWithOllamaTools(messages, tools) {
       stream: false,
       options: {
         temperature: 0.3,
-        num_ctx: 4096,
+        // The serialized AGENT_TOOLS definitions + system prompt alone run to
+        // roughly 13k tokens (57+ tool specs). 4096 silently truncated that
+        // context, so the model often couldn't "see" the matching tool and
+        // fell back to a plain reply (looked like success, did nothing).
+        num_ctx: 16384,
       },
     }),
   });
@@ -3769,7 +3917,8 @@ const GOVERNANCE_CONSOLE_EMAIL = 'admin-console@system.local';
 // user loaded. Governance/reporting/policy tools are not in this set.
 const USER_SCOPED_TOOLS = new Set([
   'provision_account', 'disable_account', 'reset_password', 'update_attribute',
-  'add_to_group', 'add_to_m365_group', 'reset_mfa', 'get_mfa_status',
+  'add_to_group', 'add_to_m365_group', 'remove_from_group', 'remove_from_m365_group',
+  'revoke_sharepoint_access', 'reset_mfa', 'get_mfa_status',
   'assign_license', 'remove_license', 'grant_mailbox_access', 'add_email_alias',
   'get_out_of_office', 'set_out_of_office', 'add_to_teams_channel', 'grant_onedrive_access',
   'revoke_guest_access', 'dismiss_risky_user', 'list_app_consents', 'revoke_app_consent',
@@ -3868,6 +4017,45 @@ async function executeToolCall(toolCall, { pool, email, sessionId, records }) {
         ticketId: t.id,
         ticketStatus: t.status,
         action: 'add_to_m365_group',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'remove_from_group': {
+      const { ticket: t, actionResult } = await executeRemoveFromGroup(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.removed || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'remove_from_group',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'remove_from_m365_group': {
+      const { ticket: t, actionResult } = await executeRemoveFromM365Group(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.removed || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'remove_from_m365_group',
+        ...actionResult,
+      });
+      break;
+    }
+
+    case 'revoke_sharepoint_access': {
+      const { ticket: t, actionResult } = await executeRevokeSharePointAccess(pool, email, fnArgs, sessionId);
+      ticket = t;
+      toolResultContent = JSON.stringify({
+        success: actionResult.revoked || false,
+        ticketId: t.id,
+        ticketStatus: t.status,
+        action: 'revoke_sharepoint_access',
         ...actionResult,
       });
       break;
