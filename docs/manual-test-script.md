@@ -4,10 +4,6 @@ A step-by-step script for a **human tester** to click/type through every piece o
 functionality in the app as it exists today. This is not an automated test —
 check each box yourself and note anything that doesn't match the expected result.
 
-Cross-reference: [docs/capability-inventory.md](capability-inventory.md) is the
-governance-capability audit this script exercises; sections G–J below map to its
-3a–3d tables.
-
 ---
 
 ## 0. Before you start
@@ -26,8 +22,8 @@ governance-capability audit this script exercises; sections G–J below map to i
    started. Each panel title (plus the Reports panel's "Violations" and
    "Change Logs" links) is clickable and opens a card-based drill-down view of
    the underlying data.
-4. There is **no login** — the app is intentionally unauthenticated (see
-   capability-inventory §1 Auth model). Nothing to sign into.
+4. There is **no login** — the app is intentionally unauthenticated. Nothing to
+   sign into.
 5. To talk to the agent, there are two ways in:
    - Search for any person, click their result card to open the detail
      overlay, and use the chat box inside it — this is bound to that real
@@ -161,7 +157,7 @@ responses are synthetic/local, not live Entra data. That's expected.
 
 ---
 
-## G. Agent: Governance Detection (capability-inventory §3a/§3b)
+## G. Agent: Governance Detection
 
 These work immediately on existing synthetic data — no setup needed.
 
@@ -317,7 +313,7 @@ These work immediately on existing synthetic data — no setup needed.
 
 ## Known out of scope (don't file these as bugs)
 
-Per capability-inventory.md, these are intentionally **not** implemented:
+These are intentionally **not** implemented:
 
 - No authentication/authorisation (anyone can do anything — documented, not a bug).
 - No live Microsoft Graph data — everything governance-related runs in mock mode

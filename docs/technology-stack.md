@@ -1,6 +1,6 @@
 # Technology Stack
 
-A complete inventory of every technology, framework, library, model, and tool used in the User Search proof of concept.
+A complete inventory of every technology, framework, library, model, and tool used in the User Search project.
 
 ---
 
@@ -31,7 +31,7 @@ A complete inventory of every technology, framework, library, model, and tool us
 | **vector(384)** | — | Column type storing 384-dimension embeddings |
 | **HNSW indexes** | — | Approximate nearest-neighbour index (cosine distance) on 12 ETL tables plus agent/search tables where applicable |
 | **Stored procedures** | PL/pgSQL | All query logic (search, lookup, intersection, ETL job management) in `19_stored_procedures.sql` — runs after every table it references |
-| **`agent_tickets` table** | — | PoC ticketing for agent write actions (`infra/db/init/15_agent_tickets.sql`) |
+| **`agent_tickets` table** | — | Ticketing for agent write actions (`infra/db/init/15_agent_tickets.sql`) |
 | **`access_requests` table** | — | Self-service access request queue with `pending → approved → rejected` lifecycle (`infra/db/init/16_access_requests.sql`) |
 | **`governance_violations` table** | — | Tracked naming/ownership/orphaned-resource/oversharing/stale-guest/inactive-license violations, with a propose→approve→apply remediation workflow (`infra/db/init/17_governance_violations.sql`, `24_remediation_proposals.sql`) |
 | **`scheduled_reports` table** | — | Persisted CSV snapshots of violations/change-logs, generated daily via cron plus on demand (`infra/db/init/18_scheduled_reports.sql`) |
@@ -60,12 +60,11 @@ The model runs **locally in-process** via ONNX Runtime (bundled inside `@xenova/
 
 | Technology | Model | Purpose |
 |---|---|---|
-| **Ollama** | `qwen2.5:3b` | LLM inference for local development only — not used in production |
-| **Amazon Bedrock** | Model TBD via LLM review (candidates: Claude 3 Haiku, Claude 3.5 Sonnet, Amazon Nova Pro) | Production LLM inference for the GenAI agent (tool calling, natural-language responses) |
+| **Ollama** | `qwen2.5:3b` | Local LLM inference for the GenAI agent (tool calling, natural-language responses) |
 
-Ollama runs as a sidecar Docker container (`ollama/ollama`) for local development only. The GenAI service communicates with it via the `/api/chat` REST endpoint with `stream: false`. In production, Ollama is replaced by Amazon Bedrock's `converse` API called from an EKS pod with IRSA permissions (`bedrock:InvokeModel`).
+Ollama runs as a sidecar Docker container (`ollama/ollama`). The GenAI service communicates with it via the `/api/chat` REST endpoint with `stream: false`.
 
-### Key LLM Parameters (local dev — Ollama)
+### Key LLM Parameters (Ollama)
 
 | Parameter | Value |
 |---|---|
@@ -172,7 +171,7 @@ Tests cover:
 
 ---
 
-## Data Generation (PoC only)
+## Data Generation
 
 | Script | Language | Purpose |
 |---|---|---|
@@ -202,20 +201,9 @@ Source JSON → ETL service → SBERT (all-MiniLM-L6-v2) → 384-dim vector
 
 ## Agent Pipeline (end to end)
 
-**Local development (Ollama):**
-
 ```text
 User prompt → Express API → Ollama (qwen2.5:3b) → Tool call decision
   → Tool executor → PostgreSQL action, Graph mock (graph-client.js), or access_requests table
   → Ticket / access request when required
   → Tool result → Ollama (follow-up) → Natural-language reply → Browser
-```
-
-**Production (Amazon Bedrock):**
-
-```text
-User prompt → Express API (EKS pod) → Bedrock converse API → Tool call decision
-  → Tool executor → RDS action (via RDS Proxy), Microsoft Graph API, NetForum REST, or ITSM API
-  → ServiceNow ticket / access request when required
-  → Tool result → Bedrock (follow-up) → Natural-language reply → Browser
 ```

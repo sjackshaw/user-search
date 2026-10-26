@@ -303,7 +303,7 @@ All HNSW indexes use `vector_cosine_ops` with `m=16, ef_construction=64`. Activi
 | Compose file | `docker-compose.app.yml` |
 | Port | `3000` |
 
-The app exposes two core search/lookup endpoints (plus a set of proxy routes to `services/genai` for the agent, tickets, violations, compliance score, trends, reports, change logs, and policy rules — see [capability-inventory.md](capability-inventory.md) §3c/§3d for those):
+The app exposes two core search/lookup endpoints (plus a set of proxy routes to `services/genai` for the agent, tickets, violations, compliance score, trends, reports, change logs, and policy rules):
 
 ### `GET /api/search?q=<query>`
 

@@ -1,6 +1,6 @@
 # GenAI Architecture (C4 Container — Current State)
 
-> Current local state: 6 ETL lines, 57 agent tools across 11 groups (account operations, M365 service desk, lifecycle management, access requests, department templates, governance detection & remediation, violation tracking, compliance reporting, policy rule engine, M365 governance actions, ticketing), reachable from a per-user detail card or a floating chat icon (no user context) with server-side tool scoping between the two, Microsoft Graph mock fallback for local development. See `docs/next-steps/agentic-ai-expansion.md` for the remaining production-hardening work.
+> Current local state: 6 ETL lines, 57 agent tools across 11 groups (account operations, M365 service desk, lifecycle management, access requests, department templates, governance detection & remediation, violation tracking, compliance reporting, policy rule engine, M365 governance actions, ticketing), reachable from a per-user detail card or a floating chat icon (no user context) with server-side tool scoping between the two, Microsoft Graph mock fallback for local development.
 
 ```mermaid
 graph TB
@@ -19,7 +19,7 @@ graph TB
 
         GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>57 tools across 11 groups<br/>Policy engine + CSV reports<br/>Graph mock fallback (local dev)<br/>agent_tickets + access_requests audit<br/>Port 3001"]:::genai
 
-        Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>(replaced by Bedrock in production)<br/>Port 11434"]:::genai
+        Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>Port 11434"]:::genai
 
         Postgres["🗄️ PostgreSQL + pgvector<br/><br/>Search tables<br/>HNSW vector indexes<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages<br/>+ agent_tickets<br/>+ access_requests<br/>+ governance_violations<br/>+ scheduled_reports<br/>+ policy_rules"]:::database
 
