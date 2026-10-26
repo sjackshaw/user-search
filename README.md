@@ -8,7 +8,7 @@ Built as a personal project to explore semantic search over structured identity 
 
 - **Cross-source semantic search** — find a person by name, email fragment, or plain-English description; results are ranked by vector similarity (SBERT embeddings), not keyword matching.
 - **Unified detail view** — one card shows a user's standing across every source system, plus group memberships, SharePoint permissions, and full change/activity history.
-- **AI agent with real actions** — a 37-tool LLM agent (Ollama, running fully locally) can provision/disable accounts, manage group and SharePoint access, reset MFA, assign licenses, run governance checks (stale guests, naming violations, missing owners, oversharing risks), and more — every write action is ticketed and auditable.
+- **AI agent with real actions** — a 57-tool LLM agent (Ollama, running fully locally) can provision/disable accounts, manage group and SharePoint access, reset MFA, assign licenses, run governance checks (stale guests, naming violations, missing owners, oversharing risks), and more — every write action is ticketed and auditable.
 - **Governance & compliance tracking** — tracked violations with severity/age, policy-rule overrides, automated remediation proposals with human approval gating, and a live compliance score.
 - **Observable ETL pipelines** — six independent pipelines ingest, vectorize, and change-detect records on a schedule, with full job history.
 
@@ -22,7 +22,7 @@ graph TB
 
     User["👤 IT Administrator<br/><br/>Searches for users across<br/>identity systems, reviews<br/>activity logs, and chats with<br/>the GenAI assistant"]:::person
 
-    UserSearch["🔍 User Search Platform<br/><br/>Dockerized application providing semantic<br/>vector search, detail lookups, change history,<br/>ETL observability, and a 37-tool GenAI agent<br/>(Ollama, running fully locally)"]:::system
+    UserSearch["🔍 User Search Platform<br/><br/>Dockerized application providing semantic<br/>vector search, detail lookups, change history,<br/>ETL observability, and a 57-tool GenAI agent<br/>(Ollama, running fully locally)"]:::system
 
     AD["Active Directory<br/><br/>Corporate identity provider<br/>(simulated via synthetic data)"]:::external
     NF["netForum<br/><br/>Membership management system<br/>(simulated via synthetic data)"]:::external
@@ -73,3 +73,4 @@ For individual services, manual compose commands, database initialisation, and s
 | [docs/technology-stack.md](docs/technology-stack.md) | Every technology/library/model in the solution |
 | [docs/etl-architecture.md](docs/etl-architecture.md) | ETL pipeline design and full database schema reference |
 | [docs/diagrams/](docs/diagrams/README.md) | C4, sequence, entity-relationship, and state diagrams |
+| [docs/manual-test-script.md](docs/manual-test-script.md) | Human walkthrough script covering every feature end-to-end |

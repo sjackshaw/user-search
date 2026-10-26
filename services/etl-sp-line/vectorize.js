@@ -73,7 +73,7 @@ async function logChange(client, sourceTable, email, changeType, fieldName, oldV
 }
 
 // Compare these fields for change detection (user_email+site form the natural key)
-const PRIMARY_COMPARE_FIELDS = ['role', 'permission_type', 'granted_by', 'granted_at'];
+const PRIMARY_COMPARE_FIELDS = ['role', 'permission_type', 'granted_by', 'granted_at', 'share_scope'];
 
 function normaliseValue(v) {
   if (v === null || v === undefined) return null;
@@ -112,12 +112,13 @@ async function upsertPrimaryBatch(records, embeddings, existingByKey, jobId) {
       const existing = existingByKey.get(key);
 
       await client.query(
-        'CALL sp_upsert_sharepoint_permission($1, $2, $3, $4, $5, $6, $7, $8)',
+        'CALL sp_upsert_sharepoint_permission($1, $2, $3, $4, $5, $6, $7, $8, $9)',
         [
           r.user, r.site, r.site_url || null, r.role,
           r.permission_type || null,
           r.granted_by || null,
           r.granted_at || null,
+          r.share_scope || 'user',
           emb,
         ],
       );
@@ -132,6 +133,7 @@ async function upsertPrimaryBatch(records, embeddings, existingByKey, jobId) {
           permission_type: r.permission_type || null,
           granted_by:      r.granted_by || null,
           granted_at:      r.granted_at || null,
+          share_scope:     r.share_scope || 'user',
         };
         let changed = false;
         for (const field of PRIMARY_COMPARE_FIELDS) {
@@ -181,6 +183,7 @@ async function runPrimary() {
         `role=${r.role}`,
         r.permission_type ? `type=${r.permission_type}` : '',
         r.granted_by ? `granted_by=${r.granted_by}` : '',
+        r.share_scope && r.share_scope !== 'user' ? `share_scope=${r.share_scope}` : '',
       ].filter(Boolean).join(' '));
       const embeddings = await vectorizeBatch(texts);
       const batchStats = await upsertPrimaryBatch(batch, embeddings, existingByKey, jobId);

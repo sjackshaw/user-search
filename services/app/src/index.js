@@ -31,7 +31,7 @@ async function embed(text) {
 // We UNION results from every source and pick the closest overall.
 
 // ── Stored-procedure SQL calls ────────────────────────────────────────────────
-// All query logic lives in PostgreSQL stored procedures (see 12_stored_procedures.sql).
+// All query logic lives in PostgreSQL stored procedures (see 19_stored_procedures.sql).
 // App code calls them with parameterised arguments via pool.query().
 
 const SP_SEARCH_ALL   = 'SELECT * FROM sp_search_all_sources($1, $2)';
@@ -319,6 +319,154 @@ app.patch('/api/tickets/:id', express.json(), async (req, res) => {
   } catch (err) {
     console.error('Ticket close proxy error:', err);
     res.status(502).json({ error: 'Ticket service unavailable.' });
+  }
+});
+
+// ── Violations proxy ──────────────────────────────────────────────────────────
+// Forwards GET /api/violations → genai service.
+
+app.get('/api/violations', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/violations?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Violations proxy error:', err);
+    res.status(502).json({ error: 'Violations service unavailable.' });
+  }
+});
+
+// ── Change logs proxy ──────────────────────────────────────────────────────────
+// Forwards GET /api/change-logs → genai service.
+
+app.get('/api/change-logs', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/change-logs?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Change logs proxy error:', err);
+    res.status(502).json({ error: 'Change logs service unavailable.' });
+  }
+});
+
+// ── Compliance score proxy ────────────────────────────────────────────────────
+// Forwards GET /api/compliance-score → genai service.
+
+app.get('/api/compliance-score', async (_req, res) => {
+  try {
+    const upstream = await fetch(`${GENAI_URL}/api/compliance-score`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Compliance score proxy error:', err);
+    res.status(502).json({ error: 'Compliance score service unavailable.' });
+  }
+});
+
+// ── Policy rules proxy (read-only; write access is agent-tool-only) ──────────
+// Forwards GET /api/policy-rules → genai service.
+
+app.get('/api/policy-rules', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/policy-rules?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Policy rules proxy error:', err);
+    res.status(502).json({ error: 'Policy rules service unavailable.' });
+  }
+});
+
+// ── Trends proxy ──────────────────────────────────────────────────────────────
+// Forwards GET /api/trends → genai service.
+
+app.get('/api/trends', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/trends?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Trends proxy error:', err);
+    res.status(502).json({ error: 'Trends service unavailable.' });
+  }
+});
+
+// ── Reports proxy ──────────────────────────────────────────────────────────────
+// Forwards GET /api/reports, /api/reports/:id/download, /api/reports/:type.csv → genai service.
+
+app.get('/api/reports', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const upstream = await fetch(`${GENAI_URL}/api/reports?${qs}`, {
+      headers: {
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    console.error('Reports proxy error:', err);
+    res.status(502).json({ error: 'Reports service unavailable.' });
+  }
+});
+
+async function proxyReportDownload(upstreamPath, res) {
+  const upstream = await fetch(`${GENAI_URL}${upstreamPath}`, {
+    headers: {
+      ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+    },
+  });
+  if (!upstream.ok) {
+    const data = await upstream.json().catch(() => ({ error: 'Report download failed.' }));
+    return res.status(upstream.status).json(data);
+  }
+  res.set('Content-Type', upstream.headers.get('content-type') || 'text/csv');
+  const disposition = upstream.headers.get('content-disposition');
+  if (disposition) res.set('Content-Disposition', disposition);
+  res.send(await upstream.text());
+}
+
+app.get('/api/reports/:id/download', async (req, res) => {
+  try {
+    await proxyReportDownload(`/api/reports/${req.params.id}/download`, res);
+  } catch (err) {
+    console.error('Report download proxy error:', err);
+    res.status(502).json({ error: 'Report service unavailable.' });
+  }
+});
+
+app.get('/api/reports/:type.csv', async (req, res) => {
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    await proxyReportDownload(`/api/reports/${req.params.type}.csv?${qs}`, res);
+  } catch (err) {
+    console.error('Report CSV proxy error:', err);
+    res.status(502).json({ error: 'Report service unavailable.' });
   }
 });
 

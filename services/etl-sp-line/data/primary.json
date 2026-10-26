@@ -3,10 +3,11 @@
     "user": "wei.sato@company.net",
     "site": "Partnerships",
     "site_url": "http://sharepoint.corporate.com/sites/partnerships",
-    "role": "Read",
+    "role": "Edit",
     "permission_type": "Direct",
     "granted_by": "janet.toure@corporate.com",
-    "granted_at": "2024-05-31T14:32:12.862Z"
+    "granted_at": "2024-05-31T14:32:12.862Z",
+    "share_scope": "everyone"
   },
   {
     "user": "nicholas.adams@example.com",
@@ -9003,10 +9004,11 @@
     "user": "mary.zimmermann@provider.io",
     "site": "Total Rewards",
     "site_url": "http://sharepoint.corporate.com/sites/total-rewards",
-    "role": "Edit",
+    "role": "FullControl",
     "permission_type": "Direct",
     "granted_by": "danya.schroeder@corporate.com",
-    "granted_at": "2024-12-26T21:27:00.305Z"
+    "granted_at": "2024-12-26T21:27:00.305Z",
+    "share_scope": "anonymous_link"
   },
   {
     "user": "frank.campbell@acme.co",
@@ -45003,10 +45005,11 @@
     "user": "lena.kovac@example.com",
     "site": "Vendor Management",
     "site_url": "http://sharepoint.corporate.com/sites/vendor-management",
-    "role": "FullControl",
+    "role": "Edit",
     "permission_type": "Inherited",
     "granted_by": "viktor.scott@corporate.com",
-    "granted_at": "2025-05-04T16:31:46.747Z"
+    "granted_at": "2025-05-04T16:31:46.747Z",
+    "share_scope": "everyone_except_external"
   },
   {
     "user": "ryan.mccarthy@test.org",
@@ -90003,10 +90006,11 @@
     "user": "raymond.hoffmann@provider.io",
     "site": "Analytics",
     "site_url": "http://sharepoint.corporate.com/sites/analytics",
-    "role": "FullControl",
+    "role": "Edit",
     "permission_type": "Inherited",
     "granted_by": "joshua.moore@corporate.com",
-    "granted_at": "2025-05-17T14:02:42.818Z"
+    "granted_at": "2025-05-17T14:02:42.818Z",
+    "share_scope": "anonymous_link"
   },
   {
     "user": "samantha.konig@provider.io",
@@ -135003,10 +135007,11 @@
     "user": "gregory.richter@corporate.com",
     "site": "Infrastructure",
     "site_url": "http://sharepoint.corporate.com/sites/infrastructure",
-    "role": "Edit",
+    "role": "FullControl",
     "permission_type": "Direct",
     "granted_by": "fatima.robinson@corporate.com",
-    "granted_at": "2025-05-02T09:20:43.742Z"
+    "granted_at": "2025-05-02T09:20:43.742Z",
+    "share_scope": "everyone"
   },
   {
     "user": "karen.chaudhry@mail.com",
@@ -180003,10 +180008,11 @@
     "user": "ryan.ryan@acme.co",
     "site": "Network Ops",
     "site_url": "http://sharepoint.corporate.com/sites/network-ops",
-    "role": "Edit",
+    "role": "FullControl",
     "permission_type": "Inherited",
     "granted_by": "samuel.gonzalez@corporate.com",
-    "granted_at": "2025-04-12T20:27:35.941Z"
+    "granted_at": "2025-04-12T20:27:35.941Z",
+    "share_scope": "everyone_except_external"
   },
   {
     "user": "matthew.richter@example.com",
