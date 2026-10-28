@@ -4,6 +4,8 @@
 
 The pipeline consists of six **line** ETL services and one application service, all coordinated via Docker Compose. Each line service handles both its primary data source and its associated activity/sync log table within a single container, sharing one SBERT model instance and one Postgres connection pool.
 
+> The former member-benefits ETL path and application were removed from this repository. Any related work now sits in the `document-search` repository.
+
 Each line service follows this pattern on startup (and then cron, hourly):
 
 1. **`runPrimary()`** — reads `data/primary.json`, generates 384-dimensional SBERT embeddings using `Xenova/all-MiniLM-L6-v2`, and upserts records into the primary Postgres table.
@@ -276,10 +278,18 @@ Init scripts in `infra/db/init/` are executed once by Postgres on first startup,
 | `09_index_netforum_activity_logs.sql` | `netforum_activity_logs` table + HNSW + supporting indexes |
 | `10_logging_tables.sql` | `etl_job_logs` + `source_change_logs` tables |
 | `11_chat_tables.sql` | `chat_messages` table |
-| `12_stored_procedures.sql` | All stored procedures (search, lookup, intersection, ETL job management) |
 | `13_index_sharepoint_permissions.sql` | `sharepoint_permissions` + `sharepoint_permission_change_logs` tables + HNSW indexes |
 | `14_index_m365_group_memberships.sql` | `m365_group_memberships` + `m365_membership_change_logs` tables + HNSW indexes |
 | `15_agent_tickets.sql` | `agent_tickets` table |
+| `16_access_requests.sql` | `access_requests` table |
+| `17_governance_violations.sql` | `governance_violations` table |
+| `18_scheduled_reports.sql` | `scheduled_reports` table |
+| `19_stored_procedures.sql` | All stored procedures (search, lookup, intersection, ETL job management) — runs last of the schema/procedure files since several procedures reference `sharepoint_permissions`/`m365_group_memberships` |
+| `20_sharepoint_share_scope.sql` | Adds `sharepoint_permissions.share_scope`; re-creates the two procedures that touch it |
+| `21_governance_event_triggers.sql` | `trg_evaluate_group_governance()` trigger function + triggers on `m365_group_memberships`/`distribution_groups` — evaluates naming/ownership rules synchronously on every write, independent of any scan |
+| `22_active_directory_last_sign_in.sql` | Adds `active_directory.last_sign_in_at`; re-creates the upsert/read procedures with the new column |
+| `23_policy_rules.sql` | `policy_rules` table — configurable governance thresholds (empty table = use hardcoded defaults) |
+| `24_remediation_proposals.sql` | Adds `remediation_*` columns to `governance_violations` — propose → approve/reject → apply workflow |
 
 All HNSW indexes use `vector_cosine_ops` with `m=16, ef_construction=64`. Activity-log and change-log tables additionally carry indexes on `email`/`user_email`, `log_timestamp DESC`, and `changed_by`.
 
@@ -293,7 +303,7 @@ All HNSW indexes use `vector_cosine_ops` with `m=16, ef_construction=64`. Activi
 | Compose file | `docker-compose.app.yml` |
 | Port | `3000` |
 
-The app exposes two API endpoints:
+The app exposes two core search/lookup endpoints (plus a set of proxy routes to `services/genai` for the agent, tickets, violations, compliance score, trends, reports, change logs, and policy rules):
 
 ### `GET /api/search?q=<query>`
 
@@ -319,7 +329,7 @@ services/etl-dg-line/data/primary.json        (500 distribution groups)
 services/etl-m365-line/data/primary.json      (M365 group memberships)
 services/etl-sp-line/data/primary.json        (SharePoint user permissions)
         │
-        ▼  (generate_synthetic.py seeds all data files at setup time)
+       ▼  (generate_synthetic.py seeds all primary/log data files)
 services/etl-ad-line/data/logs.json          (3 000 AD activity logs)
 services/etl-netforum-line/data/logs.json    (2 000 netForum activity logs)
 services/etl-eu-line/data/logs.json          (2 000 external user activity logs)
@@ -328,7 +338,7 @@ services/etl-m365-line/data/logs.json        (M365 membership change logs)
 services/etl-sp-line/data/logs.json          (SharePoint permission change logs)
                 │
                 ▼  (vectorize.js — runPrimary() then runLogs(), on startup + cron hourly)
-         Postgres / pgvector  (12 ETL tables + etl_job_logs + chat_messages + agent_tickets)
+        Postgres / pgvector  (12 ETL tables + etl_job_logs + chat_messages + agent_tickets)
                 │
                 ▼
          services/app  ──► http://localhost:3000

@@ -11,13 +11,13 @@ flowchart TB
     subgraph net ["Docker Network: user-search_default"]
         direction TB
 
-        PG["🗄️ postgres\npgvector/pgvector:pg18\nPort 5432"]:::infra
+        PG["🗄️ postgres\npgvector/pgvector:pg15\nPort 5432"]:::infra
 
         APP["📦 app\nNode.js 22\nExpress + SBERT\nPort 3000:3000"]:::app
 
         OLLAMA["🧠 ollama\nollama/ollama\nqwen2.5:3b\nPort 11434:11434"]:::genai
 
-        GENAI["🤖 genai\nNode.js 22\n9 tools · 6 action executors\nPort 3001:3001"]:::genai
+        GENAI["🤖 genai\nNode.js 22\n57 tools\nPort 3001:3001"]:::genai
 
         subgraph etl_lines ["Line ETL containers (shared model + pool)"]
             direction LR
@@ -37,8 +37,8 @@ flowchart TB
     C1 & C2 & C3 & C4 & C5 & C6 -->|"INSERT + embedding"| PG
     APP -->|"SQL queries"| PG
     APP -->|"SBERT model"| MC
+    APP -->|"chat proxy POST /api/agent"| GENAI
     GENAI -->|"RAG SQL queries"| PG
-    GENAI -->|"proxy /api/search"| APP
     GENAI -->|"LLM inference"| OLLAMA
     OLLAMA -->|"model weights"| OM
 

@@ -1,6 +1,6 @@
 # GenAI Architecture (C4 Container — Current State)
 
-> Implemented as of February 28, 2026. 6 ETL lines, 9 agent tools, 6 action executors, streaming enabled. See `docs/next-steps/agentic-ai-expansion.md` for the full implementation history.
+> Current local state: 6 ETL lines, 57 agent tools across 11 groups (account operations, M365 service desk, lifecycle management, access requests, department templates, governance detection & remediation, violation tracking, compliance reporting, policy rule engine, M365 governance actions, ticketing), reachable from a per-user detail card or a floating chat icon (no user context) with server-side tool scoping between the two, Microsoft Graph mock fallback for local development.
 
 ```mermaid
 graph TB
@@ -15,13 +15,13 @@ graph TB
     subgraph DockerPlatform [" Docker Platform — user-search "]
         direction TB
 
-        App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + Chat UI + SBERT<br/>SSE streaming proxy<br/>Port 3000"]:::existing
+        App["📦 App Container<br/><br/>Node.js 22 / Express<br/>Search UI + dashboard panels<br/>(Compliance/Trends/Reports/Policy)<br/>+ floating agent widget<br/>Chat proxy → GenAI<br/>Port 3000"]:::existing
 
-        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>9 tools · 6 action executors<br/>Intent classification + RAG<br/>SSE token streaming<br/>Port 3001"]:::genai
+        GenAI["🤖 GenAI Service<br/><br/>Node.js 22<br/>57 tools across 11 groups<br/>Policy engine + CSV reports<br/>Graph mock fallback (local dev)<br/>agent_tickets + access_requests audit<br/>Port 3001"]:::genai
 
         Ollama["🧠 Ollama Container<br/><br/>qwen2.5:3b<br/>Local LLM inference<br/>Port 11434"]:::genai
 
-        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>15 tables (12 with HNSW indexes)<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages<br/>+ agent_tickets"]:::database
+        Postgres["🗄️ PostgreSQL + pgvector<br/><br/>Search tables<br/>HNSW vector indexes<br/>+ etl_job_logs<br/>+ source_change_logs<br/>+ chat_messages<br/>+ agent_tickets<br/>+ access_requests<br/>+ governance_violations<br/>+ scheduled_reports<br/>+ policy_rules"]:::database
 
         subgraph ETLServices [" 6 ETL Line Services "]
             ETL_AD["etl-ad-line<br/>active_directory + activity_logs"]:::existing
@@ -38,9 +38,8 @@ graph TB
     User -->|"Search queries"| App
     User -->|"Natural language questions<br/>'What changed for jsmith last week?'"| App
     App -->|"Search API + SBERT embeddings"| Postgres
-    App -->|"Chat proxy SSE stream<br/>POST /api/chat"| GenAI
-    GenAI -->|"RAG context retrieval"| Postgres
-    GenAI -->|"Vector search /api/search"| App
+    App -->|"Chat proxy POST /api/agent"| GenAI
+    GenAI -->|"RAG context retrieval + ticket/request CRUD"| Postgres
     GenAI -->|"LLM inference"| Ollama
     GenAI -->|"Persist conversation"| Postgres
     ETL_AD -->|"Vectors + change logs"| Postgres
