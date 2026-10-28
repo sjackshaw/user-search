@@ -4972,7 +4972,12 @@ app.get('/api/reports', async (req, res) => {
 // ── GET /api/reports/:id/download ─────────────────────────────────────────────
 // Downloads a previously generated report snapshot by ID.
 
-app.get('/api/reports/:id/download', async (req, res) => {
+app.get('/api/reports/:id/download', rateLimit({
+  windowMs: 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+}), async (req, res) => {
   try {
     const reportId = parseInt(req.params.id, 10);
     if (isNaN(reportId)) return res.status(400).json({ error: 'Invalid report ID.' });
