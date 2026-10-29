@@ -1,8 +1,12 @@
 # User Search
 
-A semantic search and AI agent platform for identity and access data. It consolidates six identity/access sources — Active Directory, netForum, External Users, Distribution Groups, M365 Group Memberships, and SharePoint Permissions — into a single searchable, chat-driven interface, backed by vector search and a local LLM agent that can actually take action, not just answer questions.
+[![CI](https://github.com/sjackshaw/user-search/actions/workflows/ci.yml/badge.svg)](https://github.com/sjackshaw/user-search/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Node](https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white)
 
-Built as a personal project to explore semantic search over structured identity data and LLM tool-calling for real governance/IT-admin workflows. All data is synthetic; everything runs locally via Docker.
+> **Status: proof of concept.** Built as a personal project to explore semantic search over structured identity data and LLM tool-calling for real governance/IT-admin workflows. All data is synthetic, there is no auth layer, and it's designed to run locally via Docker — not production-hardened.
+
+A semantic search and AI agent platform for identity and access data. It consolidates six identity/access sources — Active Directory, netForum, External Users, Distribution Groups, M365 Group Memberships, and SharePoint Permissions — into a single searchable, chat-driven interface, backed by vector search and a local LLM agent that can actually take action, not just answer questions.
 
 ## What it does
 

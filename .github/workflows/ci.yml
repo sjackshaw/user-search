@@ -1,161 +1,26 @@
-name: CI — migrations, tests
+name: CI
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    env:
-      AWS_REGION: us-east-1
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v2
+      - uses: actions/setup-node@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ env.AWS_REGION }}
+          node-version: 22
+          cache: npm
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+      - run: npm ci
 
-      - name: Retrieve DB secret
-        id: get_db_secret
-        run: |
-          SECRET_ID=${{ secrets.DB_SECRET_ARN }}
-          secret=$(aws secretsmanager get-secret-value --secret-id "$SECRET_ID" --query SecretString --output text)
-          # Attempt common key names used in SecretsManager
-          echo "DB_USER=$(echo \"$secret\" | jq -r '.username // .DB_USER // .db_user // .user // empty')" >> $GITHUB_ENV
-          echo "DB_PASSWORD=$(echo \"$secret\" | jq -r '.password // .DB_PASSWORD // .db_password // .pass // empty')" >> $GITHUB_ENV
-          echo "DB_NAME=$(echo \"$secret\" | jq -r '.dbname // .DB_NAME // .db_name // .database // empty')" >> $GITHUB_ENV
-          echo "DB_HOST=$(echo \"$secret\" | jq -r '.host // .DB_HOST // .hostname // empty')" >> $GITHUB_ENV
-          echo "DB_PORT=$(echo \"$secret\" | jq -r '.port // .DB_PORT // .db_port // 5432')" >> $GITHUB_ENV
+      - name: Lint
+        run: npm run lint
 
-      - name: Start Postgres (compose fragment)
-        run: |
-          docker compose -f docker-compose.postgres.yml up -d
-
-      - name: Wait for Postgres
-        run: |
-          for i in {1..30}; do
-            docker compose exec -T postgres pg_isready -U "${DB_USER:-postgres}" && break || sleep 2
-          done
-
-      - name: Run SQL migrations (if present)
-        if: ${{ always() }}
-        run: |
-          if [ -d infra/db/migrations ]; then
-            for f in infra/db/migrations/*.sql; do
-              [ -f "$f" ] || continue
-              echo "Applying $f"
-              docker compose exec -T postgres psql -U "${DB_USER:-postgres}" -d "${DB_NAME:-appdb}" < "$f"
-            done
-          else
-            echo "No migrations directory found; relying on init scripts if needed."
-          fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        env:
-          DATABASE_URL: postgresql://${{ env.DB_USER }}:${{ env.DB_PASSWORD }}@localhost:5433/${{ env.DB_NAME }}
+      - name: Unit tests
         run: npm test
-
-      - name: Tear down Postgres
-        if: always()
-        run: |
-          docker compose -f docker-compose.postgres.yml down -v
-
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    env:
-      AWS_REGION: us-east-1
-    strategy:
-      matrix:
-        include:
-          - name: app
-            path: services/app
-            repo: app
-          - name: etl-ad-line
-            path: services/etl-ad-line
-            repo: etl-ad-line
-          - name: etl-netforum-line
-            path: services/etl-netforum-line
-            repo: etl-netforum-line
-          - name: etl-eu-line
-            path: services/etl-eu-line
-            repo: etl-eu-line
-          - name: etl-dg-line
-            path: services/etl-dg-line
-            repo: etl-dg-line
-          - name: etl-m365-line
-            path: services/etl-m365-line
-            repo: etl-m365-line
-          - name: etl-sp-line
-            path: services/etl-sp-line
-            repo: etl-sp-line
-          - name: genai
-            path: services/genai
-            repo: genai
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Install tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-          sudo apt-get install -y awscli
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Determine ECR registry
-        id: ecr
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
-          echo "ECR_REGISTRY=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
-
-      - name: Login to ECR
-        run: |
-          aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin $ECR_REGISTRY
-
-      - name: Ensure ECR repository exists
-        run: |
-          REPO=${{ matrix.repo }}
-          if ! aws ecr describe-repositories --repository-names "$REPO" >/dev/null 2>&1; then
-            aws ecr create-repository --repository-name "$REPO" || true
-          fi
-
-      - name: Build and push image
-        run: |
-          REPO=${{ matrix.repo }}
-          PATH_TO_BUILD=${{ matrix.path }}
-          TAG=${GITHUB_SHA::8}
-          docker buildx build --platform linux/amd64 -t ${ECR_REGISTRY}/${REPO}:$TAG -t ${ECR_REGISTRY}/${REPO}:latest --push $PATH_TO_BUILD
