@@ -8,6 +8,16 @@
 
 A semantic search and AI agent platform for identity and access data. It consolidates six identity/access sources — Active Directory, netForum, External Users, Distribution Groups, M365 Group Memberships, and SharePoint Permissions — into a single searchable, chat-driven interface, backed by vector search and a local LLM agent that can actually take action, not just answer questions.
 
+## Screenshots
+
+| Compliance dashboard | Semantic search |
+|---|---|
+| ![Compliance Posture, Activity Trends, Reports, and Policy Rules panels](docs/screenshots/dashboard.png) | ![Intersection query results across sources](docs/screenshots/search-results.png) |
+
+| Unified user detail card | AI agent & governance chat |
+|---|---|
+| ![Cross-source detail card with change history](docs/screenshots/user-detail.png) | ![User-scoped and global governance agent panels](docs/screenshots/agent-panel.png) |
+
 ## What it does
 
 - **Cross-source semantic search** — find a person by name, email fragment, or plain-English description; results are ranked by vector similarity (SBERT embeddings), not keyword matching.
